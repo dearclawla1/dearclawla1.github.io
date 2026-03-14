@@ -1,301 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Base64 Encoder/Decoder</title>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --card: #161b22;
-      --text: #c9d1d9;
-      --accent: #58a6ff;
-      --border: #30363a;
-      --success: #238636;
-      --error: #da3632;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 2rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .container {
-      max-width: 800px;
-      width: 100%;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 2rem;
-      font-size: 2.5rem;
-      color: var(--accent);
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    .card-header {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      color: var(--accent);
-    }
-    textarea {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.75rem;
-      color: var(--text);
-      font-size: 0.875rem;
-      font-family: 'Consolas', 'Monaco', monospace;
-      resize: vertical;
-      min-height: 150px;
-      margin-bottom: 0.5rem;
-    }
-    textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-    .btn-group {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-    }
-    button {
-      background: var(--success);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    button:hover {
-      background: #2ea043;
-    }
-    button.secondary {
-      background: var(--border);
-      color: var(--text);
-    }
-    button.secondary:hover {
-      background: #484f58;
-    }
-    .result {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.75rem;
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 0.875rem;
-      word-break: break-all;
-      min-height: 150px;
-      color: var(--accent);
-    }
-    .preview {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .preview-item {
-      flex: 1;
-      min-width: 150px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-    }
-    .preview-label {
-      font-size: 0.75rem;
-      color: #8b949e;
-      margin-bottom: 0.5rem;
-    }
-    .preview-value {
-      font-size: 0.75rem;
-      color: var(--accent);
-      word-break: break-all;
-      font-family: 'Consolas', 'Monaco', monospace;
-    }
-    .error {
-      color: var(--error);
-      border-color: var(--error);
-    }
-    .actions {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
-    .actions button {
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-  </style>
+<meta charset="UTF-8">
+<style>
+body{font-family:system-ui;padding:20px;background:#1e1e1e;color:#e0e0e0}
+h1{color:#00ff9d;margin-bottom:20px}.controls{margin:15px 0}
+input,button{padding:10px;font-size:14px}
+textarea{width:100%;height:100px;background:#2a2a2a;color:#e0e0e0;border:1px solid #444}
+.result{background:#2a2a2a;padding:15px;border-radius:8px;margin-top:15px}
+a{color:#00ff9d;text-decoration:none}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>🔢 Base64 Encoder/Decoder</h1>
-    
-    <div class="card">
-      <div class="card-header">Input Text</div>
-      <textarea id="input" placeholder="Enter text to encode or decode from base64..."></textarea>
-      <div class="btn-group">
-        <button onclick="encode()">Encode to Base64</button>
-        <button onclick="decode()" class="secondary">Decode from Base64</button>
-        <button onclick="clearAll()" class="secondary">Clear</button>
-      </div>
-    </div>
-    
-    <div class="card">
-      <div class="card-header">Result</div>
-      <div id="result" class="result" placeholder="Result will appear here..."></div>
-    </div>
-    
-    <div class="preview">
-      <div class="preview-item">
-        <div class="preview-label">Length</div>
-        <div id="length" class="preview-value">0 chars</div>
-      </div>
-      <div class="preview-item">
-        <div class="preview-label">Size (bytes)</div>
-        <div id="size" class="preview-value">0 bytes</div>
-      </div>
-    </div>
-    
-    <div class="card">
-      <div class="card-header">Actions</div>
-      <div class="actions">
-        <button onclick="copyResult()">Copy Result</button>
-        <button onclick="validateBase64()" class="secondary">Validate Base64</button>
-        <button onclick="toggleMode()" class="secondary">Toggle Mode</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let mode = 'encode'; // 'encode' or 'decode'
-
-    function encode() {
-      const input = document.getElementById('input').value.trim();
-      if (!input) {
-        setResult('Error: Please enter text to encode.', true);
-        return;
-      }
-      try {
-        const encoded = btoa(unescape(encodeURIComponent(input)));
-        setResult(encoded, false);
-        updateStats(input.length, new TextEncoder().encode(encoded).length);
-      } catch (e) {
-        setResult('Error: ' + e.message, true);
-      }
-    }
-
-    function decode() {
-      const input = document.getElementById('input').value.trim();
-      if (!input) {
-        setResult('Error: Please enter base64 text to decode.', true);
-        return;
-      }
-      try {
-        if (!isValidBase64(input)) {
-          throw new Error('Invalid base64 input');
-        }
-        const decoded = decodeURIComponent(escape(atob(input)));
-        setResult(decoded, false);
-        updateStats(input.length, new TextEncoder().encode(decoded).length);
-      } catch (e) {
-        setResult('Error: ' + e.message, true);
-      }
-    }
-
-    function clearAll() {
-      document.getElementById('input').value = '';
-      document.getElementById('result').value = '';
-      document.getElementById('length').textContent = '0 chars';
-      document.getElementById('size').textContent = '0 bytes';
-    }
-
-    function copyResult() {
-      const result = document.getElementById('result');
-      if (result && result.value) {
-        navigator.clipboard.writeText(result.value).then(() => {
-          alert('Copied to clipboard!');
-        });
-      }
-    }
-
-    function validateBase64() {
-      const input = document.getElementById('input').value.trim();
-      const result = document.getElementById('result');
-      if (!input) {
-        setResult('Error: Please enter text to validate.', true);
-        return;
-      }
-      try {
-        // Check if it looks like base64
-        const regex = /^[A-Za-z0-9+/=]*$/;
-        if (!regex.test(input)) {
-          throw new Error('Contains invalid base64 characters');
-        }
-        // Check length (base64 length must be multiple of 4)
-        if (input.length % 4 !== 0) {
-          throw new Error('Base64 string length must be a multiple of 4');
-        }
-        // Try to decode
-        decodeURIComponent(escape(atob(input)));
-        setResult('✅ Valid base64 string!', false);
-        document.getElementById('length').textContent = input.length + ' chars';
-        document.getElementById('size').textContent = new TextEncoder().encode(input).length + ' bytes';
-      } catch (e) {
-        setResult('❌ Invalid base64: ' + e.message, true);
-      }
-    }
-
-    function toggleMode() {
-      mode = mode === 'encode' ? 'decode' : 'encode';
-      const resultDiv = document.getElementById('result');
-      resultDiv.placeholder = mode === 'encode' ? 'Enter text to encode...' : 'Enter base64 to decode...';
-    }
-
-    function setResult(text, isError) {
-      const result = document.getElementById('result');
-      if (isError) {
-        result.value = text;
-        result.classList.add('error');
-      } else {
-        result.value = text;
-        result.classList.remove('error');
-      }
-    }
-
-    function updateStats(inputLength, outputLength) {
-      document.getElementById('length').textContent = inputLength + ' chars';
-      document.getElementById('size').textContent = outputLength + ' bytes';
-    }
-
-    function isValidBase64(str) {
-      const regex = /^[A-Za-z0-9+/=]*$/;
-      if (!regex.test(str)) return false;
-      if (str.length % 4 !== 0) return false;
-      try {
-        atob(str);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    }
-  </script>
+<h1>Base64 Encoder/Decoder</h1>
+<div class="controls">
+<a href="index.html">Home</a> | 
+<button onclick="encode()">Encode to Base64</button> | 
+<button onclick="decode()">Decode from Base64</button>
+</div>
+<textarea id="input" placeholder="Enter your text to encode or Base64 string to decode..."></textarea>
+<div class="result">
+<pre id="output"></pre>
+</div>
+<script>
+function encode(){
+const text=document.getElementById('input').value.trim();
+if(!text){document.getElementById('output').textContent='Enter text to encode...';return}
+const encoded=btoa(unescape(encodeURIComponent(text))).replace(/-/g,'+').replace(/_/g,'/');
+document.getElementById('output').textContent='Base64: ' + encoded;
+}
+function decode(){
+const b64=document.getElementById('input').value.trim();
+if(!b64){document.getElementById('output').textContent='Enter Base64 to decode...';return}
+try{
+const decoded=decodeURIComponent(escape(atob(b64.replace(/-/g,'+').replace(/_/g,'/'))));
+document.getElementById('output').textContent='Decoded: ' + decoded;
+}catch(e){document.getElementById('output').textContent='Invalid Base64!';}
+}
+</script>
 </body>
 </html>
