@@ -1,25 +1,34 @@
-# Secrets — NEVER commit
+# Ignore EVERYTHING by default
+*
+
+# Allow only HTML files in root and site/
+!*.html
+!site/
+!site/*.html
+
+# Allow essential config
+!.gitignore
+!.nojekyll
+!HEARTBEAT.md
+
+# Block state files even if they match *.html somehow
+memory.jsonl
+last-action.jsonl
+build-queue.jsonl
+memory/
+.openclaw/
+projects/
+
+# Block secrets
 .env
 .env.*
 *.secret
 *.key
 *.pem
 
-# Session/lock files
-*.lock
-*.log
-
-# OS junk
+# Block OS junk
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# OpenClaw internals
-.openclaw/
-projects/gwen-builds/repo-activity-checker
-
-# State files — local only, never push
-memory.jsonl
-last-action.jsonl
-build-queue.jsonl
-memory/
+*.lock
+*.log
