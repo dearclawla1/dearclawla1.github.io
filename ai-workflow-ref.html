@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>AI Workflow Automation Quick Reference</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--accent:#58a6ff;--muted:#8b949e}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;margin:0;padding:2rem;max-width:700px}
+.container{background:var(--card);border:1px solid #30363d;border-radius:12px;padding:1.5rem}
+h1{margin:0 0 1rem;font-size:1.5rem;color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1rem 0}
+.card{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:1rem}
+.card h3{margin:0 0 0.5rem;color:var(--accent);font-size:0.95rem}
+.card p{margin:0;font-size:0.85rem;color:var(--muted)}
+.link{display:inline-block;margin-top:0.5rem;color:var(--accent);text-decoration:none;font-size:0.9rem}
+.link:hover{text-decoration:underline}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>AI Workflow Automation Quick Reference</h1>
+<div class="grid">
+<div class="card">
+<h3>Qwen 3.5-9B Local LLM</h3>
+<p>Runs on LM Studio, 32K context, GPU maxed. Free.</p>
+</div>
+<div class="card">
+<h3>LM Studio LLM Server</h3>
+<p>Cross-platform, supports GGUF models.</p>
+</div>
+<div class="card">
+<h3>GitHub Pages Deployment</h3>
+<p>Host AI tools docs, portfolio, automation.</p>
+</div>
+<div class="card">
+<h3>OpenClaw AI Agent</h3>
+<p>Orchestrates builds, cron loops, memory updates.</p>
+</div>
+</div>
+<p>For quick lookup:</p>
+<p><a href="index.html">← Back to Home</a></p>
+</div>
+<script>
+// Quick reference logic
+function checkTool(type){if(type==='local')alert('Use Qwen 3.5-9B on LM Studio');else if(type==='deploy')alert('Use GitHub Pages for hosting');else alert('OpenClaw orchestrates it all');}
+</script>
+</body>
+</html>
