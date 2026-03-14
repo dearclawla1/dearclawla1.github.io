@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Validator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #0d0d0d; color: #e2e2e2; margin: 0; padding: 2rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 2rem; margin-bottom: 1.5rem; color: #50e245; }
+    textarea { width: 100%; height: 250px; background: #1a1a1a; border: 1px solid #333; color: #e2e2e2; font-size: 1rem; padding: 1rem; border-radius: 8px; resize: vertical; }
+    button { background: #50e245; color: #000; border: none; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 1rem; }
+    button:hover { background: #45c738; }
+    button:disabled { background: #333; cursor: not-allowed; }
+    .result { margin-top: 1.5rem; }
+    .result h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .syntax-error { color: #ff6b6b; font-weight: 600; }
+    .pretty { background: #1a1a1a; padding: 1rem; border-radius: 8px; white-space: pre-wrap; font-family: monospace; }
+    .meta { font-size: 0.85rem; color: #888; margin-top: 1rem; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; }
+    .stat { background: #1a1a1a; padding: 1rem; border-radius: 8px; text-align: center; }
+    .stat .value { font-size: 1.5rem; font-weight: 700; color: #50e245; }
+    .stat .label { font-size: 0.85rem; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>JSON Validator</h1>
+    <textarea id="input" placeholder="Paste your JSON here..."></textarea>
+    <button id="validateBtn">Validate & Format</button>
+    <div class="result"></div>
+    <div class="stats"></div>
+  </div>
+  <script>
+    const input = document.getElementById('input');
+    const btn = document.getElementById('validateBtn');
+    const result = document.querySelector('.result');
+    const stats = document.querySelector('.stats');
+
+    btn.addEventListener('click', () => {
+      const text = input.value.trim();
+      if (!text) return alert('Please paste JSON first');
+
+      btn.disabled = true;
+      btn.textContent = 'Validating...';
+
+      try {
+        const parsed = JSON.parse(text);
+        const pretty = JSON.stringify(parsed, null, 2);
+        const keys = Object.keys(parsed);
+        const values = Object.values(parsed);
+        const flat = JSON.stringify(parsed).split(/[\s\n]/).filter(Boolean).length;
+
+        result.innerHTML = `
+          <h2 class="syntax-error" style="color: #50e245; font-weight: 600;">✅ Valid JSON</h2>
+          <div class="pretty">${pretty}</div>
+        `;
+      } catch (e) {
+        result.innerHTML = `<h2 class="syntax-error">❌ Syntax Error: ${escapeHtml(e.message)}</h2>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Validate & Format';
+      }
+    });
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    // Show meta when typing
+    input.addEventListener('input', () => {
+      stats.innerHTML = `
+        <div class="stat"><div class="value">${input.value.length}</div><div class="label">Characters</div></div>
+        <div class="stat"><div class="value">${input.value.length > 0 ? input.value.replace(/[\s\n]/g, '').length : 0}</div><div class="label">Non-Space</div></div>
+        <div class="stat"><div class="value">${input.value.length > 0 ? (input.value.match(/[\[\{\]\}]/g) || []).length : 0}</div><div class="label">Braces/Brackets</div></div>
+      `;
+    });
+  </script>
+</body>
+</html>

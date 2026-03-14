@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html data-dark-mode>
+<head>
+<meta charset="utf-8">
+<title>Repo Star Tracker</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#111;--card:#1a1a1a;--text:#ddd;--muted:#888;--accent:#0b93f5;--border:#333}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;min-height:100vh}
+.container{max-width:700px;margin:0 auto;padding:1rem}
+h1{font-size:1.6rem;margin:0 0 1rem}
+label{display:block;margin:1rem 0 .4rem;font-weight:600}
+input[type="text"]{width:100%;padding:.6rem;font-size:1rem;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:4px}
+button{background:var(--accent);color:#fff;border:0;padding:.6rem 1rem;font-size:1rem;border-radius:4px;cursor:pointer;margin-top:.4rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8;padding:.8rem;margin-top:1rem}
+.card h3{margin:.2rem 0 .4rem;font-size:1.1rem}
+.card p{color:var(--muted);font-size:.9rem;margin:.2rem 0}
+.meta{display:flex;gap:.8rem;margin:.6rem 0;color:var(--muted);font-size:.85rem;flex-wrap:wrap}
+.meta span{padding:.2rem .4rem;border-radius:3px;background:#222}
+.commit{background:#161616;border-radius:4;padding:.4rem .6rem;margin:.4rem 0;font-size:.85rem;color:var(--muted)}
+.tag{display:inline-block;padding:.1rem .4rem;font-size:.7rem;border-radius:2px;background:#2a2a2a;color:var(--muted);text-transform:uppercase}
+.nav{margin-top:2rem}
+.nav a{display:inline-block;background:var(--card);border:1px solid var(--border);color:var(--text);padding:.5rem 1rem;text-decoration:none;border-radius:4px;font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🔭 Repo Star Tracker</h1>
+<label>Enter GitHub Repository</label>
+<input type="text" id="repo" placeholder="owner/repo or just repo name">
+<button onclick="fetchRepo()">Track Repo</button>
+<div class="card" id="result"></div>
+<div class="nav"><a href="index.html">Back to Home</a></div>
+</div>
+<script>
+async function fetchRepo(){
+const repo = document.getElementById('repo').value.trim();
+if(!repo)return alert('Please enter a repo.');
+try{
+const parts = repo.split('/');
+const owner = parts[0], name = parts[1] || parts[0];
+const url = `https://api.github.com/repos/${owner}/${name}`;
+const res = await fetch(url);
+if(!res.ok)throw new Error('Not found. Check the repo name.');
+const data = await res.json();
+const container = document.getElementById('result');
+container.innerHTML = `
+<h3>${data.name || repo}</h3>
+<div class="meta">
+<span>👁 ${data.stargazers_count} ⭐</span>
+${data.forks_count?`<span>🍴 ${data.forks_count} 🍴</span>`:''}
+</div>
+<div class="meta">
+<span>📂 ${data.size} KB</span>
+<span>${data.language || 'No language'}</span>
+${data.updated_at?`<span>🕒 ${data.updated_at.split('T')[0]}</span>`:''}
+</div>
+${data.description?`<p>${data.description}</p>`:''}
+</h1>`;
+}catch(e){
+document.getElementById('result').innerHTML = `<p style="color:#ff6b6b">${e.message}</p>`;
+}
+}
+</script>
+</body>
+</html>

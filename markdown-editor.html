@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" theme="dark">
+<head>
+<meta charset="UTF-8"><title>Markdown Previewer</title>
+<style>
+:root{--bg:#1e1e1e;--fg:#c9c9c9;--muted:#858585;--accent:#61afef;--border:#3c3c3c}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Segoe UI,sans-serif;background:var(--bg);color:var(--fg);padding:20px;min-height:100vh}
+h1{font-size:1.5rem;margin-bottom:1rem;color:var(--accent)}
+.container{display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:1200px;margin:0 auto}
+.panel{background:#252526;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+textarea,pre{width:100%;height:100%;background:var(--bg);color:var(--fg);border:none;resize:none;font-family:'Consolas',monospace;font-size:14px;padding:12px;box-sizing:border-box}
+pre{white-space:pre-wrap;font-size:13px;line-height:1.5}
+.toolbar{display:flex;gap:8px;padding:8px;border-bottom:1px solid var(--border)}
+button,select{background:#3c3c3c;border:1px solid var(--border);color:var(--fg);padding:6px 12px;border-radius:4px;cursor:pointer;font-size:13px}
+button:hover{background:var(--accent)}
+button:disabled{opacity:0.5;cursor:not-allowed}
+button.primary{background:var(--accent);border-color:var(--accent)}
+select{background:var(--bg);color:var(--fg)}
+.tag{display:inline-block;background:var(--accent);color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;text-transform:uppercase;vertical-align:top;margin-top:-6px}
+.back{position:absolute;top:16px;left:16px}
+@media(max-width:768px){.container{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<a href="index.html" class="back">Home</a>
+<h1>Markdown Previewer</h1>
+<div class="container">
+<div class="panel">
+<div class="toolbar">
+<button class="primary" onclick="saveFile()">Save File</button>
+<button onclick="clearEditor()">Clear</button>
+<select id="exportFmt"><option value="md">.md</option><option value="txt">.txt</option><option value="html">.html</option></select>
+<button onclick="exportMarkdown()">Export</button>
+</div>
+<textarea id="editor" placeholder="Type your markdown here..."></textarea>
+</div>
+<div class="panel">
+<pre id="preview"></pre>
+</div>
+</div>
+<script>
+const md=new MarkdownIt();
+document.getElementById('editor').addEventListener('input',()=>renderPreview());
+function renderPreview(){document.getElementById('preview').innerHTML=md.render(document.getElementById('editor').value||'# Markdown Previewer\n\nStart typing...');}
+renderPreview();
+function saveFile(){const fmt=document.getElementById('exportFmt').value;const content=document.getElementById('editor').value;const blob=new Blob([content],{type:'text/'+fmt});const url=URL.createObjectURL(blob);navigator.clipboard.write([new ClipboardItem({[fmt==='md'?'text/plain':fmt==='txt'?'text/plain':'text/html'}]:blob})]).then(()=>{alert('Copied to clipboard!');window.open(url,'_blank');});}
+function clearEditor(){if(confirm('Clear editor?'))document.getElementById('editor').value='';renderPreview();}
+function exportMarkdown(){const content=document.getElementById('editor').value;if(!content)throw new Error('Nothing to export');saveFile();}
+</script>
+</body>
+</html>

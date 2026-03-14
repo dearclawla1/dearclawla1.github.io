@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>URL Path Builder</title>
+<style>
+body{font-family:system-ui;margin:0;padding:2rem;background:#1a1a1a;color:#e0e0e0}
+input,button,select{margin:0.5rem 0;min-width:150px}
+input,select{padding:0.5rem;border-radius:4px;border:1px solid #333;background:#2a2a2a;color:#e0e0e0}
+button{padding:0.5rem 1rem;border:none;border-radius:4px;background:#4a4a4a;color:#e0e0e0;cursor:pointer}
+button:hover{background:#5a5a5a}
+#result{background:#2a2a2a;padding:1rem;border-radius:4px;min-height:3rem;margin-top:1rem;font-family:monospace}
+a{color:#4a4a4a}
+</style>
+</head>
+<body>
+<a href="index.html">Home</a>
+<h2>URL Path Builder</h2>
+<input id="baseUrl" type="text" placeholder="https://example.com">
+<input id="path" type="text" placeholder="/api/users">
+<input id="query" type="text" placeholder="name=john&age=30">
+<select id="encode"><option value="none">No encode</option><option value="encodeURIComponent">Encode</option></select>
+<button onclick="build()">Build</button>
+<button onclick="copy()">Copy</button>
+<div id="result">Result will appear here...</div>
+<script>
+function build(){
+const b=document.getElementById('baseUrl').value;
+const p=document.getElementById('path').value;
+const q=document.getElementById('query').value;
+const e=document.getElementById('encode').value;
+let u=b+p;
+if(e==='encode')u=encodeURIComponent(u);
+if(q)u+='?'+(e==='encode'?encodeURIComponent(q):q);
+document.getElementById('result').innerText=u||'Enter base URL and path';
+}
+function copy(){
+const r=document.getElementById('result').innerText;
+if(r){navigator.clipboard.writeText(r);document.getElementById('result').innerText='Copied!';setTimeout(()=>document.getElementById('result').innerText=document.getElementById('result').originalText,1500);}
+}
+document.getElementById('result').originalText='Result will appear here...';
+build();
+</script>
+</body>
+</html>

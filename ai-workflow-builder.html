@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Workflow Builder</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f12; color: #e0e0e0; padding: 2rem; min-height: 100vh; }
+.container { max-width: 900px; margin: 0 auto; }
+header { margin-bottom: 1.5rem; }
+h1 { font-size: 1.8rem; color: #7c3aed; margin-bottom: 0.5rem; }
+.back-link { display: inline-block; color: #60a5fa; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.5rem; }
+.back-link:hover { text-decoration: underline; }
+.panel { background: #1a1a20; border: 1px solid #2d2d35; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: #a0a0b0; }
+input[type="text"], textarea, select { width: 100%; padding: 0.75rem; background: #0f0f12; border: 1px solid #2d2d35; border-radius: 6px; color: #e0e0e0; font-size: 0.95rem; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: #7c3aed; }
+textarea { min-height: 100px; resize: vertical; font-family: 'SF Mono', Monaco, Consolas, monospace; }
+button { background: #7c3aed; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 500; cursor: pointer; margin-top: 0.5rem; width: 100%; }
+button:hover { background: #6d28d9; }
+button.secondary { background: #374151; }
+button.secondary:hover { background: #4b5563; }
+.result-box { background: #1a1a20; border: 1px solid #2d2d35; border-radius: 6px; padding: 1rem; margin-top: 1rem; min-height: 60px; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 0.9rem; white-space: pre-wrap; word-wrap: break-word; }
+.result-box::before { content: 'Output:'; display: block; color: #6b7280; font-size: 0.8rem; margin-bottom: 0.5rem; }
+.steps { margin-top: 1rem; padding: 1rem; background: #1a1a20; border-radius: 6px; }
+.step { margin-bottom: 0.75rem; font-size: 0.9rem; }
+.step-number { color: #7c3aed; font-weight: 600; margin-right: 0.5rem; }
+.steps a { color: #60a5fa; text-decoration: none; }
+.steps a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<a href="index.html" class="back-link">&larr; Back to Home</a>
+<h1>AI Workflow Builder</h1>
+<p style="color:#a0a0b0; font-size:0.9rem;">Build your AI agent workflows and automation logic</p>
+</header>
+<div class="panel">
+<label for="workflow-name">Workflow Name</label>
+<input type="text" id="workflow-name" placeholder="e.g., Data Pipeline Automation">
+</div>
+<div class="panel">
+<label for="step-type">Step Type</label>
+<select id="step-type">
+<option value="data-fetch">Data Fetch</option>
+<option value="process">Process Data</option>
+<option value="transform">Transform</option>
+<option value="output">Output to File/API</option>
+</select>
+</div>
+<div class="panel">
+<label for="step-logic">Step Logic (JavaScript)</label>
+<textarea id="step-logic" placeholder="function process(data) { ... return result; }"></textarea>
+</div>
+<div class="panel">
+<button onclick="addStep()">Add Step to Workflow</button>
+</div>
+<div class="panel">
+<label for="workflow-output">Workflow Output Preview</label>
+<div id="workflow-output" class="result-box"></div>
+</div>
+<div class="steps">
+<div class="step"><span class="step-number">1.</span>Enter workflow name and step details</div>
+<div class="step"><span class="step-number">2.</span>Select step type and logic</div>
+<div class="step"><span class="step-number">3.</span>Click "Add Step" to build your workflow</div>
+<div class="step"><span class="step-number">4.</span>View preview output and share workflow definition</div>
+<div class="step">
+Built with <a href="https://github.com/openclaw/openclaw" target="_blank">OpenClaw</a> — Build in public workflow tools
+</div>
+</div>
+</div>
+<script>
+let workflowSteps = [];
+
+function addStep() {
+const name = document.getElementById('workflow-name').value.trim();
+const type = document.getElementById('step-type').value;
+const logic = document.getElementById('step-logic').value.trim();
+
+if (!name) {
+alert('Please enter a workflow name');
+return;
+}
+
+if (!logic) {
+alert('Please enter step logic');
+return;
+}
+
+const step = { name, type, logic };
+workflowSteps.push(step);
+
+document.getElementById('workflow-name').value = '';
+document.getElementById('step-logic').value = '';
+
+updatePreview();
+}
+
+function updatePreview() {
+const preview = document.getElementById('workflow-output');
+
+if (workflowSteps.length === 0) {
+preview.innerHTML = '';
+return;
+}
+
+let html = '<div style="margin-bottom:1rem;color:#a0a0b0;font-size:0.85rem;">';
+workflowSteps.forEach((step, i) => {
+html += `<div style="background:#1e1e24;padding:0.75rem;border-radius:4;margin-bottom:0.5rem;border-left:3px solid #7c3aed;">`;
+html += `<strong>${i+1}. ${step.name}</strong>`;
+html += `<div style="margin-top:0.25rem;color:#60a5fa;font-size:0.85rem;word-break:break-all;">${step.logic}</div>`;
+html += `</div>`;
+});
+html += '</div>';
+
+html += '<div style="background:#1e1e24;padding:0.75rem;border-radius:4;margin-bottom:0.5rem;"><strong>Workflow Definition:</strong></div>';
+html += '<code style="word-break:break-all;font-size:0.85rem;">';
+html += JSON.stringify(workflowSteps, null, 2);
+html += '</code>';
+
+html += '<div style="margin-top:1rem;color:#a0a0b0;font-size:0.85rem;">';
+html += `Total steps: ${workflowSteps.length}`;
+html += `<br>Ready to deploy workflow definition:`;
+html += `<br><a href="#" id="share-btn" onclick="shareWorkflow()" style="color:#7c3aed;text-decoration:none;">Share via clipboard</a>`;
+html += '</div>';
+
+preview.innerHTML = html;
+}
+
+function shareWorkflow() {
+const definition = JSON.stringify(workflowSteps, null, 2);
+navigator.clipboard.writeText(definition)
+.then(() => {
+alert('Workflow definition copied to clipboard!');
+})
+.catch(err => {
+console.error('Failed to copy:', err);
+});
+}
+
+// Initialize with empty preview
+updatePreview();
+</script>
+</body>
+</html>

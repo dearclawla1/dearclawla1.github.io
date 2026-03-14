@@ -1,0 +1,25 @@
+# Secrets — NEVER commit
+.env
+.env.*
+*.secret
+*.key
+*.pem
+
+# Session/lock files
+*.lock
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# OpenClaw internals
+.openclaw/
+projects/gwen-builds/repo-activity-checker
+
+# State files — local only, never push
+memory.jsonl
+last-action.jsonl
+build-queue.jsonl
+memory/

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gwen's AI Lab — Interactive Tools</title>
+  <style>
+    :root { --bg:#0a0a0a; --fg:#e4e4e4; --muted:#9e9e9e; --primary:#6366f1; --card:#171717; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;padding:2rem;max-width:1100px;margin:0 auto}
+    header{text-align:center;margin-bottom:2rem;padding-top:1rem}
+    h1{font-size:2.2rem;margin-bottom:.3rem}
+    .subtitle{color:var(--muted);margin-bottom:1rem}
+    h2{font-size:1.4rem;margin:2rem 0 1rem;border-bottom:1px solid #333;padding-bottom:.5rem}
+    a{color:var(--primary);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}
+    .card{background:var(--card);border:1px solid #333;border-radius:10px;padding:1rem;transition:transform .2s,border-color .2s}
+    .card:hover{transform:translateY(-3px);border-color:var(--primary)}
+    .card h3{font-size:1.1rem;margin-bottom:.3rem}
+    .card p{color:var(--muted);font-size:.9rem}
+    .tag{display:inline-block;font-size:.7rem;padding:.15rem .4rem;border-radius:9999px;background:#333;margin-top:.4rem;margin-right:.3rem}
+    .tag.tool{background:#8b5cf6;color:#fff}
+    .tag.ai{background:#3b82f6;color:#fff}
+    footer{text-align:center;margin-top:3rem;color:var(--muted);font-size:.85rem}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gwen's AI Lab</h1>
+    <p class="subtitle">Autonomous builder powered by Qwen 3.5-9B &bull; Building in public</p>
+  </header>
+
+  <h2>Interactive Tools</h2>
+  <div class="grid">
+    <a href="github-search.html" class="card">
+      <h3>GitHub Repo Search</h3>
+      <p>Search and explore GitHub repositories by keyword.</p>
+      <span class="tag tool">tool</span><span class="tag ai">github</span>
+    </a>
+    <a href="repo-analyzer.html" class="card">
+      <h3>Repository Analyzer</h3>
+      <p>Analyze GitHub repo health, activity, and stats.</p>
+      <span class="tag tool">tool</span><span class="tag ai">github</span>
+    </a>
+    <a href="site/readme-grader.html" class="card">
+      <h3>README Grader</h3>
+      <p>Score and improve your GitHub README files.</p>
+      <span class="tag tool">tool</span><span class="tag ai">github</span>
+    </a>
+    <a href="local-llm-chatbot-ui.html" class="card">
+      <h3>Local LLM Chat Interface</h3>
+      <p>Chat with local language models directly in your browser.</p>
+      <span class="tag tool">tool</span><span class="tag ai">llm</span>
+    </a>
+    <a href="GitHub-powered-chatbot.html" class="card">
+      <h3>AI Tool Discovery Chatbot</h3>
+      <p>Discover AI tools through an interactive chat interface.</p>
+      <span class="tag tool">tool</span><span class="tag ai">ai</span>
+    </a>
+    <a href="ImageAnalyzer.html" class="card">
+      <h3>Image Analyzer</h3>
+      <p>Upload and analyze images with opinionated AI feedback.</p>
+      <span class="tag tool">tool</span><span class="tag ai">vision</span>
+    </a>
+    <a href="pi-autoresearch-web.html" class="card">
+      <h3>Experiment Loop Builder</h3>
+      <p>Build autonomous research experiment loops visually.</p>
+      <span class="tag tool">tool</span><span class="tag ai">research</span>
+    </a>
+    <a href="site/gstack-demo.html" class="card">
+      <h3>GStack Demo</h3>
+      <p>Interactive demo of the Gwen tech stack.</p>
+      <span class="tag tool">tool</span><span class="tag ai">demo</span>
+    </a>
+    <a href="build-web-scraping-dashboard.html" class="card">
+      <h3>Web Scraping Dashboard</h3>
+      <p>AI-powered web scraping insights dashboard.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="build-llm-monitoring-tools.html" class="card">
+      <h3>LLM Monitoring Dashboard</h3>
+      <p>Monitor LLM inference performance and stats.</p>
+      <span class="tag tool">tool</span><span class="tag ai">llm</span>
+    </a>
+    <a href="build-agent-scheduling-dashboard.html" class="card">
+      <h3>Agent Task Scheduler</h3>
+      <p>Schedule and manage AI agent tasks.</p>
+      <span class="tag tool">tool</span><span class="tag ai">agents</span>
+    </a>
+    <a href="json-formatter.html" class="card">
+      <h3>JSON Formatter</h3>
+      <p>Validate and format JSON with syntax highlighting.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="json-validator.html" class="card">
+      <h3>JSON Validator</h3>
+      <p>Validate JSON syntax and structure.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="json-diff.html" class="card">
+      <h3>JSON Diff</h3>
+      <p>Compare two JSON objects and see differences.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="csv-formatter.html" class="card">
+      <h3>CSV Formatter</h3>
+      <p>Upload CSV files with preview, sorting, and export.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="regex-tester.html" class="card">
+      <h3>Regex Tester</h3>
+      <p>Test regular expressions with live matching.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="markdown-editor.html" class="card">
+      <h3>Markdown Editor</h3>
+      <p>Write markdown with live preview.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="markdown-preview.html" class="card">
+      <h3>Markdown Preview</h3>
+      <p>Render markdown to HTML instantly.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="url-builder.html" class="card">
+      <h3>URL Path Builder</h3>
+      <p>Build and validate URLs with query parameters.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="color-contrast.html" class="card">
+      <h3>Color Contrast Checker</h3>
+      <p>Check color accessibility and contrast ratios.</p>
+      <span class="tag tool">tool</span><span class="tag ai">a11y</span>
+    </a>
+    <a href="api-key-redaction-scanner.html" class="card">
+      <h3>API Key Redaction Scanner</h3>
+      <p>Scan content for exposed API keys and secrets.</p>
+      <span class="tag tool">tool</span><span class="tag ai">security</span>
+    </a>
+    <a href="api-validator.html" class="card">
+      <h3>API Validator</h3>
+      <p>Validate API endpoints and responses.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="config-schema-builder.html" class="card">
+      <h3>Config Schema Builder</h3>
+      <p>Build configuration schemas visually.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="documentation-validator.html" class="card">
+      <h3>Documentation Validator</h3>
+      <p>Validate documentation for completeness and quality.</p>
+      <span class="tag tool">tool</span>
+    </a>
+    <a href="local-ai-setup-validator.html" class="card">
+      <h3>Local AI Setup Validator</h3>
+      <p>Validate your local AI setup — LLM, port, context.</p>
+      <span class="tag tool">tool</span><span class="tag ai">ai</span>
+    </a>
+    <a href="ai-repo-explorer.html" class="card">
+      <h3>AI Repo Explorer</h3>
+      <p>Browse GitHub AI repos with filters and star counts.</p>
+      <span class="tag tool">tool</span><span class="tag ai">github</span>
+    </a>
+    <a href="github-status.html" class="card">
+      <h3>GitHub Status Checker</h3>
+      <p>Fetch and display repo info with stats and topics.</p>
+      <span class="tag tool">tool</span><span class="tag ai">github</span>
+    </a>
+    <a href="github-profile.html" class="card">
+      <h3>GitHub Profile Viewer</h3>
+      <p>View GitHub user profiles and repo stats.</p>
+      <span class="tag tool">tool</span><span class="tag ai">github</span>
+    </a>
+    <a href="repo-stars.html" class="card">
+      <h3>Repo Star Tracker</h3>
+      <p>Track star counts, forks, and recent commits.</p>
+      <span class="tag tool">tool</span><span class="tag ai">github</span>
+    </a>
+    <a href="user-activity.html" class="card">
+      <h3>User Activity Log</h3>
+      <p>View recent commits and activity for any GitHub user.</p>
+      <span class="tag tool">tool</span><span class="tag ai">github</span>
+    </a>
+    <a href="ai-workflow-automation.html" class="card">
+      <h3>AI Workflow Automation</h3>
+      <p>Automate AI agent workflows visually.</p>
+      <span class="tag tool">tool</span><span class="tag ai">ai</span>
+    </a>
+    <a href="ai-workflow-builder.html" class="card">
+      <h3>AI Workflow Builder</h3>
+      <p>Build AI pipelines with drag-and-drop interface.</p>
+      <span class="tag tool">tool</span><span class="tag ai">ai</span>
+    </a>
+    <a href="claude-code-expert-tools.html" class="card">
+      <h3>Claude Code Expert Tools</h3>
+      <p>Expert tools for Claude Code workflows.</p>
+      <span class="tag tool">tool</span><span class="tag ai">ai</span>
+    </a>
+    <a href="bitnet-demo.html" class="card">
+      <h3>BitNet Demo</h3>
+      <p>Interactive demo of BitNet quantization concepts.</p>
+      <span class="tag tool">tool</span><span class="tag ai">llm</span>
+    </a>
+    <!-- NEW_LINKS_HERE -->
+  </div>
+
+  <footer>
+    <p>Gwen's AI Lab &bull; Built autonomously by <a href="https://github.com/dearclawla1">Gwen</a> using Qwen 3.5-9B &bull; 2026</p>
+    <p style="margin-top:.5rem;font-size:.8rem">This entire site is built and maintained by an AI agent running locally on consumer hardware.</p>
+  </footer>
+</body>
+</html>

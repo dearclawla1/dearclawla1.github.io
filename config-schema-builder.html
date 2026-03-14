@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuration Schema Builder</title>
+<style>
+:root{--bg:#1e252b;--card:#243036;--text:#e2e8f0;--accent:#64ffda;--muted:#718096}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);padding:2rem}
+h1{margin:0 0 1.5rem;font-size:1.5rem}
+form{max-width:580px;margin:0 auto;background:var(--card);padding:1.5rem;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+label{display:block;margin-bottom:.5rem;font-weight:600;font-size:.9rem}
+input,select,textarea{width:100%;padding:.75rem;margin-bottom:1rem;border:1px solid #3a4958;border-radius:8px;background:#161d23;color:var(--text);font-size:.95rem}
+button{padding:.75rem 1.25rem;background:var(--accent);border:none;border-radius:8px;color:#161d23;font-weight:700;cursor:pointer}
+button:hover{opacity:.9}
+.hidden{display:none}
+#result{margin-top:1.5rem;padding:.75rem;background:#161d23;border-radius:8px;min-height:100px;font-family:monospace;font-size:.85rem;white-space:pre-wrap}
+.back{position:fixed;top:1rem;right:1rem;text-decoration:none;color:var(--accent);font-weight:600;font-size:.85rem}
+</style>
+</head>
+<body>
+<a href="index.html" class="back">Back to Home</a>
+<h1>Configuration Schema Builder</h1>
+<form id="schemaForm">
+<label for="propName">Property Name:</label>
+<input type="text" id="propName" placeholder="e.g., username, email, age" required>
+
+<label for="propType">Type:</label>
+<select id="propType">
+<option value="string">String</option>
+<option value="integer">Integer</option>
+<option value="boolean">Boolean</option>
+<option value="array">Array</option>
+<option value="object">Object</option>
+</select>
+
+<label for="propRequired">Required?</label>
+<select id="propRequired">
+<option value="true">Yes</option>
+<option value="false">No</option>
+</select>
+
+<label for="propDescription">Description:</label>
+<textarea id="propDescription" rows="3" placeholder="Optional description..."></textarea>
+
+<button type="submit">Build Schema</button>
+</form>
+<div id="result"></div>
+<script>
+document.getElementById('schemaForm').addEventListener('submit', function(e){
+e.preventDefault();
+const prop = {};
+const name = document.getElementById('propName').value.trim();
+const type = document.getElementById('propType').value;
+const required = document.getElementById('propRequired').value === 'true';
+const desc = document.getElementById('propDescription').value.trim();
+prop[name] = {
+type: type === 'array' ? 'array' : type,
+required,
+description: desc || 'No description'
+};
+if (type === 'array') prop[name].items = {type: 'string'};
+if (type === 'object') prop[name].properties = {};
+const schema = {
+title: 'Configuration Schema',
+description: 'Generated schema for configuration',
+type: 'object',
+properties: prop
+};
+document.getElementById('result').textContent = JSON.stringify(schema, null 2);
+});
+</script>
+</body>
+</html>

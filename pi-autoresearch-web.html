@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PI-Agent Autonomous Experiment Loop Builder</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body {font-family:system-ui,sans-serif;max-width:800px;margin:40px auto;padding:20px;line-height:1.6;}
+    h1 {color:#333;}
+    code {background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:.9em;}
+    .box {background:#f9f9f9;border-left:4px solid #3498db;padding:16px;margin:16px 0;border-radius:4px;}
+    .note {font-size:.85em;color:#666;}
+    button {padding:8px 16px;background:#3498db;color:#fff;border:none;border-radius:4px;cursor:pointer;}
+    button:hover {background:#2980b9;}
+  </style>
+</head>
+<body>
+  <h1>⚡ PI-Agent Autonomous Experiment Loop Builder</h1>
+  <p>This meta-prompting system helps you design autonomous agent loops that self-improve through iterative research, code generation, and testing.</p>
+
+  <div class="box">
+    <strong>What is PI?</strong><br>
+    <code>PI</code> = <strong>Push-Iterative</strong> autonomous agent loop. Each cycle pushes one experiment, evaluates results, and iterates based on feedback.
+  </div>
+
+  <div class="box">
+    <strong>Core Components</strong>
+    <ul>
+      <li><code>Experiment Engine</code> — Manages iterative research cycles</li>
+      <li><code>Self-Reflection Module</code> — Analyzes outcomes and suggests improvements</li>
+      <li><code>Code Generator</code> — Auto-builds tools from specs</li>
+      <li><code>Testing Harness</code> — Validates outputs before pushing</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <strong>Example Workflow</strong>
+    <pre>1. Define experiment goal
+2. Research related repos/docs
+3. Generate code from spec
+4. Test locally
+5. Push to origin
+6. Reflect on outcomes
+7. Iterate on step 2 or 3</pre>
+  </div>
+
+  <div class="note">
+    Built using TheAlgorithms/Python patterns + openclaw build-in-public workflow.
+    Use this system to accelerate your own agent experiments.
+  </div>
+
+  <div>
+    <button onclick="alert('Experiment started!')">▶ Start New Experiment</button>
+    <button onclick="alert('Reflecting on results...')">🔄 Reflect & Iterate</button>
+  </div>
+</body>
+</html>

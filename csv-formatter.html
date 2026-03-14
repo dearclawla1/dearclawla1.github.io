@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CSV Formatter</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--accent:#2f9c3f;--border:#303639}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+body{background:var(--bg);color:var(--text);padding:2rem;display:grid;grid-template-rows:auto auto 1fr;gap:1.5rem;min-height:100vh}
+header{text-align:center;margin-bottom:1.5rem}
+h1{font-size:1.75rem;margin-bottom:0.5rem;color:#fff}
+p{color:var(--muted);font-size:0.9rem}
+.container{max-width:900px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+h2{font-size:1.1rem;margin-bottom:0.75rem;color:#fff}
+button{background:var(--accent);color:#fff;border:none;padding:0.5rem 1rem;border-radius:6px;font-size:0.875rem;cursor:pointer;transition:0.2s}
+button:hover{filter:brightness(1.15)}
+button.secondary{background:#21262d;color:var(--text);margin-left:0.75rem}
+input[type="file"]{background:#0d1117;border:1px solid var(--border);padding:0.5rem;border-radius:6px;width:100%;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:1rem}
+th,td{padding:0.5rem 0.75rem;text-align:left;font-size:0.875rem;border-bottom:1px solid var(--border)}
+th{background:#1c2128;font-weight:600}
+select{background:#0d1117;border:1px solid var(--border);padding:0.5rem;border-radius:6px;font-size:0.875rem;color:var(--text)}
+</style>
+</head>
+<body>
+<header>
+<h1>CSV Formatter</h1>
+<p>Upload, preview, sort, and export CSV files with options</p>
+</header>
+<div class="container">
+<div class="card">
+<h2>1. Upload CSV</h2>
+<input type="file" id="fileInput" accept=".csv">
+</div>
+<div class="card" id="previewCard" style="display:none">
+<h2>2. Preview</h2>
+<table id="table"></table>
+</div>
+<div class="card" id="actionsCard" style="display:none">
+<h2>3. Options & Export</h2>
+<select id="sortCol">
+<option value="">Sort by column</option>
+</select>
+<button id="sortBtn" class="secondary">Sort</button>
+<select id="sortAsc">
+<option value="true">Ascending</option>
+<option value="false">Descending</option>
+</select>
+<button id="exportBtn">Export CSV</button>
+</div>
+<a href="index.html">Home</a>
+</div>
+<script>
+const fileInput=document.getElementById('fileInput');
+const previewCard=document.getElementById('previewCard');
+const table=document.getElementById('table');
+const actionsCard=document.getElementById('actionsCard');
+const sortCol=document.getElementById('sortCol');
+const sortBtn=document.getElementById('sortBtn');
+const sortAsc=document.getElementById('sortAsc');
+const exportBtn=document.getElementById('exportBtn');
+let data=[];
+let headers=[];
+fileInput.addEventListener('change',async(e)=>{
+const file=e.target.files[0];
+if(!file)return;
+const reader=new FileReader();
+reader.onload=()=>{
+const text=reader.result;
+const rows=text.split('\n').map(r=>r.trim()).filter(Boolean);
+if(rows.length===0)return;
+headers=rows[0].split(',').map(h=>h.trim().replace(/^"|"$/,''));
+const parseRow=r=>r.split(',').map(c=>c.trim().replace(/^"|"$/,''));
+data=rows.slice(1).map(parseRow).filter(r=>r.some(c=>c));
+table.innerHTML='';
+headers.forEach(h=>{
+const th=document.createElement('th');
+th.textContent=h;
+th.style.padding='0.5rem';
+table.appendChild(th);
+});
+data.slice(0,100).forEach(row=>{
+const tr=document.createElement('tr');
+row.forEach(c=>{
+const td=document.createElement('td');
+td.textContent=c;
+td.style.padding='0.5rem';
+td.style.minWidth='80px';
+tr.appendChild(td);
+});
+table.appendChild(tr);
+});
+previewCard.style.display='block';
+actionsCard.style.display='block';
+updateSortDropdown();
+};
+reader.readAsText(file);
+});
+function updateSortDropdown(){
+let options='<option value="">--</option>';
+headers.forEach((h,i)=>{
+options+='<option value="'+i+'">'+h+'</option>';
+});
+sortCol.innerHTML=options;
+}
+sortCol.addEventListener('change',()=>table.sort());
+sortBtn.addEventListener('click',()=>{
+const colIndex=sortCol.value;
+if(!colIndex)return;
+const ascending=sortAsc.value==='true';
+const colHeaders=headers[colIndex];
+const colData=data.map(row=>row[colIndex]);
+const maxLen=colData.reduce((m,v)=>Math.max(m,v.length),0);
+const pad=(v,i)=>{
+const str=v.toString();
+if(str.length>=maxLen)return str;
+return ' '.repeat(maxLen-str.length)+str;
+};
+const sortKey=(idx,val)=>{
+const padded=pad(val,idx);
+const num=Number(val);
+return isNaN(num)?{0:0,1:padded}:{0:num,1:padded};
+};
+const reverse=ascending===false;
+data.sort((a,b)=>{
+const keyA=sortKey(colIndex,a[colIndex]);
+const keyB=sortKey(colIndex,b[colIndex]);
+const diff=keyA[0]-keyB[0];
+if(diff!==0)return reverse?-diff:diff;
+return keyA[1].localeCompare(keyB[1]);
+});
+const tRows=table.querySelectorAll('tr');
+tRows.slice(1).forEach(tr=>tr.remove());
+data.slice(0,100).forEach(row=>{
+const tr=document.createElement('tr');
+row.forEach(c=>{
+const td=document.createElement('td');
+td.textContent=c;
+td.style.padding='0.5rem';
+td.style.minWidth='80px';
+tr.appendChild(td);
+});
+table.appendChild(tr);
+});
+});
+exportBtn.addEventListener('click',()=>{
+const csv=headers.map(h=>h).join(',')+'\n'+data.map(row=>row.join(',')).join('\n');
+const blob=new Blob([csv],{type:'text/csv'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;a.download='formatted.csv';a.click();
+URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>

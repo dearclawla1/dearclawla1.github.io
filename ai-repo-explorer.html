@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Repo Explorer</title>
+<style>
+body{font-family:system-ui;margin:2rem;background:#fafafa;color:#1a1a1a}
+h1{color:#2563eb}
+.container{max-width:800px;margin:0 auto;border:1px solid #e5e7eb;padding:2rem;border-radius:8px}
+input,select{width:100%;padding:0.5rem;margin:0.5rem 0;border:1px solid #d1d5db;border-radius:4px}
+table{width:100%;border-collapse:collapse;margin-top:1rem}
+.repo{border:1px solid #e5e7eb;padding:1rem;margin:0.5rem 0;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>AI Repo Explorer</h1>
+<div class="container">
+<h2>Browse GitHub AI Repositories</h2>
+<label>Search Query:</label>
+<input type="text" id="searchQuery" placeholder="Enter search query">
+<label>Sort By:</label>
+<select id="sortBy">
+<option value="stars">Stars</option>
+<option value="created">Created Date</option>
+</select>
+<button onclick="loadRepos()">Load Repos</button>
+<div id="results"></div>
+</div>
+<script>
+async function loadRepos() {
+const query = document.getElementById('searchQuery').value;
+const sortBy = document.getElementById('sortBy').value;
+const url = query ? `https://api.github.com/search/repositories?q=${query}&sort=${sortBy}&order=desc` : `https://api.github.com/search/repositories?q=ai+machine+learning&sort=stars&order=desc`;
+fetch(url)
+.then(res => res.json())
+.then(data => {
+document.getElementById('results').innerHTML = '<table><tr><th>Name</th><th>Description</th><th>Stars</th><th>Created</th></tr>';
+data.items.forEach(repo => {
+document.getElementById('results').innerHTML += `<div class="repo">
+<h3><a href="${repo.html_url}" target="_blank">${repo.name}</a></h3>
+<p>${repo.description || 'No description'}</p>
+<p><strong>Stars:</strong> ${repo.stargazers_count}</p>
+<p><strong>Created:</strong> ${new Date(repo.created_at).toLocaleDateString()}</p>
+</div>`;
+});
+document.getElementById('results').innerHTML += '</table>';
+});
+}
+</script>
+</body>
+</html>

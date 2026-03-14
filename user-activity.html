@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Activity Log</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #1a1a2e; color: #eaeaea; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #e94560; margin-bottom: 20px; }
+        .input-group { background: #16213e; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 12px; border: 2px solid #0f3460; border-radius: 6px; background: #1a1a2e; color: #eaeaea; font-size: 16px; }
+        button { background: #e94560; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #ff6b6b; }
+        .activity-card { background: #16213e; border-radius: 8px; padding: 15px; margin-top: 15px; border-left: 4px solid #e94560; }
+        .activity-item { margin: 10px 0; font-size: 14px; }
+        .activity-item strong { color: #0f3460; }
+        .activity-item span { color: #aaa; }
+        .tag { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px; }
+        .tag.tool { background: #0f3460; color: #eaeaea; }
+        .tag.repo { background: #e94560; color: white; }
+        a.home { display: inline-block; margin-bottom: 15px; color: #e94560; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="home">← Back to Home</a>
+        <h1>User Activity Log</h1>
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Enter GitHub username (e.g., github)">
+            <button onclick="getActivity()">Load Activity</button>
+        </div>
+        <div id="results"></div>
+    </div>
+    <script>
+        async function getActivity() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) return alert('Please enter a username');
+            try {
+                const reposRes = await fetch(`https://api.github.com/users/${username}/repos?per_page=30`);
+                if (!reposRes.ok) throw new Error('User not found');
+                const repos = await reposRes.json();
+                const commitsRes = await fetch(`https://api.github.com/users/${username}/events/public?per_page=30`);
+                const events = await commitsRes.json();
+                let html = '<div class="activity-card"><strong>Public Repos:</strong><div class="activity-item">';
+                repos.forEach(r => {
+                    html += `<span class="tag repo">${r.name}</span>`;
+                });
+                html += '</div></div><div class="activity-card"><strong>Recent Activity:</strong><div class="activity-item">';
+                events.slice(0, 10).forEach(e => {
+                    const repo = e.repo || e.payload.repository_name;
+                    const desc = e.payload.description || 'Activity';
+                    const time = new Date(e.created).toLocaleDateString();
+                    html += `<div>${repo ? '<strong>' + repo + '</strong>' : ''} ${desc} — ${time}</div>`;
+                });
+                html += '</div></div>';
+                document.getElementById('results').innerHTML = html;
+            } catch (err) {
+                document.getElementById('results').innerHTML = `<div style="color:#e94560">Error: ${err.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

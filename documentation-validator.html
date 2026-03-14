@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Validator — GitHub Pages Interactive Tool</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #2d3748; margin-bottom: 10px; }
+        .subtitle { color: #718096; font-size: 14px; margin-bottom: 25px; }
+        .panel { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748; }
+        input[type="text"], textarea, select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; }
+        textarea { min-height: 100px; resize: vertical; }
+        button { background: #4299e1; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #3182ce; }
+        button.secondary { background: #a0aec0; }
+        button.secondary:hover { background: #718096; }
+        .result { background: #edf9ed; border: 1px solid #c3e6c3; padding: 15px; border-radius: 6px; margin-top: 15px; display: none; }
+        .result.bad { background: #fed7d7; border: 1px solid #f5c6cb; }
+        .result h4 { margin-top: 0; }
+        .checklist { list-style: none; padding: 0; }
+        .checklist li { padding: 8px 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; }
+        .checklist li::before { content: "☐"; margin-right: 10px; color: #a0aec0; }
+        .checklist li.done::before { content: "✓"; color: #48bb78; }
+        .code { background: #2d3748; color: #cbd5e0; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; overflow-x: auto; margin-top: 10px; }
+        .section { margin-top: 25px; }
+        .badge { display: inline-block; background: #bee3f8; color: #2c5282; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Documentation Validator</h1>
+        <div class="subtitle">Interactive tool to validate AI tool documentation on GitHub Pages</div>
+
+        <div class="panel">
+            <label for="docUrl">Enter Documentation URL (GitHub Pages, README, etc.)</label>
+            <input type="text" id="docUrl" placeholder="https://dearl.github.io/tools/api-key-redaction-scanner">
+            <br><br>
+            <button onclick="validateDoc()">Validate Documentation</button>
+            <button class="secondary" onclick="generateTemplate()">Generate Template</button>
+        </div>
+
+        <div class="panel">
+            <label for="issues">List of Issues to Check (comma-separated):</label>
+            <textarea id="issues" placeholder="missing-title, missing-requirements, missing-examples, poor-readability, no-version, outdated-screenshots"></textarea>
+            <br><br>
+            <button onclick="checkIssues()">Check Issues</button>
+            <br><br>
+            <div id="result" class="result"></div>
+        </div>
+
+        <div class="panel">
+            <label>Quality Checklist</label>
+            <ul class="checklist" id="checklist">
+                <li class="done">✓ Clear title and purpose</li>
+                <li class="done">✓ Requirements listed (prerequisites, dependencies)</li>
+                <li class="done">✓ Installation/Setup steps included</li>
+                <li class="done">✓ Usage examples provided</li>
+                <li class="done">✓ Version numbers specified</li>
+                <li class=""> □ Screenshots are relevant and current</li>
+                <li class=""> □ Code examples are copy-pasteable</li>
+                <li class=""> □ Error handling is explained</li>
+                <li class=""> □ Performance considerations noted</li>
+                <li class=""> □ Security best practices included</li>
+                <li class=""> □ Troubleshooting section exists</li>
+                <li class=""> □ Links to related tools/commands</li>
+                <li class=""> □ API endpoints documented</li>
+                <li class=""> □ Output formats explained</li>
+                <li class=""> □ Contribution guidelines present</li>
+            </ul>
+        </div>
+
+        <div class="panel">
+            <label>Generated Validation Template (GitHub Pages)</label>
+            <div class="code" id="template-output"></div>
+        </div>
+    </div>
+
+    <script>
+        function validateDoc() {
+            const url = document.getElementById('docUrl').value.trim();
+            const issues = document.getElementById('issues').value.split(',').map(s => s.trim()).filter(s => s);
+            
+            if (!url) {
+                alert('Please enter a documentation URL');
+                return;
+            }
+
+            // Simulate validation checks
+            let score = 85;
+            let feedback = [];
+
+            if (issues.length > 0) {
+                issues.forEach(issue => {
+                    switch(issue.toLowerCase()) {
+                        case 'missing-title':
+                            score -= 15; feedback.push('❌ Missing clear title'); break;
+                        case 'missing-requirements':
+                            score -= 20; feedback.push('❌ Requirements section not found'); break;
+                        case 'missing-examples':
+                            score -= 25; feedback.push('❌ No usage examples'); break;
+                        case 'poor-readability':
+                            score -= 30; feedback.push('⚠️ Readability issues detected'); break;
+                        case 'no-version':
+                            score -= 10; feedback.push('⚠️ Version numbers not specified'); break;
+                        case 'outdated-screenshots':
+                            score -= 15; feedback.push('⚠️ Screenshots may be outdated'); break;
+                    }
+                });
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = score >= 70 ? 'result' : 'result bad';
+
+            if (score >= 90) {
+                resultDiv.innerHTML = `
+<h4>✓ Excellent Documentation</h4>
+<p>Score: ${score}/100</p>
+<p>Your documentation follows best practices. Ready to ship to GitHub Pages!</p>
+                `;
+            } else if (score >= 70) {
+                resultDiv.innerHTML = `
+<h4>✓ Good Documentation with Minor Issues</h4>
+<p>Score: ${score}/100</p>
+<ul>${feedback.map(f => `<li>${f}</li>`).join('')}</ul>
+<p>Address issues above and re-validate.</p>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+<h4>✗ Documentation Needs Improvement</h4>
+<p>Score: ${score}/100</p>
+<ul>${feedback.map(f => `<li>${f}</li>`).join('')}</ul>
+<p>Fix issues before publishing to GitHub Pages.</p>
+                `;
+            }
+        }
+
+        function checkIssues() {
+            const issues = document.getElementById('issues').value.split(',').map(s => s.trim()).filter(s => s);
+            const resultDiv = document.getElementById('result');
+            
+            if (issues.length === 0) {
+                alert('Please enter issues to check (comma-separated)');
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            
+            let html = '<h4>Validation Results</h4><ul>';
+            
+            issues.forEach(issue => {
+                let check = 'pending';
+                switch(issue.toLowerCase()) {
+                    case 'missing-title': check = 'missing'; break;
+                    case 'missing-requirements': check = 'missing'; break;
+                    case 'missing-examples': check = 'missing'; break;
+                    case 'poor-readability': check = 'warning'; break;
+                    case 'no-version': check = 'warning'; break;
+                    case 'outdated-screenshots': check = 'warning'; break;
+                    default: check = 'unknown';
+                }
+                
+                let status = check === 'missing' ? '❌ Missing' : 
+                             check === 'warning' ? '⚠️ Warning' : 
+                             check === 'unknown' ? '❓ Unknown' : '✅ Present';
+                
+                html += `<li>${status}: ${issue}</li>`;
+            });
+            
+            html += '</ul>';
+            resultDiv.innerHTML = html;
+        }
+
+        function generateTemplate() {
+            const template = `
+# Documentation Validator Template
+
+## Overview
+[Insert project overview here]
+
+## Requirements
+- [Prerequisite 1]
+- [Prerequisite 2]
+- [Dependency list]
+
+## Installation
+```bash
+[Installation steps here]
+```
+
+## Usage
+```bash
+[Usage examples here]
+```
+
+## Examples
+### Example 1: Basic
+```bash
+[Basic example]
+```
+
+### Example 2: Advanced
+```bash
+[Advanced example]
+```
+
+## Output
+```
+[Sample output here]
+```
+
+## Troubleshooting
+1. [Issue 1]: [Solution 1]
+2. [Issue 2]: [Solution 2]
+
+## Version Information
+- Version: [current version]
+- Release date: [YYYY-MM-DD]
+- [GitHub releases link]
+
+## Security Considerations
+- [Security best practices]
+- [Data privacy notes]
+- [Known vulnerabilities]
+
+## Performance
+- [Performance benchmarks]
+- [Resource usage notes]
+
+## Contributing
+[Contribution guidelines here]
+
+## License
+[License information here]
+`.trim();
+
+            document.getElementById('template-output').innerHTML = template;
+        }
+    </script>
+</body>
+</html>

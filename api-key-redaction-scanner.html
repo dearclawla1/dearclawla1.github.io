@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>API Key Redaction Scanner</title>
+<style>
+body{font-family:sans-serif;margin:0;padding:1rem;background:#111;color:#eee;}
+h1{margin:0.5rem 0;color:#646cff;}
+.container{max-width:700px;margin:0 auto;}
+.card{background:#222;border:1px solid #333;border-radius:8px;padding:1rem;margin:1rem 0;box-shadow:0 2px 4px rgba(0,0,0,0.3);}
+input,button,select{width:100%;padding:0.5rem;margin:0.5rem 0;font-size:1rem;border-radius:4px;}
+input{background:#333;color:#eee;border:1px solid #444;}
+button{background:#646cff;color:#fff;border:none;font-weight:bold;cursor:pointer;}
+button:hover{background:#535ce6;}
+pre{background:#111;padding:0.5rem;border-radius:4px;overflow-x:auto;white-space:pre-wrap;font-family:monospace;font-size:0.9rem;}
+.list{list-style:none;padding:0;}
+.list li{background:#222;padding:0.5rem;margin:0.5rem 0;border-radius:4px;display:flex;justify-content:space-between;align-items:center;}
+.list li .key{font-family:monospace;color:#ffd43b;}
+.list li .status{font-size:0.8rem;padding:0.2rem 0.5rem;border-radius:3px;display:inline-block;}
+.status.safe{background:#104325;color:#6eff9e;}
+.status.exposed{background:#3e1025;color:#ff6e9e;}
+.tag{display:inline-block;padding:0.2rem 0.5rem;border-radius:4px;font-size:0.8rem;background:#333;color:#aaa;margin-left:0.5rem;}
+.new{background:#646cff;color:#fff;}
+a{color:#646cff;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>API Key Redaction Scanner</h1>
+<p class="lead">Paste HTML/Markdown content below to scan for exposed API keys. This tool helps identify secrets in your documentation.</p>
+
+<div class="card">
+<label for="content">Content to Scan:</label>
+<textarea id="content" rows="6" placeholder="Paste HTML or Markdown here..."></textarea>
+<button onclick="scan()">Scan for API Keys</button>
+<button onclick="clearContent()">Clear</button>
+</div>
+
+<div id="results"></div>
+
+<a href="index.html">&larr; Back to Home</a>
+</div>
+
+<script>
+function isValidApiKey(key) {
+  const patterns = [/sk-[a-zA-Z0-9]{24,}/,/api_[a-zA-Z0-9]{18,}/,/ghp_[a-zA-Z0-9]{36,}/,/pat_[a-zA-Z0-9]{20,}/,/xox[baprs]-[a-zA-Z0-9]{13,}/,/AWS[A-Za-z0-9]{18,}/,/bearer [a-zA-Z0-9]{32,}/,/Bearer [a-zA-Z0-9]{32,}/];
+  for(const p of patterns) {
+    if(p.test(key.trim())) return true;
+  }
+  return false;
+}
+
+function scan() {
+  const text = document.getElementById('content').value;
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+  
+  if(!text.trim()) {
+    results.innerHTML = '<div class="card">Please paste some content to scan.</div>';
+    return;
+  }
+  
+  const lines = text.split('\n');
+  let found = false;
+  
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if(!trimmed || trimmed.startsWith('#')) return;
+    
+    const keys = trimmed.split(/[\s,]+/).filter(t => isValidApiKey(t));
+    if(keys.length > 0) {
+      found = true;
+      keys.forEach(key => {
+        const redacted = key.replace(/([a-zA-Z]{3,10})/, '[${1}]');
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="key">${key}</span><span class="tag exposed">Exposed</span><span class="tag">Line ${idx+1}</span>`;
+        results.appendChild(li);
+      });
+    }
+  });
+  
+  if(!found) {
+    results.innerHTML = '<div class="card"><span class="status safe">✓ No exposed API keys detected.</span><span class="tag">Safe</span></div>';
+  }
+}
+
+function clearContent() {
+  document.getElementById('content').value = '';
+  document.getElementById('results').innerHTML = '';
+}
+</script>
+</body>
+</html>

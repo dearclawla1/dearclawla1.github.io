@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code Expert Tools Visualizer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 2rem;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      color: #a0a0a0;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .back-link:hover { color: #c0c0c0; }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h3 {
+      color: #8b5cf6;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #b0b0b0;
+      font-size: 0.9rem;
+    }
+    textarea, input, select {
+      width: 100%;
+      padding: 0.8rem;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    textarea:focus, input:focus, select:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.2);
+    }
+    button {
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-right: 0.5rem;
+      margin-top: 1rem;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(139,92,246,0.4);
+    }
+    .preview {
+      background: #0d1117;
+      padding: 1rem;
+      border-radius: 8px;
+      min-height: 100px;
+      margin-top: 1rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .tag {
+      display: inline-block;
+      background: rgba(139,92,246,0.2);
+      color: #c0a0ff;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Claude Code Expert Tools Visualizer</h1>
+    <a href="/index.html" class="back-link">← Back to Home</a>
+    
+    <div class="card">
+      <h3>🎯 Tool: Claude Code Expert Configuration</h3>
+      <p style="margin-bottom: 1rem; color: #a0a0a0;">
+        Configure your Claude Code environment with expert tools. Paste your system prompt and generate a ready-to-use configuration.
+      </p>
+      
+      <label for="prompt">Enter System Prompt:</label>
+      <textarea id="prompt" rows="5" placeholder="You are an expert assistant helping users configure Claude Code with tools like CTO Team, AI-Flow, and Claude Skills..."></textarea>
+      
+      <label for="tools">Enable Tools:</label>
+      <select id="tools">
+        <option value="all">All Expert Tools</option>
+        <option value="cto">CTO Team Only</option>
+        <option value="aiflow">AI-Flow Only</option>
+        <option value="skills">Claude Skills Only</option>
+      </select>
+      
+      <label for="context">Context (optional):</label>
+      <textarea id="context" rows="2" placeholder="Your project or task context..."></textarea>
+      
+      <div id="output" class="preview" style="min-height: 50px;">Click "Generate Configuration" to create your setup...</div>
+      
+      <button onclick="generateConfig()">Generate Configuration</button>
+      <button onclick="copyToClipboard()">Copy to Clipboard</button>
+    </div>
+    
+    <div class="card">
+      <h3>🔧 Available Expert Tools</h3>
+      <div class="tag">CTO Team — Personal CTO for Claude Code</div>
+      <div class="tag">AI-Flow — Visual node-based workflow builder</div>
+      <div class="tag">Claude Skills — Custom skills & resources</div>
+    </div>
+  </div>
+  
+  <script>
+    function generateConfig() {
+      const prompt = document.getElementById('prompt').value.trim();
+      const tools = document.getElementById('tools').value;
+      const context = document.getElementById('context').value.trim();
+      
+      let toolList = '';
+      let config = '';
+      
+      switch(tools) {
+        case 'all':
+          toolList = 'CTO Team, AI-Flow, Claude Skills';
+          break;
+        case 'cto':
+          toolList = 'CTO Team';
+          break;
+        case 'aiflow':
+          toolList = 'AI-Flow';
+          break;
+        case 'skills':
+          toolList = 'Claude Skills';
+          break;
+      }
+      
+      if (context) {
+        config = `
+### Claude Code Expert Configuration
+
+**System Prompt:**
+"${prompt}"
+
+**Context:**
+${context}
+
+**Enabled Tools:**
+- ${toolList}
+
+---
+
+**To use:**
+1. Copy this configuration
+2. Paste into your Claude Code environment
+3. Start building smart AI workflows!
+      `.trim();
+      } else {
+        config = `
+### Claude Code Expert Configuration
+
+**System Prompt:**
+"${prompt}"
+
+**Enabled Tools:**
+- ${toolList}
+
+---
+
+**To use:**
+1. Copy this configuration
+2. Paste into your Claude Code environment
+3. Start building smart AI workflows!
+      `.trim();
+      }
+      
+      const output = document.getElementById('output');
+      output.textContent = config;
+    }
+    
+    function copyToClipboard() {
+      const output = document.getElementById('output').textContent;
+      navigator.clipboard.writeText(output).then(() => {
+        const original = document.getElementById('output').textContent;
+        document.getElementById('output').textContent = '✓ Copied to clipboard!';
+        setTimeout(() => {
+          document.getElementById('output').textContent = original;
+        }, 1500);
+      }).catch(err => {
+        alert('Failed to copy: ' + err.message);
+      });
+    }
+    
+    // Load prompt from local storage if exists
+    if (localStorage.getItem('claudePrompt')) {
+      document.getElementById('prompt').value = localStorage.getItem('claudePrompt');
+    }
+    
+    // Save on change
+    document.getElementById('prompt').addEventListener('input', (e) => {
+      localStorage.setItem('claudePrompt', e.target.value);
+    });
+  </script>
+</body>
+</html>

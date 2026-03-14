@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repository Analyzer Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a1a; color: #e0e0e0; padding: 20px; }
+        h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #fff; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .search-box { margin-bottom: 20px; }
+        .search-box input { width: 100%; padding: 12px; border: none; border-radius: 6px; background: #2a2a2a; color: #fff; font-size: 1rem; }
+        .results { display: grid; gap: 12px; }
+        .repo-card { background: #252525; padding: 16px; border-radius: 8px; transition: transform 0.2s; }
+        .repo-card:hover { transform: translateY(-2px); }
+        .repo-name { font-size: 1.2rem; font-weight: bold; color: #60a5fa; margin-bottom: 4px; }
+        .repo-desc { color: #a0a0a0; font-size: 0.9rem; margin-bottom: 8px; }
+        .repo-meta { display: flex; gap: 16px; font-size: 0.85rem; color: #808080; }
+        .repo-stats { display: flex; gap: 20px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #333; font-size: 0.85rem; }
+        .stat { display: flex; align-items: center; gap: 6px; }
+        .star-count { color: #fbbf24; }
+        .fork-count { color: #93c5fd; }
+        .search-box button { width: 100%; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 6px; margin-top: 8px; cursor: pointer; font-size: 1rem; }
+        .search-box button:hover { background: #2563eb; }
+        .no-results { text-align: center; padding: 40px; color: #808080; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 GitHub Repository Analyzer</h1>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search repositories (e.g., 'ai agents', 'llm', 'python')...">
+            <button onclick="searchRepos()">Search</button>
+        </div>
+        <div id="results" class="results"></div>
+    </div>
+    <script>
+        const API_URL = 'https://api.github.com/search/repositories?q=stars:>100&sort=stars&per_page=20';
+        let cache = null;
+        let cacheTime = 0;
+
+        async function fetchRepos() {
+            const now = Date.now();
+            if (cache && (now - cacheTime) < 60000) {
+                return cache;
+            }
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                cache = data.items;
+                cacheTime = now;
+                return cache;
+            } catch (err) {
+                return [];
+            }
+        }
+
+        async function searchRepos() {
+            const query = document.getElementById('searchInput').value.trim();
+            const resultsDiv = document.getElementById('results');
+            if (!query) return;
+            resultsDiv.innerHTML = 'Searching...';
+            try {
+                const url = new URL(API_URL);
+                url.searchParams.set('q', query);
+                const res = await fetch(url.toString());
+                const data = await res.json();
+                if (data.total_count === 0 || !data.items || data.items.length === 0) {
+                    resultsDiv.innerHTML = '<div class="no-results">No repositories found</div>';
+                    return;
+                }
+                resultsDiv.innerHTML = data.items.map(repo => `
+                    <div class="repo-card">
+                        <div class="repo-name">${escapeHtml(repo.name)}</div>
+                        <div class="repo-desc">${escapeHtml(repo.description || 'No description')}</div>
+                        <div class="repo-meta">
+                            <span>⭐ ${repo.stargazers_count}</span>
+                            <span>🍴 ${repo.forks_count}</span>
+                            <span>${new Date(repo.updated_at).toLocaleDateString()}</span>
+                            ${repo.language ? `<span>💻 ${escapeHtml(repo.language)}</span>` : ''}
+                        </div>
+                        <div class="repo-stats">
+                            <a href="${repo.html_url}" target="_blank" style="color: #60a5fa; text-decoration: none;">View on GitHub →</a>
+                            ${repo.homepage ? `<a href="${repo.homepage}" target="_blank" style="color: #93c5fd; text-decoration: none;">Project →</a>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                resultsDiv.innerHTML = '<div class="no-results">Error loading repositories</div>';
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Auto-fetch on load
+        fetchRepos().then(cache => {
+            if (cache) {
+                document.getElementById('results').innerHTML = `
+                    <div style="color: #808080; text-align: center; padding: 20px;">
+                        Type in the search box and press Search to find repositories
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

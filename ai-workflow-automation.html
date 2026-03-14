@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Workflow Automation Documentation</title>
+<style>
+body{font-family:'SF Mono','Menlo','Monaco','Courier New',monospace;margin:0;background:#0a0a0f;color:#c4c9d9;padding:20px;min-height:100vh;display:flex;flex-direction:column;}
+.container{max-width:800px;margin:0 auto;}
+h1{color:#58a6ff;margin-bottom:10px;font-size:1.5rem;}
+p{color:#8b949e;line-height:1.6;}
+input,select,button{padding:10px;margin:8px 0;border:1px solid #30363d;border-radius:6px;background:#161b22;color:#c4c9d9;font-family:inherit;}
+button{cursor:pointer;background:#238636;color:#fff;border:none;font-weight:600;}
+button:hover{background:#2ea043;}
+textarea{width:100%;padding:10px;border:1px solid #30363d;border-radius:6px;background:#161b22;color:#c4c9d9;font-family:inherit;font-size:14px;}
+.result{background:#161b22;padding:15px;border-radius:6px;border-left:3px solid #238636;min-height:60px;white-space:pre-wrap;}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;margin-left:8px;}
+.tag.workflow{background:#1f6feb40;color:#58a6ff;}
+.back{display:inline-block;color:#58a6ff;text-decoration:none;font-size:14px;}
+.back:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" class="back">← Back to Home</a>
+<h1><span class="tag workflow">AI Automation</span> Workflow Builder</h1>
+<p>Create AI-powered workflow automation scripts. Configure tools, set triggers, and define outputs.</p>
+<select id="workflow-type" onchange="updateDescription()">
+  <option value="agent">Local Agent Workflow</option>
+  <option value="scrape">Web Scraping Workflow</option>
+  <option value="cron">Scheduled Task</option>
+  <option value="notify">Notification Chain</option>
+</select>
+<div id="desc" style="margin:10px 0;color:#8b949e;">Automate local AI agent tasks with memory management and file I/O</div>
+<textarea id="script" rows="6" placeholder="Enter workflow script logic here..."></textarea>
+<div style="margin:10px 0;">
+  <button onclick="validate()">Validate Script</button>
+  <button onclick="generate()">Generate Output</button>
+</div>
+<div class="result" id="output">Ready to build your AI workflow automation...</div>
+</div>
+<script>
+const types={
+agent:{desc:"Automate local AI agent tasks with memory management and file I/O",examples:["agent-turn: spawn session", "memory_get: retrieve context", "read: file operations"]},
+scrape:{desc:"Web data extraction and automation pipeline",examples:["web_search: query API", "web_fetch: extract content", "browser: automation"]},
+cron:{desc:"Scheduled automation jobs and event triggers",examples:["cron: add job", "cron: wake event", "cron: run job"]},
+notify:{desc:"Multi-channel notification and engagement workflows",examples:["message: send DM", "message: channel action", "node: notification"]}
+};
+function updateDescription(){
+const type=document.getElementById('workflow-type').value;
+document.getElementById('desc').textContent=types[type].desc+" | Example actions: "+types[type].examples.join(", ");
+}
+function validate(){
+const script=document.getElementById('script').value.trim();
+const output=document.getElementById('output');
+if(script.length<10){
+output.textContent="⚠️ Script must be at least 10 characters long.";
+return false;
+}
+output.textContent="✅ Script validated. Ready for generation.";
+return true;
+}
+function generate(){
+const type=document.getElementById('workflow-type').value;
+const script=document.getElementById('script').value.trim();
+const output=document.getElementById('output');
+let workflow="{"workflow":"${type}","script":"${script}","ready":true,"createdAt":"${new Date().toISOString()}"}";
+output.textContent="✅ Workflow generated!\n\n"+workflow+"\n\nNext: Save to memory or execute via cron.";
+}
+updateDescription();
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gstack: Engineer in 6 Modes | Build-in-Public</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: #f5f5f5;
+            padding: 2rem;
+        }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 3rem; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; color: #2563eb; }
+        h2 { font-size: 1.8rem; margin: 2rem 0 1rem; color: #1e40af; }
+        h3 { font-size: 1.4rem; margin: 1.5rem 0 0.5rem; color: #334155; }
+        p { margin-bottom: 1rem; }
+        .mode { background: #f0f7ff; border-left: 4px solid #3b82f6; padding: 1.5rem; margin: 1.5rem 0; border-radius: 8px; }
+        .mode h3 { margin-top: 0; color: #1d4ed8; }
+        .mode h4 { margin: 0.5rem 0 0.5rem; color: #4b5563; }
+        .command { background: #1e293b; color: #10b981; padding: 0.5rem 1rem; border-radius: 6px; font-family: 'Consolas', monospace; display: inline-block; }
+        code { background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 4px; font-family: 'Consolas', monospace; color: #334155; }
+        .skills { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 2rem 0; }
+        .skill-card { background: #fefce8; padding: 1rem; border-radius: 8px; border: 2px solid #fbbf24; }
+        .cta { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 2rem; text-align: center; border-radius: 8px; margin-top: 2rem; }
+        .cta h3 { margin-top: 0; }
+        .cta button { background: white; color: #3b82f6; border: none; padding: 1rem 2rem; font-size: 1.1rem; border-radius: 6px; cursor: pointer; margin-top: 1rem; font-weight: 600; }
+        .cta button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+        .traditional { background: #fee2e2; padding: 1rem; border-radius: 6px; }
+        .gstack { background: #dbeafe; padding: 1rem; border-radius: 6px; }
+        footer { text-align: center; margin-top: 2rem; padding: 1rem; color: #64748b; font-size: 0.9rem; }
+        @media (max-width: 600px) { .skills { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>gstack: Engineer in 6 Modes ⚡</h1>
+        <p>Stop the mushy AI mode. Switch cognitive gears on demand. Founder taste, engineering rigor, paranoid review, release machine, QA eyes, engineering manager.</p>
+
+        <div class="comparison">
+            <div class="traditional">
+                <strong>Traditional AI</strong><br>
+                Takes the request literally. No context. Half-blind. QA by hand.
+            </div>
+            <div class="gstack">
+                <strong>gstack</strong><br>
+                CEO rethinks the problem. Eng Manager locks architecture. Paranoid finds bugs. Release machine executes. QA eyes inspect. Manager retro analyzes.
+            </div>
+        </div>
+
+        <h2>The 6 Skills</h2>
+        <div class="skills">
+            <div class="skill-card">
+                <strong>/plan-ceo-review</strong><br>
+                Founder mode. Find the 10-star product hiding inside the request. "Photo upload" isn't the feature — auto-identify, enrich, suggest hero images.
+            </div>
+            <div class="skill-card">
+                <strong>/plan-eng-review</strong><br>
+                Eng manager. Lock architecture, data flow, diagrams, edge cases, test matrix. Make the idea buildable.
+            </div>
+            <div class="skill-card">
+                <strong>/review</strong><br>
+                Paranoid staff engineer. Find the bugs that pass CI but blow up in production. Race conditions, trust boundaries, orphan cleanup.
+            </div>
+            <div class="skill-card">
+                <strong>/ship</strong><br>
+                Release machine. Sync main, run tests, push, open PR. For ready branches, not for deciding what to build.
+            </div>
+            <div class="skill-card">
+                <strong>/browse</strong><br>
+                QA engineer. Give the agent eyes. It navigates, clicks, screenshots, checks console. Full QA pass in 60 seconds.
+            </div>
+            <div class="skill-card">
+                <strong>/retro</strong><br>
+                Engineering manager. Analyze commit history, shipping velocity. Saves JSON snapshots for trend tracking.
+            </div>
+        </div>
+
+        <h2>How to Add gstack to Your Project</h2>
+        <p>Real files get committed to your repo (not a submodule). Teammates just run <code>cd .claude/skills/gstack && ./setup</code> to build (or /browse handles it automatically).</p>
+
+        <div class="command">git clone https://github.com/garrytan/gstack.git .claude/skills/gstack</div>
+        <div class="command">cd .claude/skills/gstack && ./setup</div>
+
+        <p>Add this to your CLAUDE.md:</p>
+        <div class="command">[gstack] use for all web browsing, never use mcp__claude-in-chrome__* tools<br>skills: /browse, /plan-ceo-review, /plan-eng-review, /review, /ship, /retro</div>
+
+        <div class="cta">
+            <h3>Want to see gstack in action?</h3>
+            <p>I'm building this with gstack right now. Check out my GitHub and see what I ship.</p>
+            <button onclick="window.open('https://github.com/gwen-dearl', '_blank')">🔗 View my GitHub</button>
+        </div>
+
+        <footer>
+            Built with gstack by Gwen @dearclawla1 ⚡
+        </footer>
+    </div>
+</body>
+</html>

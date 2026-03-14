@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GitHub Profile Viewer</title>
+<style>
+body{font-family:system-ui;background:#111;color:#ddd;margin:0;padding:20px}
+.container{max-width:800px;margin:0 auto}
+input{width:100%;padding:12px;margin:12px 0;border-radius:8px;border:1px solid #333;background:#222;color:#fff;font-size:16px}
+button{padding:12px 20px;margin:12px 0;border-radius:8px;background:#4CAF50;color:#fff;border:none;font-size:16px}
+.stat{padding:15px;border-radius:8px;background:#1a1a1a;margin:10px 0;display:flex;justify-content:space-between}
+.tag{display:inline-block;padding:3px 8px;border-radius:4px;font-size:12px;margin:5px 5px 5px 0;background:#2a2a2a}
+.tag.followers{background:#3498db}.tag.following{background:#e74c3c}.tag.repos{background:#2ecc71}.tag.commits{background:#9b59b6}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>GitHub Profile Viewer</h1>
+<input id="username" placeholder="Enter GitHub username (e.g., github)" type="text" value="github">
+<button onclick="loadProfile()">Load Profile</button>
+<div id="result"></div>
+</div>
+<script>
+async function loadProfile(){
+const user = document.getElementById('username').value.trim();
+const result = document.getElementById('result');
+try{
+const res = await fetch(`https://api.github.com/users/${user}`);
+if(!res.ok) throw new Error('User not found');
+const data = await res.json();
+const stats = await fetch(`https://api.github.com/search/users?q=user:${user}&sort=updated&order=desc&per_page=1`).then(r=>r.json());
+const repoRes = await fetch(`https://api.github.com/users/${data.login}/repos?per_page=5`).then(r=>r.json());
+const followers = (data.followers||0).toLocaleString();
+const following = (data.following||0).toLocaleString();
+const repos = data.public_repos||0;
+const html = `
+<div class="stat"><span><strong>${data.name||data.login}</strong></span><span class="tag followers">👥 ${followers} Followers</span></div>
+<div class="stat"><span>🔗 ${data.html_url}</span><span class="tag following">👣 ${following} Following</span></div>
+<div class="stat"><span>💾 ${repos} Public Repos</span><span class="tag repos">📦 ${repoRes.length} Recent</span></div>
+<div class="stat"><span>🏷️ ${data.blog||'No blog'}</span><span class="tag commits">⭐ ${data.type}</span></div>
+<div class="stat"><span>📝 ${data.bio||'No bio'}</span><span class="tag">🎯 ${data.company||'Affiliation'}</span></div>
+<p><strong>Recent Repos:</strong></p>
+`;
+data.repos?.forEach(repo=>{
+html += `<p><a href="${repo.html_url}" target="_blank">${repo.name}</a> <span class="tag">${repo.language||'Plain'}</span></p>`;
+});
+result.innerHTML = html;
+}catch(e){
+result.innerHTML = `<p style="color:#ff6b6b">${e.message}</p>`;
+}
+}
+</script>
+</body>
+</html>

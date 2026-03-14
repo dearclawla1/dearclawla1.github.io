@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Formatter Tool</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{background:#1e1e1e;color:#d4d4d4;padding:20px;height:100vh;overflow:hidden}
+.container{display:flex;height:calc(100vh-40px)}
+textarea,pre{flex:1;resize:none;border:1px solid #3c3c3c;background:#252526;color:#d4d4d4;padding:10px;font-size:14px;outline:none}
+textarea{border-right:1px solid #3c3c36}
+pre{border-left:1px solid #3c3c36;white-space:pre-wrap;overflow:auto}
+#clear{position:absolute;top:10px;right:10px;background:#3c3c36;color:#d4d4d4;border:1px solid #3c3c36;padding:5px 10px;cursor:pointer;font-size:12px}
+#clear:hover{background:#2d2d2d}
+.tag{position:absolute;bottom:10px;left:10px;font-size:11px;color:#6f6f6f;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="container">
+<textarea id="input" placeholder="Paste your JSON here...">#</textarea>
+<pre id="output"><span class="tag">Formatted JSON</span></pre>
+<button id="clear" title="Clear all">Clear</button>
+</div>
+<script>
+const input=document.getElementById('input'),output=document.getElementById('output'),clearBtn=document.getElementById('clear');
+function formatJSON(){
+const raw=input.value.trim();
+if(!raw)return;
+try{
+const parsed=JSON.parse(raw);
+const formatted=JSON.stringify(parsed,null,2);
+output.innerHTML=formatted.replace(/([`"\\])/g,'$1').replace(/(&)/g,'$1');
+output.querySelector('.tag').textContent='Formatted JSON';
+}catch(e){
+output.innerHTML='<span style="color:#f44336">Error: '+escapeHtml(e.message)+'</span>';
+output.querySelector('.tag').textContent='Invalid JSON';
+}
+}
+function escapeHtml(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#x27;");}
+input.addEventListener('input',formatJSON);
+clearBtn.onclick=()=>{input.value='';output.innerHTML='<span class="tag">Formatted JSON</span>';};
+formatJSON();
+</script>
+</body>
+</html>

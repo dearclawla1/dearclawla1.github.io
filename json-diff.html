@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Diff Tool - Compare JSON Files</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #61dafb;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .json-input {
+            display: block;
+            width: 100%;
+            min-height: 200px;
+            background: #2d2d30;
+            border: 1px solid #3e3e42;
+            color: #d4d4d4;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            border-radius: 6px;
+            resize: vertical;
+        }
+        .json-input:focus {
+            outline: none;
+            border-color: #61dafb;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            background: #0e639c;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        button:disabled {
+            background: #3e3e42;
+            cursor: not-allowed;
+        }
+        .diff-result {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .diff-panel {
+            background: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 300px;
+            font-family: inherit;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-x: auto;
+        }
+        .diff-panel.added {
+            border-color: #34d399;
+            background: rgba(52, 211, 153, 0.05);
+        }
+        .diff-panel.removed {
+            border-color: #f87171;
+            background: rgba(248, 113, 113, 0.05);
+        }
+        .diff-panel.match {
+            border-color: #61dafb;
+            background: rgba(97, 218, 251, 0.05);
+        }
+        .diff-panel .line.added {
+            color: #76ff03;
+        }
+        .diff-panel .line.removed {
+            color: #ff7676;
+        }
+        .diff-panel .line.match {
+            color: #d4d4d4;
+        }
+        .sync-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .sync-btn {
+            padding: 8px 16px;
+            background: #238636;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .sync-btn:hover {
+            background: #2ea043;
+        }
+        .status {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #858585;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔀 JSON Diff Tool</h1>
+        
+        <div class="editor-container">
+            <div>
+                <label><strong>JSON 1:</strong></label>
+                <textarea id="json1" class="json-input" placeholder='Enter first JSON...'></textarea>
+            </div>
+            <div>
+                <label><strong>JSON 2:</strong></label>
+                <textarea id="json2" class="json-input" placeholder='Enter second JSON...'></textarea>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <button onclick="compareJSON()">Compare JSON</button>
+            <button onclick="loadExample()">Load Example</button>
+            <button onclick="clearAll()">Clear All</button>
+        </div>
+        
+        <div class="diff-result">
+            <div id="diff-added" class="diff-panel added">
+                <strong>Added:</strong>
+                <div id="added-content"></div>
+            </div>
+            <div id="diff-removed" class="diff-panel removed">
+                <strong>Removed:</strong>
+                <div id="removed-content"></div>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <button onclick="syncChanges('forward')">Sync → JSON 2</button>
+            <button onclick="syncChanges('backward')">Sync → JSON 1</button>
+            <button onclick="diffHighlight()">Visual Diff</button>
+        </div>
+        
+        <div id="sync-status" class="status"></div>
+    </div>
+    
+    <script>
+        const json1 = document.getElementById('json1');
+        const json2 = document.getElementById('json2');
+        const addedContent = document.getElementById('added-content');
+        const removedContent = document.getElementById('removed-content');
+        const syncStatus = document.getElementById('sync-status');
+        
+        function parseJSON(text) {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        function objectToTree(obj, parentPath = '') {
+            let tree = {};
+            if (typeof obj === 'object' && obj !== null) {
+                for (let key in obj) {
+                    let fullKey = parentPath ? `${parentPath}.${key}` : key;
+                    let value = obj[key];
+                    if (typeof value === 'object' && value !== null) {
+                        tree[fullKey] = objectToTree(value, fullKey);
+                    } else {
+                        tree[fullKey] = value;
+                    }
+                }
+                return tree;
+            } else {
+                return obj;
+            }
+        }
+        
+        function getChanges(obj1, obj2) {
+            const tree1 = objectToTree(obj1);
+            const tree2 = objectToTree(obj2);
+            const added = [];
+            const removed = [];
+            
+            for (let key in tree2) {
+                if (!(key in tree1)) {
+                    added.push({ path: key, value: tree2[key] });
+                } else {
+                    if (tree1[key] !== tree2[key]) {
+                        removed.push({ path: key, value: tree1[key] });
+                    }
+                }
+            }
+            return { added, removed };
+        }
+        
+        function compareJSON() {
+            const obj1 = parseJSON(json1.value);
+            const obj2 = parseJSON(json2.value);
+            
+            if (!obj1 || !obj2) {
+                alert('Please enter valid JSON in both fields');
+                return;
+            }
+            
+            const changes = getChanges(obj1, obj2);
+            addedContent.innerHTML = changes.added.map(c => `[${c.path}]: ${c.value}`).join('\\n');
+            removedContent.innerHTML = changes.removed.map(c => `[${c.path}]: ${c.value}`).join('\\n');
+        }
+        
+        function loadExample() {
+            json1.value = JSON.stringify({ name: 'Alice', age: 30, city: 'New York' }, null, 2);
+            json2.value = JSON.stringify({ name: 'Alice', age: 31, city: 'Boston' }, null, 2);
+        }
+        
+        function clearAll() {
+            json1.value = '';
+            json2.value = '';
+            addedContent.innerHTML = '';
+            removedContent.innerHTML = '';
+        }
+        
+        function syncChanges(direction) {
+            const obj1 = parseJSON(json1.value);
+            const obj2 = parseJSON(json2.value);
+            
+            if (!obj1 || !obj2) {
+                alert('Please enter valid JSON first');
+                return;
+            }
+            
+            const changes = getChanges(obj1, obj2);
+            let syncResult;
+            
+            if (direction === 'forward') {
+                // Apply changes from JSON 2 to JSON 1
+                syncResult = deepCloneAndMerge(obj2, changes.removed || []);
+            } else {
+                // Apply changes from JSON 1 to JSON 2
+                syncResult = deepCloneAndMerge(obj1, changes.added || []);
+            }
+            
+            if (direction === 'forward') {
+                json2.value = JSON.stringify(syncResult, null, 2);
+                syncStatus.textContent = 'Synced changes from JSON 1 → JSON 2';
+            } else {
+                json1.value = JSON.stringify(syncResult, null, 2);
+                syncStatus.textContent = 'Synced changes from JSON 2 → JSON 1';
+            }
+        }
+        
+        function deepCloneAndMerge(base, changes) {
+            const result = JSON.parse(JSON.stringify(base));
+            for (const change of changes) {
+                const keys = change.path.split('.');
+                let target = result;
+                for (let i = 0; i < keys.length - 1; i++) {
+                    target = target[keys[i]] = target[keys[i]] || {};
+                }
+                delete target[keys[keys.length - 1]];
+            }
+            return result;
+        }
+        
+        function diffHighlight() {
+            const obj1 = parseJSON(json1.value);
+            const obj2 = parseJSON(json2.value);
+            
+            if (!obj1 || !obj2) {
+                alert('Please enter valid JSON first');
+                return;
+            }
+            
+            const tree1 = objectToTree(obj1);
+            const tree2 = objectToTree(obj2);
+            let html = '';
+            
+            for (let key in tree2) {
+                if (key in tree1) {
+                    if (tree1[key] === tree2[key]) {
+                        html += `<span class="line match">[${key}]: ${tree2[key]}</span>\n`;
+                    } else {
+                        html += `<span class="line removed">[${key}]: ${tree1[key]}</span>\n`;
+                    }
+                } else {
+                    html += `<span class="line added">[${key}]: ${tree2[key]}</span>\n`;
+                }
+            }
+            
+            addedContent.innerHTML = html;
+        }
+        
+        function deepClone(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+    </script>
+</body>
+</html>

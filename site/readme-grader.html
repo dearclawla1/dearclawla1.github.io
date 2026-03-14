@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repo README Grader — Rate your docs, instantly</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; padding: 3rem 1.5rem; }
+    .container { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 1rem; color: #fff; }
+    p { margin-bottom: 1rem; }
+    .btn { display: inline-block; background: #238636; color: #fff; padding: 0.75rem 1.25rem; border-radius: 6px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; font-size: 1rem; }
+    .btn:hover { background: #2ea043; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; }
+    .card h3 { color: #58a6ff; margin-bottom: 0.5rem; }
+    .card p { font-size: 0.9rem; color: #8b949e; margin-bottom: 0.5rem; }
+    .hidden { display: none; }
+    #result { margin-top: 2rem; padding: 1.5rem; background: #1c2128; border-radius: 8px; border: 1px solid #30363d; }
+    .score { font-size: 3rem; font-weight: 800; color: #2ea043; text-align: center; }
+    .grade { text-align: center; font-size: 1.2rem; color: #fff; margin-top: 0.5rem; }
+    .details { margin-top: 1rem; font-size: 0.9rem; }
+    .details-item { margin-bottom: 0.5rem; }
+    .good { color: #2ea043; }
+    .bad { color: #da3633; }
+    .neutral { color: #8b949e; }
+    .error { color: #ff7b72; font-weight: 600; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Repo README Grader</h1>
+    <p>Paste a GitHub repo URL and we'll score the README quality. Looks for badges, install instructions, examples, and more.</p>
+    
+    <input type="url" id="urlInput" placeholder="https://github.com/owner/repo" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border-radius: 6px; border: 1px solid #30363d; background: #0d1117; color: #c9d1d9; font-size: 1rem;">
+    <button class="btn" onclick="check()">Grader This!</button>
+    
+    <div id="result" class="hidden">
+      <div class="score" id="score"></div>
+      <div class="grade" id="grade"></div>
+      <div class="details hidden" id="details"></div>
+    </div>
+  </div>
+  
+  <script>
+    async function check() {
+      const url = document.getElementById('urlInput').value;
+      if (!url) { alert('Paste a GitHub URL first!'); return; }
+      
+      try {
+        const response = await fetch('https://api.github.com/repos/' + url.split('/').slice(-2).join('/'));
+        if (!response.ok) { alert('Invalid GitHub URL'); return; }
+        
+        const repo = await response.json();
+        const readmeUrl = repo.readme_url;
+        const readme = await fetch(readmeUrl).then(r => r.text());
+        
+        const badges = readme.match(/!\[/g) || [];
+        const hasInstall = /install|install\(|setup/i.test(readme);
+        const hasExample = /example|example\(|usage/i.test(readme);
+        const hasLicense = /license|mit|apache/i.test(readme);
+        const hasTests = /test|test\(/i.test(readme);
+        const hasScreenshots = /screenshot|image|capture/i.test(readme);
+        const hasLinks = /http/i.test(readme);
+        
+        const total = badges.length + (hasInstall ? 1 : 0) + (hasExample ? 1 : 0) + (hasLicense ? 1 : 0) + (hasTests ? 1 : 0) + (hasScreenshots ? 1 : 0) + (hasLinks ? 1 : 0);
+        const max = 7;
+        const score = Math.round((total / max) * 100);
+        
+        document.getElementById('result').classList.remove('hidden');
+        document.getElementById('score').innerText = score + '%';
+        
+        let gradeText = '';
+        if (score >= 90) gradeText = '🏆 A+ — Excellent documentation!';
+        else if (score >= 75) gradeText = '👏 A — Great job!';
+        else if (score >= 60) gradeText = '👍 B — Solid, room to improve';
+        else if (score >= 45) gradeText = '⚠️ C — Needs work';
+        else if (score >= 30) gradeText = '🔧 D — Barely there';
+        else gradeText = '💀 F — README not found or empty';
+        
+        document.getElementById('grade').innerText = gradeText;
+        
+        const details = document.getElementById('details');
+        details.classList.remove('hidden');
+        
+        details.innerHTML = `
+          <div class="details-item ${badges.length > 3 ? 'good' : badges.length > 1 ? 'neutral' : 'bad'}">
+            🏆 Badges: ${badges.length}${badges.length > 3 ? ' (Great!)' : badges.length === 1 ? ' (Add more!)' : ''}
+          </div>
+          <div class="details-item ${hasInstall ? 'good' : 'bad'}">
+            📦 Install instructions: ${hasInstall ? '✅ Yes' : '❌ No'}
+          </div>
+          <div class="details-item ${hasExample ? 'good' : 'bad'}">
+            💡 Examples/usage: ${hasExample ? '✅ Yes' : '❌ No'}
+          </div>
+          <div class="details-item ${hasLicense ? 'good' : 'bad'}">
+            📜 License: ${hasLicense ? '✅ Yes' : '❌ No'}
+          </div>
+          <div class="details-item ${hasTests ? 'good' : 'bad'}">
+            🧪 Test instructions: ${hasTests ? '✅ Yes' : '❌ No'}
+          </div>
+          <div class="details-item ${hasScreenshots ? 'good' : 'bad'}">
+            📸 Screenshots/demo: ${hasScreenshots ? '✅ Yes' : '❌ No'}
+          </div>
+          <div class="details-item ${hasLinks ? 'good' : 'bad'}">
+            🔗 External links: ${hasLinks ? '✅ Yes' : '❌ No'}
+          </div>
+        `;
+        
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

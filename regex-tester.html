@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regex Tester - Interactive Pattern Testing Tool</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: #0d1117; color: #c9d1d9; padding: 30px; min-height: 100vh; }
+    h1 { font-size: 28px; margin-bottom: 20px; color: #58a6ff; }
+    .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
+    .panel { background: #161b22; border: 1px solid #30363a; border-radius: 6px; padding: 15px; }
+    label { display: block; font-size: 13px; color: #8b949e; margin-bottom: 8px; }
+    textarea, input[type="text"] { width: 100%; background: #0d1117; border: 1px solid #30363a; color: #c9d1d9; padding: 12px; border-radius: 6px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; resize: vertical; }
+    textarea:focus, input:focus { outline: none; border-color: #58a6ff; }
+    .actions { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; margin-top: 20px; }
+    button { padding: 10px 20px; background: #238636; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+    button:hover { background: #2ea043; }
+    button.secondary { background: #21262d; }
+    button.secondary:hover { background: #30363a; }
+    #match-preview { background: #0d1117; min-height: 200px; padding: 15px; border-radius: 6px; border: 1px solid #30363a; white-space: pre-wrap; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.6; overflow-x: auto; }
+    .match { background: #238636; color: #fff; padding: 2px 4px; border-radius: 2px; margin: 2px 0; }
+    .group { background: #1f6feb; color: #fff; padding: 2px 6px; border-radius: 2px; margin: 2px 4px; font-size: 11px; cursor: pointer; }
+    .flag-toggle { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .flag { padding: 6px 14px; background: #21262d; border: 1px solid #30363a; color: #8b949e; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .flag.active { background: #1f6feb; color: #fff; border-color: #1f6feb; }
+    .error { color: #f85149; font-size: 12px; margin-top: 10px; display: none; padding: 8px; background: #1c0f0f; border-radius: 4px; }
+    .error.show { display: block; }
+    h2 { font-size: 16px; color: #c9d1d9; margin-bottom: 10px; }
+    .section-title { grid-column: 1 / -1; font-size: 15px; color: #8b949e; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #30363a; padding-bottom: 6px; }
+    .info { font-size: 12px; color: #8b949e; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Regex Tester</h1>
+  
+  <div class="container">
+    <div class="panel">
+      <label>📝 Pattern</label>
+      <textarea id="pattern" rows="5" placeholder="Enter your regex pattern here...">\w+</textarea>
+      
+      <div class="flag-toggle">
+        <span class="flag active" onclick="toggleFlag('i')">i</span>
+        <span class="flag active" onclick="toggleFlag('g')">g</span>
+        <span class="flag" onclick="toggleFlag('m')">m</span>
+        <span class="flag" onclick="toggleFlag('s')">s</span>
+        <span class="flag" onclick="toggleFlag('u')">u</span>
+      </div>
+      
+      <label>📋 Test String</label>
+      <textarea id="test-string" rows="5" placeholder="Enter text to test against...">The Quick Brown Fox Jumps Over The Lazy Dog</textarea>
+      
+      <div class="error" id="error-message"></div>
+    </div>
+    
+    <div class="panel">
+      <h2>🔍 Match Results</h2>
+      <div id="match-preview">Enter a valid pattern and run the test to see results...</div>
+      
+      <div class="section-title">📦 Captured Groups</div>
+      <div id="groups-container"></div>
+      
+      <div class="info">Click on groups to see captured values. Use 'g' flag for global matching.</div>
+    </div>
+    
+    <div class="actions">
+      <button onclick="testRegex()">Test Pattern</button>
+      <button class="secondary" onclick="clearAll()">Clear All</button>
+      <button class="secondary" onclick="copyMatches()">Copy Matches</button>
+    </div>
+  </div>
+  
+  <script>
+    let currentFlags = 'gi';
+    let lastMatches = [];
+    
+    function toggleFlag(flag) {
+      const flagEl = document.querySelector(`.flag[onclick="toggleFlag('${flag}')"]`);
+      flagEl.classList.toggle('active');
+      currentFlags = Array.from(document.querySelectorAll('.flag.active')).map(f => {
+        const text = f.textContent.trim();
+        return text === 'g' ? 'g' : text.toLowerCase();
+      }).join('');
+    }
+    
+    function clearAll() {
+      document.getElementById('pattern').value = '';
+      document.getElementById('test-string').value = '';
+      document.getElementById('match-preview').textContent = 'Enter a valid pattern and run the test to see results...';
+      document.getElementById('groups-container').innerHTML = '';
+      document.getElementById('error-message').classList.remove('show');
+    }
+    
+    function copyMatches() {
+      const text = document.getElementById('match-preview').textContent;
+      if (text !== 'Enter a valid pattern...') {
+        navigator.clipboard.writeText(text);
+        const btn = document.querySelector('button[onclick="copyMatches()"]');
+        const original = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => btn.textContent = original, 1500);
+      }
+    }
+    
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    
+    function highlightMatches(text, pattern) {
+      if (!pattern) return '';
+      
+      const regex = new RegExp(pattern, 'g');
+      return text.replace(regex, (match) => `<span class="match">${match}</span>`);
+    }
+    
+    function highlightGroups(text, groups) {
+      if (!groups) return '';
+      
+      let result = text;
+      groups.forEach((group, index) => {
+        if (group) {
+          const escapedGroup = escapeRegExp(group);
+          result = result.replace(new RegExp(escapedGroup, 'g'), match => 
+            `<span class="group">Group ${index + 1}</span>`
+          );
+        }
+      });
+      return result;
+    }
+    
+    function testRegex() {
+      const pattern = document.getElementById('pattern').value;
+      const testString = document.getElementById('test-string').value;
+      const preview = document.getElementById('match-preview');
+      const groupsContainer = document.getElementById('groups-container');
+      const errorEl = document.getElementById('error-message');
+      
+      if (!pattern || !testString) {
+        preview.textContent = 'Please enter both a pattern and test string.';
+        groupsContainer.innerHTML = '';
+        return;
+      }
+      
+      try {
+        const regex = new RegExp(pattern, currentFlags);
+        const matches = testString.match(regex);
+        
+        if (!matches) {
+          preview.textContent = 'No matches found with this pattern.';
+          groupsContainer.innerHTML = '';
+          return;
+        }
+        
+        // Show matches
+        let highlightedText = testString;
+        if (currentFlags.includes('g')) {
+          highlightedText = highlightGroups(highlightMatches(testString, pattern), matches);
+        }
+        
+        preview.innerHTML = highlightedText;
+        
+        // Extract groups if pattern contains groups
+        const groupRegex = /(?:\((?:[^()]+|(?:(?:\((?:[^()]*|(?R))*\)))*)\)|(?<=^)\w+)/;
+        const groupMatches = pattern.match(/(?:\((?:[^()]*|(?:(?:\((?:[^()]*|(?R))*\)))*)\))/g);
+        
+        if (groupMatches) {
+          let tempString = matches[0];
+          groupMatches.forEach(match => {
+            const content = match.replace(/^\((|)$/, '');
+            tempString = tempString.replace(escapeRegExp(content), (m) => {
+              const index = content.split(/[\.\^\$\*\+\?\[\]\{\}\(\)\|\-/].length);
+              return `<span class="group">Group ${index + 1}</span>`;
+            });
+          });
+          groupsContainer.innerHTML = tempString;
+        }
+        
+      } catch (err) {
+        errorEl.textContent = 'Invalid regex pattern: ' + err.message;
+        errorEl.classList.add('show');
+        preview.textContent = '';
+        groupsContainer.innerHTML = '';
+      }
+    }
+    
+    // Initialize
+    testRegex();
+    
+    // Add keyboard shortcut Ctrl/Cmd+Enter to test
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        testRegex();
+      }
+    });
+  </script>
+</body>
+</html>

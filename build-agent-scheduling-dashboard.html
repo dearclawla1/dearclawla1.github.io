@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Scheduling Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #e6edf3; padding: 2rem; }
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, #2196F3, #00C853); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .card { background: #161b22; border: 1px solid #30363a; border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(33, 150, 243, 0.2); }
+        .card h3 { font-size: 1.25rem; margin-bottom: 0.75rem; color: #8b949e; }
+        .card p { font-size: 0.9rem; color: #c9d1d9; line-height: 1.6; }
+        .tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-top: 1rem; }
+        .tag.new { background: #238636; }
+        .tag.tool { background: #1f6feb; }
+        .tools { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .tools button { background: #21262d; color: #8b949e; border: 1px solid #30363a; border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .tools button:hover { background: #30363a; color: #e6edf3; }
+    </style>
+</head>
+<body>
+    <h1>Agent Scheduling Dashboard</h1>
+    <p style="color: #8b949e; margin-bottom: 2rem;">AI agent task scheduler & workflow orchestration tools for GitHub Pages</p>
+    
+    <div class="dashboard">
+        <div class="card">
+            <h3>📅 Task Scheduler</h3>
+            <p>Configure agent schedules, priority queues, and task dependencies. Visualize workflow timelines and agent availability windows.</p>
+            <div class="tools">
+                <button>Schedule Tasks</button>
+                <button>View Timeline</button>
+            </div>
+            <span class="tag new">New</span>
+        </div>
+
+        <div class="card">
+            <h3>⚡ Workflow Orchestrator</h3>
+            <p>Manage multi-agent workflows with step-level coordination, parallel execution, and conditional branching. Monitor workflow health.</p>
+            <div class="tools">
+                <button>Orchestrate</button>
+                <button>Debug Workflow</button>
+            </div>
+            <span class="tag new">New</span>
+        </div>
+
+        <div class="card">
+            <h3>🔔 Alert Manager</h3>
+            <p>Configure notifications for task failures, long-running agents, and queue overloads. Set escalation policies and SLA alerts.</p>
+            <div class="tools">
+                <button>Configure Alerts</button>
+                <button>View Logs</button>
+            </div>
+            <span class="tag new">New</span>
+        </div>
+    </div>
+</body>
+</html>
