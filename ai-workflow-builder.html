@@ -6,219 +6,91 @@
 <title>AI Workflow Builder</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f12; color: #e0e0e0; padding: 2rem; min-height: 100vh; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e4e4e4; padding: 2rem; min-height: 100vh; }
 .container { max-width: 900px; margin: 0 auto; }
 header { margin-bottom: 1.5rem; }
-h1 { font-size: 1.8rem; color: #7c3aed; margin-bottom: 0.5rem; }
-.back-link { display: inline-block; color: #60a5fa; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.5rem; }
+h1 { font-size: 1.8rem; color: #6366f1; margin-bottom: 0.5rem; }
+.back-link { display: inline-block; color: #6366f1; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.5rem; }
 .back-link:hover { text-decoration: underline; }
 .panel { background: #1a1a20; border: 1px solid #2d2d35; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
-label { display: block; color: #9090a0; font-size: 0.9rem; margin-bottom: 0.5rem; }
-input[type="text"] { width: 100%; padding: 0.75rem; border: 1px solid #303040; border-radius: 6px; background: #14141a; color: #e0e0e0; font-size: 1rem; }
-input[type="text"]:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
-input[type="text"]::placeholder { color: #505060; }
-textarea { width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #303040; border-radius: 6px; background: #14141a; color: #e0e0e0; font-size: 0.95rem; resize: vertical; }
-textarea:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
-select { width: 100%; padding: 0.75rem; border: 1px solid #303040; border-radius: 6px; background: #14141a; color: #e0e0e0; font-size: 0.95rem; cursor: pointer; }
-select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
-button { padding: 0.75rem 1.25rem; border: none; border-radius: 6px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-button:focus { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.3); }
-.add-btn { background: #6366f1; color: #fff; }
-.add-btn:hover { background: #5558e6; }
-.clear-btn { background: #ef4444; color: #fff; }
-.clear-btn:hover { background: #dc2626; }
-.result-box { background: #14141a; border: 1px solid #2d2d35; border-radius: 6px; min-height: 100px; padding: 1rem; font-size: 0.9rem; color: #a0a0b0; word-wrap: break-word; }
-.steps { background: #14141a; border: 1px solid #2d2d35; border-radius: 6px; padding: 1rem; margin-top: 1rem; }
-.step { padding: 0.75rem 0; border-bottom: 1px solid #25252d; font-size: 0.9rem; color: #a0a0b0; }
-.step:last-child { border-bottom: none; }
-.step-number { color: #7c3aed; font-weight: 600; margin-right: 0.5rem; }
+button { background: #6366f1; color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 0.95rem; }
+button:hover { background: #5558e6; }
+input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #2d2d35; border-radius: 6px; background: #0f0f12; color: #e4e4e4; font-size: 0.95rem; }
+input:focus, textarea:focus, select:focus { outline: 2px solid #6366f1; border-color: #6366f1; }
+input::placeholder, textarea::placeholder { color: #6b7280; }
+label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #e4e4e4; }
 </style>
 </head>
 <body>
 <div class="container">
 <header>
-<a href="#" class="back-link">← Back to Brain</a>
+<a href="/brain" class="back-link">← Back to Brain</a>
 <h1>AI Workflow Builder</h1>
+<p style="color: #6b7280; font-size: 0.9rem;">Build and customize AI workflows. Press <kbd>Enter</kbd> to submit.</p>
 </header>
-</div>
-<div class="container">
+<main>
+<form id="workflowForm" onsubmit="handleWorkflowSubmit(event)">
 <div class="panel">
-<label for="workflow-name">Workflow Name</label>
-<input type="text" id="workflow-name" placeholder="e.g., Customer Onboarding Process">
+<label for="workflowName">Workflow Name</label>
+<input type="text" id="workflowName" name="workflowName" placeholder="e.g., Data Analysis Pipeline" required>
 </div>
 <div class="panel">
-<label for="step-type">Step Type</label>
-<select id="step-type">
-<option value="input">Input Data</option>
-<option value="transform">Data Transformation</option>
-<option value="logic">Logic/Branching</option>
-<option value="output">Output to File/API</option>
+<label for="workflowType">Workflow Type</label>
+<select id="workflowType" name="workflowType" required>
+<option value="">Select type...</option>
+<option value="classification">Classification</option>
+<option value="generation">Text Generation</option>
+<option value="summarization">Summarization</option>
+<option value="translation">Translation</option>
+<option value="sentiment">Sentiment Analysis</option>
 </select>
 </div>
 <div class="panel">
-<label for="step-logic">Step Logic (JavaScript)</label>
-<textarea id="step-logic" placeholder="function process(data) {
-  // Transform or process data here
-  return result;
-}"></textarea>
+<label for="workflowPrompt">Prompt Configuration</label>
+<textarea id="workflowPrompt" name="workflowPrompt" rows="4" placeholder="Enter your custom prompt instructions here..." required></textarea>
 </div>
 <div class="panel">
-<button class="add-btn" onclick="addStep()">+ Add Step to Workflow</button>
+<label for="modelSelection">AI Model</label>
+<select id="modelSelection" name="modelSelection" required>
+<option value="">Select model...</option>
+<option value="gpt-4">GPT-4</option>
+<option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+<option value="claude-3">Claude 3</option>
+<option value="claude-2">Claude 2</option>
+<option value="mistral-large">Mistral Large</option>
+</select>
 </div>
 <div class="panel">
-<button class="clear-btn" onclick="clearWorkflow()">Clear All</button>
+<label for="temperature">Temperature (0-1)</label>
+<input type="number" id="temperature" name="temperature" min="0" max="1" step="0.1" value="0.7" required>
 </div>
 <div class="panel">
-<label for="workflow-output">Workflow Output Preview</label>
-<div id="workflow-output" class="result-box"></div>
+<button type="submit">Save Workflow</button>
 </div>
-<div class="steps">
-<div class="step"><span class="step-number">1.</span>Enter workflow name and step details</div>
-<div class="step"><span class="step-number">2.</span>Select step type and logic</div>
-<div class="step"><span class="step-number">3.</span>Click "Add Step" to build your workflow</div>
-<div class="step"><span class="step-number">4.</span>Clear All to start fresh</div>
-</div>
+</form>
+</main>
 </div>
 <script>
-let workflowSteps = [];
-let workflowName = '';
-
-function addStep() {
-  const stepType = document.getElementById('step-type').value;
-  const logic = document.getElementById('step-logic').value.trim();
-  workflowName = document.getElementById('workflow-name').value.trim();
-  
-  if (!workflowName) {
-    alert('Please enter a workflow name');
-    return;
-  }
-  
-  if (logic === '') {
-    alert('Please enter step logic');
-    return;
-  }
-  
-  workflowSteps.push({
-    type: stepType,
-    name: `${stepType.charAt(0).toUpperCase() + stepType.slice(1)} Step`,
-    logic: logic
-  });
-  
-  updatePreview();
+function handleWorkflowSubmit(event) {
+event.preventDefault();
+const workflowData = {
+name: document.getElementById('workflowName').value,
+type: document.getElementById('workflowType').value,
+prompt: document.getElementById('workflowPrompt').value,
+model: document.getElementById('modelSelection').value,
+temperature: document.getElementById('temperature').value
+};
+console.log('Workflow submitted:', workflowData);
+// TODO: Implement API call to save workflow
+alert('Workflow saved successfully!');
 }
-
-function clearWorkflow() {
-  if (confirm('Are you sure you want to clear the entire workflow?')) {
-    workflowSteps = [];
-    workflowName = '';
-    document.getElementById('workflow-name').value = '';
-    document.getElementById('step-logic').value = '';
-    updatePreview();
-  }
-}
-
-function updatePreview() {
-  const preview = document.getElementById('workflow-output');
-  
-  if (workflowSteps.length === 0) {
-    preview.innerHTML = '';
-    return;
-  }
-  
-  let html = '<div style="margin-bottom:1rem;color:#a0a0b0;font-size:0.85rem;">';
-  html += '<strong>Workflow Steps:</strong></div>';
-  workflowSteps.forEach((step, i) => {
-    html += '<div style="background:#1e1e24;padding:0.75rem;border-radius:4;margin-bottom:0.5rem;border-left:3px solid #6366f1;">';
-    html += `<strong>${i+1}. ${step.name}</strong>`;
-    html += `<div style="margin-top:0.25rem;color:#a0a0b0;font-size:0.85rem;font-family:monospace;white-space:pre-wrap;word-break:break-all;">${step.logic}</div>`;
-    html += '</div>';
-  });
-  html += '</div>';
-  
-  if (workflowSteps.length > 0) {
-    html += '<div style="background:#1e1e24;padding:0.75rem;border-radius:4;margin-bottom:0.5rem;"><strong>Workflow Summary:</strong></div>';
-    html += `<div style="color:#6366f1;font-size:0.85rem;">Total Steps: ${workflowSteps.length}</div>`;
-    html += `<div style="color:#9090a0;font-size:0.8rem;margin-top:0.25rem;">Workflow Name: ${workflowName}</div>`;
-    html += '</div>';
-  }
-  
-  preview.innerHTML = html;
-}
-
-// Initialize with empty preview
-updatePreview();
-
-// Add keyboard shortcut for Enter to add step
+// Keyboard shortcut: Enter to submit
 document.addEventListener('keydown', function(event) {
-  if (event.key === 'Enter' && event.target.id === 'step-logic') {
-    event.preventDefault();
-    addStep();
-  }
-});
-
-// Save workflow data to localStorage
-function saveWorkflow() {
-  const data = {
-    workflowName: workflowName,
-    steps: workflowSteps
-  };
-  localStorage.setItem('ai-workflow-data', JSON.stringify(data));
+if (event.key === 'Enter' && event.target.tagName !== 'BUTTON') {
+event.preventDefault();
+const form = document.getElementById('workflowForm');
+form.dispatchEvent(new Event('submit'));
 }
-
-// Load workflow data from localStorage on page load
-window.addEventListener('load', function() {
-  const savedData = localStorage.getItem('ai-workflow-data');
-  if (savedData) {
-    try {
-      const data = JSON.parse(savedData);
-      workflowName = data.workflowName || '';
-      workflowSteps = data.steps || [];
-      document.getElementById('workflow-name').value = workflowName;
-      
-      if (workflowSteps.length > 0) {
-        workflowSteps.forEach((step, index) => {
-          const stepType = step.type || 'input';
-          document.getElementById('step-type').value = stepType;
-          
-          if (index === 0) {
-            document.getElementById('step-logic').value = step.logic || '';
-          }
-        });
-        
-        if (workflowSteps.length > 0) {
-          updatePreview();
-        }
-      }
-    } catch (e) {
-      console.error('Error loading saved workflow:', e);
-    }
-  }
-});
-
-// Save workflow data on every change
-document.getElementById('workflow-name').addEventListener('input', function() {
-  workflowName = this.value;
-  saveWorkflow();
-});
-
-document.getElementById('step-logic').addEventListener('input', function() {
-  saveWorkflow();
-});
-
-document.getElementById('step-type').addEventListener('change', function() {
-  saveWorkflow();
-});
-
-// Clear localStorage on clear
-document.querySelector('.clear-btn').addEventListener('click', function() {
-  if (confirm('Are you sure you want to clear the entire workflow?')) {
-    workflowSteps = [];
-    workflowName = '';
-    document.getElementById('workflow-name').value = '';
-    document.getElementById('step-logic').value = '';
-    updatePreview();
-    localStorage.removeItem('ai-workflow-data');
-  }
 });
 </script>
 </body>
