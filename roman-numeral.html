@@ -2,108 +2,51 @@
 <html>
 <head>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
-.container{max-width:600px;margin:0 auto;}
-h1{text-align:center;font-size:1.5em;}
-nav{margin-bottom:20px;text-align:center;}
-a{color:#6366f1;text-decoration:none;}
-.input-group{margin:15px 0;}
-label{display:block;margin-bottom:5px;}
-input,select{width:100%;padding:10px;font-size:1em;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:4px;}
-button{width:100%;padding:12px;font-size:1em;background:#6366f1;color:#fff;border:none;border-radius:4px;cursor:pointer;margin-top:10px;}
-button:hover{background:#5558ff;}
-#result{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;min-height:50px;font-family:monospace;font-size:1.1em;}
-#error{background:#8a1c1c;color:#fff;padding:10px;border-radius:4px;margin-top:10px;display:none;}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+.container{max-width:400px;margin:0 auto}
+.back{color:#6366f1;font-size:12px;display:block;margin:10px 0;text-decoration:none}
+.btn{background:#6366f1;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px}
+.input{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;border-radius:6px;width:300px;margin:10px 0;font-size:14px}
+.result{background:#1a1a1a;padding:15px;border-radius:6px;margin-top:10px;font-size:14px;text-align:center}
 </style>
 </head>
 <body>
+<a href="index.html" class="back">Home</a>
 <div class="container">
-<nav><a href="index.html">Home</a></nav>
-<h1>Roman Numeral Converter</h1>
-<div class="input-group">
-<label>Enter Arabic Number:</label>
-<input type="number" id="arabic" placeholder="e.g., 99" min="1" max="3999">
-</div>
-<div class="input-group">
-<label>Or Enter Roman Numeral:</label>
-<input type="text" id="roman" placeholder="e.g., MCMLXXXIX" maxlength="15">
-</div>
-<button onclick="convert()" id="convertBtn">Convert</button>
-<div id="result"></div>
-<div id="error"></div>
+<h1 style="text-align:center">Roman Numeral Converter</h1>
+<div class="result" id="result">Result will appear here</div>
+<input type="text" id="roman" class="input" placeholder="Enter Roman numeral (e.g., X, LXXV)">
+<input type="text" id="arabic" class="input" placeholder="Or enter Arabic number (e.g., 25, 75)">
+<button onclick="toRoman()" class="btn">To Roman Numeral</button>
+<button onclick="toArabic()" class="btn">To Arabic Number</button>
 </div>
 <script>
-function toRoman(num){
-const vals=[1000,900,500,400,100,90,50,40,10,9,5,4,1];
-const syms=["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
-let roman="",i=0;
-while(num>0){
-while(num>=vals[i]){
-roman+=syms[i];
-num-=vals[i];
+function toRoman(){
+let r=document.getElementById('roman').value||'1';
+let a=document.getElementById('arabic').value||'';
+let res='';
+let n=parseInt(r);
+let M=1000,C=100,X=10,V=5,I=1;
+if(n>=1000){res+=M*n-999;n%=100}
+if(n>=100){res+=C*(n>=99?1:(n>=4?1:0));if(n>=50&&n<100){res+=V*(n>=5?1:0);n%=5}else{n-=99}}
+if(n>=10){res+=X*(n>=9?1:(n>=4?1:0));if(n>=5&&n<10){res+=V*(n>=5?1:0);n%=5}else{n-=9}}
+if(n>=1){res+=I*n}
+document.getElementById('arabic').value=res;
+document.getElementById('result').innerText='Arabic: '+res}
+function toArabic(){
+let a=document.getElementById('arabic').value||'1';
+let r=document.getElementById('roman').value||'';
+let num=parseInt(a);
+let rom='';
+let M=1000,C=100,X=10,V=5,I=1;
+if(num>=1000){rom+=M;num-=1000}else if(num>=900){rom+='CM';num-=900}else if(num>=500){rom+='D';num-=500}else if(num>=400){rom+='CD';num-=400}
+for(let i=0;i<100&&num>0;i++){
+if(num>=100){rom+=C*(num>=99?1:(num>=4?1:0));if(num>=50&&num<100){rom+=V*(num>=5?1:0);i--}else{num-=99}}
+else if(num>=10){rom+=X*(num>=9?1:(num>=4?1:0));if(num>=5&&num<10){rom+=V*(num>=5?1:0);i--}else{num-=9}}
+else{rom+=I*num;break}
 }
-i++;
-}
-return roman;
-}
-function toArabic(str){
-const map={"I":1,"V":5,"X":10,"L":50,"C":100,"D":500,"M":1000};
-let roman=str.toUpperCase().replace(/[^IVXLCDM]/g,""), arabic=0, prev=0, num=0;
-for(let i=roman.length-1;i>=0;i--){
-let curr=map[roman[i]];
-if(curr>=prev){
-num+=curr;
-}
-else{
-num-=curr;
-}
-prev=curr;
-}
-return num;
-}
-function convert(){
-let arabicEl=document.getElementById("arabic");
-let romanEl=document.getElementById("roman");
-let resultEl=document.getElementById("result");
-let errorEl=document.getElementById("error");
-let result="";
-if(arabicEl.value){
-let num=parseInt(arabicEl.value);
-if(num<1||num>3999){
-errorEl.textContent="Please enter a number between 1 and 3999";
-errorEl.style.display="block";
-resultEl.textContent="";
-errorEl.style.display="block";
-return;
-}
-errorEl.style.display="none";
-resultEl.textContent="Roman Numeral: " + toRoman(num);
-}
-else if(romanEl.value){
-let str=romanEl.value.replace(/[^IVXLCDM]/g,"");
-if(!str){
-errorEl.textContent="Please enter a valid Roman numeral";
-errorEl.style.display="block";
-resultEl.textContent="";
-return;
-}
-try{
-let num=toArabic(str);
-errorEl.style.display="none";
-resultEl.textContent="Arabic Number: " + num;
-}
-catch{
-errorEl.textContent="Invalid Roman numeral. Use uppercase I,V,X,L,C,D,M";
-errorEl.style.display="block";
-resultEl.textContent="";
-}
-}
-else{
-errorEl.textContent="Please enter a number or Roman numeral";
-errorEl.style.display="block";
-resultEl.textContent="";
-}
-}
+document.getElementById('roman').value=rom;
+document.getElementById('result').innerText='Roman: '+rom}
 </script>
 </body>
 </html>
