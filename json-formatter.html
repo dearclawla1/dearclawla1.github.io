@@ -2,45 +2,53 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSON Formatter Tool</title>
+<title>JSON Formatter/Validator</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-body{background:#1e1e1e;color:#d4d4d4;padding:20px;height:100vh;overflow:hidden}
-.container{display:flex;height:calc(100vh-40px)}
-textarea,pre{flex:1;resize:none;border:1px solid #3c3c3c;background:#252526;color:#d4d4d4;padding:10px;font-size:14px;outline:none}
-textarea{border-right:1px solid #3c3c36}
-pre{border-left:1px solid #3c3c36;white-space:pre-wrap;overflow:auto}
-#clear{position:absolute;top:10px;right:10px;background:#3c3c36;color:#d4d4d4;border:1px solid #3c3c36;padding:5px 10px;cursor:pointer;font-size:12px}
-#clear:hover{background:#2d2d2d}
-.tag{position:absolute;bottom:10px;left:10px;font-size:11px;color:#6f6f6f;text-transform:uppercase}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #1e1e1e; color: #e0e0e0; font-family: monospace; padding: 20px; }
+h1 { margin-bottom: 15px; color: #76c7c0; }
+.container { max-width: 800px; margin: 0 auto; }
+textarea { width: 100%; height: 200px; background: #2d2d2d; color: #e0e0e0; border: 1px solid #404040; padding: 10px; font-family: monospace; font-size: 14px; border-radius: 4px; resize: vertical; }
+button { background: #76c7c0; border: none; padding: 10px 20px; margin: 10px 5px 0 0; border-radius: 4px; cursor: pointer; font-family: monospace; font-size: 14px; }
+button:hover { background: #5fb0a0; }
+#result { background: #1e1e1e; padding: 15px; border-radius: 4px; margin-top: 15px; white-space: pre-wrap; min-height: 40px; }
+#status { margin-left: auto; color: #76c7c0; }
+a { color: #76c7c0; text-decoration: none; }
 </style>
 </head>
 <body>
 <div class="container">
-<textarea id="input" placeholder="Paste your JSON here...">#</textarea>
-<pre id="output"><span class="tag">Formatted JSON</span></pre>
-<button id="clear" title="Clear all">Clear</button>
+<a href="index.html">Home</a>
+<h1>JSON Formatter/Validator</h1>
+<textarea id="input" placeholder="Paste your JSON here..."></textarea>
+<div style="margin-top: 10px;">
+<button onclick="formatJSON()">Format JSON</button>
+<button onclick="validateJSON()">Validate JSON</button>
 </div>
+<div style="margin-top: 15px;"><span id="status"></span></div>
+<div id="result" style="margin-top: 15px;"></div>
 <script>
-const input=document.getElementById('input'),output=document.getElementById('output'),clearBtn=document.getElementById('clear');
-function formatJSON(){
-const raw=input.value.trim();
-if(!raw)return;
-try{
-const parsed=JSON.parse(raw);
-const formatted=JSON.stringify(parsed,null,2);
-output.innerHTML=formatted.replace(/([`"\\])/g,'$1').replace(/(&)/g,'$1');
-output.querySelector('.tag').textContent='Formatted JSON';
-}catch(e){
-output.innerHTML='<span style="color:#f44336">Error: '+escapeHtml(e.message)+'</span>';
-output.querySelector('.tag').textContent='Invalid JSON';
+function formatJSON() {
+try {
+const json = document.getElementById('input').value;
+const result = document.getElementById('result');
+const formatted = JSON.stringify(JSON.parse(json), null, 2);
+result.textContent = formatted;
+result.style.color = '#76c7c0';
+} catch (e) {
+result.textContent = "Invalid JSON: " + e.message;
+result.style.color = '#ff6b6b';
 }
 }
-function escapeHtml(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#x27;");}
-input.addEventListener('input',formatJSON);
-clearBtn.onclick=()=>{input.value='';output.innerHTML='<span class="tag">Formatted JSON</span>';};
-formatJSON();
+function validateJSON() {
+try {
+JSON.parse(document.getElementById('input').value);
+document.getElementById('result').textContent = "✓ Valid JSON";
+} catch (e) {
+document.getElementById('result').textContent = "✗ Invalid JSON: " + e.message;
+}
+}
 </script>
+</div>
 </body>
 </html>
