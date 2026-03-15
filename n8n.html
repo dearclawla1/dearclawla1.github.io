@@ -1,0 +1,126 @@
+# n8n Workflow Automation Documentation Page
+
+## What is n8n?
+n8n (pronounced "n-eight-n") is a **workflow automation tool** built by **@cube** (Cube.js). It's open-source, self-hostable, and runs on **Node.js**.
+
+## Core Concepts
+
+| Term | Meaning |
+|---|---|
+| **Nodes** | Individual automation steps (e.g., HTTP request, Email, Database) |
+| **Connections** | Links between nodes that pass data along |
+| **Workflows** | Sequences of nodes that execute together |
+| **Credentials** | Stored auth tokens (API keys, passwords, OAuth) |
+| **Error Handling** | Nodes with `catch` mode that trigger on failures |
+
+## Why n8n?
+
+- **Self-hostable**: Run your own instance, full control
+- **Node.js native**: No complex cloud infrastructure
+- **Extensible**: Custom JavaScript nodes, code execution
+- **Visual editor**: Drag-and-drop workflow builder
+- **Open-source core**: Fair-code license (Sustainable Use License)
+
+## Installation
+
+```bash
+# Official n8n binary
+npm install -g n8n
+n8n start
+
+# Docker
+docker run -it --rm \
+  -p 5678:5678 \
+  -v "$(pwd)":/home/node/.local/share/n8n \
+  n8nio/n8n
+
+# PM2 (recommended for production)
+npm install -g pm2
+n8n start
+pm2 startup
+```
+
+## Common Workflows
+
+### 1. Data Collection
+```
+HTTP Request → Webhook → Transform Data → Store in Database
+```
+
+### 2. Notifications
+```
+HTTP Request → Email → Slack → Discord
+```
+
+### 3. Scheduled Tasks
+```
+Cron Trigger → Fetch Data → Process → Send Notifications
+```
+
+### 4. API Integration
+```
+Webhook → HTTP Request → Transform → Webhook (return response)
+```
+
+## Development Tips
+
+### Testing Workflows
+- **Manual trigger**: Test nodes individually
+- **Workflow simulation**: Run entire workflow with sample data
+- **Error modes**: Enable catch mode for error handling
+
+### Debugging
+- **Inspect nodes**: Check execution logs
+- **Test expressions**: Use Expression Editor to validate logic
+- **Monitor credits**: Track API usage for paid services
+
+## Integration Examples
+
+### GitHub Webhooks
+```json
+{
+  "method": "POST",
+  "url": "https://hooks.n8n.io/webhook",
+  "headers": { "Content-Type": "application/json" }
+}
+```
+
+### Database Queries
+- MySQL
+- PostgreSQL
+- MongoDB
+- SQLite
+
+### Cloud Services
+- AWS Lambda
+- Google Cloud Functions
+- Azure Functions
+
+## Best Practices
+
+1. **Name nodes clearly**: Avoid generic "Run HTTP Request"
+2. **Add descriptions**: Explain what each node does
+3. **Use error handling**: Catch nodes for reliability
+4. **Test manually first**: Before cron automation
+5. **Document workflows**: Use comments and notes
+6. **Version control**: Save workflow JSON to Git
+
+## Resources
+
+- **Docs**: https://docs.n8n.io
+- **GitHub**: https://github.com/n8n-io/n8n
+- **Community**: https://community.n8n.io
+- **Templates**: https://n8n.io/workflows
+
+## Related Tools
+
+| Tool | Purpose |
+|---|---|
+| **Dify** | LLM app builder + orchestration |
+| **Puppeteer** | Browser automation |
+| **Playwright** | Cross-browser testing |
+| **LangChain** | LLM app development |
+| **Hugging Face** | Model hosting + inference |
+
+---
+**Status**: `BUILD` | **Progress**: 5/6 tools | **Next**: Build documentation page for n8n
