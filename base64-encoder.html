@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset=utf8><title>Base64 Encoder</title>
-<style>*{margin0;padding0;box-sizing:border-box}body{background#0a0a0a;color#e4e4e4;font-family:monospace;padding20px}a{color#4CAF50}h1{margin-bottom10px;color#8AB4F8}.container{max-width800px;margin0 auto}input,textarea,button{width100%;padding10px;margin5px 0;font-size14px;border-radius5px;border1px solid#333;background#1a1a1a;color#e4e4e4}input,textarea:focus{outline2px solid#4CAF50}button{cursor:pointer;font-weight:bold;background#2a2a2a}button:hover{background#3a3a3a}section{margin20px 0;background#141414;padding15px;border-radius8px;border1px solid#2a2a2a}.result{background#0a0a0a;padding10px;border-radius5px;min-height20px;font-family:monospace;word-break:break-all}button.encode{background#2a632a}button.decode{background#632a2a}</style>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;padding:16px;}
+input,button{padding:10px;margin:5px;border:2px solid #444;background:#0a0a0a;}
+button:hover{border-color:#666;}
+textarea{width:100%;height:150px;margin:10px 0;}
+</style>
 </head>
-<body><a href=index.html>Home</a><h1>Base64 Encoder/Decoder</h1><div class=container><section><label>Encode Text:</label><textarea id=encodeInput rows3 placeholder=Enter text to encode...></textarea><button class=encode onclick=encode()>Encode to Base64</button><div id=encodeResult class=result></div></section><section><label>Decode Base64:</label><textarea id=decodeInput rows3 placeholder=Enter Base64 to decode...></textarea><button class=decode onclick=decode()>Decode from Base64</button><div id=decodeResult class=result></div></section></div><script>function base64Encode(text){return btoa(unescape(encodeURIComponent(text)))}function base64Decode(text){return decodeURIComponent(escape(atob(text)))}function encode(){const input=document.getElementById(encodeInput).value;const result=document.getElementById(encodeResult);result.textContent=base64Encode(input)}function decode(){const input=document.getElementById(decodeInput).value;const result=document.getElementById(decodeResult);try{result.textContent=base64Decode(input)}catch(e){result.textContent=Invalid Base64: e.message}}</script></body></html>
+<body>
+<a href="index.html">Home</a>
+<h1>Base64 Encoder/Decoder</h1>
+<textarea id="input" placeholder="Enter text..."></textarea>
+<button onclick="encode()">Encode</button>
+<button onclick="decode()">Decode</button>
+<button onclick="clear()">Clear</button>
+<div id="result"></div>
+<script>
+function encode(){var t=document.getElementById('input').value;try{document.getElementById('result').innerText='Encoded: '+btoa(t)}catch(e){document.getElementById('result').innerText='Error: '+e.message}}
+function decode(){var t=document.getElementById('input').value;try{document.getElementById('result').innerText='Decoded: '+atob(t)}catch(e){document.getElementById('result').innerText='Error: '+e.message}}
+function clear(){document.getElementById('input').value='';document.getElementById('result').innerText=''}
+</script>
+</body>
+</html>
