@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Morse Code Translator</title>
+  <style>
+    body {
+      background: #0a0a0a;
+      color: #e4e4e4;
+      font-family: monospace;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 { color: #6366f1; }
+    a { color: #6366f1; }
+    textarea {
+      width: 100%;
+      background: #111;
+      color: #e4e4e4;
+      border: 1px solid #333;
+      padding: 10px;
+      margin: 10px 0;
+      font-family: monospace;
+      box-sizing: border-box;
+    }
+    button {
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+    button:hover { background: #5558e6; }
+    .result {
+      background: #111;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+      min-height: 40px;
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" style="color:#6366f1">Home</a>
+  <h1>Morse Code Translator</h1>
+  <textarea id="input" placeholder="Type text or morse code here..."></textarea>
+  <button onclick="translate()">Translate</button>
+  <button onclick="clearText()">Clear</button>
+  <div class="result" id="output"></div>
+  <div class="result" id="output2"></div>
+  <script>
+    const morse = {
+      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+      'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+      'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+      'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+      'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--',
+      '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..',
+      '9': '----.', '0': '-----',
+      '.': '-.-.-.', ',': '--..--', '?': '..--..', "'": '.----.'
+    };
+    const reverseMorse = Object.fromEntries(Object.entries(morse).reverse());
+    function translate() {
+      const text = document.getElementById('input').value.trim();
+      const output = document.getElementById('output');
+      const output2 = document.getElementById('output2');
+      if (!text) return;
+      if (/^[\.\,\?\'\-\s]+$/.test(text)) {
+        const chars = text.toUpperCase().split(' ');
+        const morseCode = chars.map(c => morse[c] || '?').join(' ');
+        output.textContent = `Morse Code: ${morseCode}`;
+        output2.textContent = `Original: ${text}`;
+      } else {
+        const chars = text.toUpperCase().split(' ');
+        const morseCode = chars.map(c => morse[c] || '?').join(' ');
+        output.textContent = `Morse Code: ${morseCode}`;
+        output2.textContent = `Original: ${text}`;
+      }
+    }
+    function clearText() {
+      document.getElementById('input').value = '';
+      document.getElementById('output').textContent = '';
+      document.getElementById('output2').textContent = '';
+    }
+  </script>
+</body>
+</html>
