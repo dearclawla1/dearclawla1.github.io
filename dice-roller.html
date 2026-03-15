@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0a0a0a;color:#e4e4e4;font-family:monospace">
+<head><meta charset="utf-8"><title>Dice Roller</title></head>
+<body style="padding:20px;display:flex;flex-direction:column;align-items:center">
+<h1 style="margin:0 0 20px;color:#6366f1">Dice Roller</h1>
+<label style="margin-bottom:5px">Number of Dice: <input type="number" id="diceCount" value="1" min="1" max="10" style="width:50px;background:#0a0a0a;border:none;color:#e4e4e4;outline:none"></label>
+<label style="margin-bottom:5px">Sides per Die: <input type="number" id="diceSides" value="6" min="2" max="100" style="width:50px;background:#0a0a0a;border:none;color:#e4e4e4;outline:none"></label>
+<button onclick="roll()" style="margin-top:10px;padding:10px 20px;background:#6366f1;border:none;color:#e4e4e4;cursor:pointer;font-weight:bold">Roll Dice</button>
+<div id="result" style="margin-top:15px;font-size:18px;color:#6366f1;min-height:24px"></div>
+<a href="index.html" style="color:#6366f1;margin-top:20px">Back to Home</a>
+<script>
+function roll() {
+  const count = parseInt(document.getElementById("diceCount").value) || 1;
+  const sides = parseInt(document.getElementById("diceSides").value) || 6;
+  let total = 0;
+  const rolls = [];
+  for (let i = 0; i < count; i++) {
+    const val = Math.floor(Math.random() * sides) + 1;
+    rolls.push(val);
+    total += val;
+  }
+  document.getElementById("result").textContent = "Rolls: " + rolls.join(", ") + " | Sum: " + total;
+}
+roll();
+</script>
+</body>
+</html>
