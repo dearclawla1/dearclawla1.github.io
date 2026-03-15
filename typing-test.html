@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><title>Typing Speed Test</title>
+<style>
+:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1;--muted:#71717a;--border:#27272a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+h1{margin-bottom:10px;font-size:1.5rem}
+nav{margin-bottom:20px}</a>
+.container{max-width:800px;width:100%}
+.panel{background:#111111;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.stats{display:flex;justify-content:space-between;gap:10px;font-size:0.9rem;color:var(--muted)}
+.stats>div{flex:1;text-align:center}
+.stats>div:first-child{font-weight:600;color:var(--text)}
+.test-area{border:1px dashed var(--border);border-radius:8px;padding:16px;font-family:monospace;font-size:1.1rem;min-height:120px;resize:vertical}
+.btn{background:var(--primary);color:white;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:0.9rem;transition:opacity .2s}
+.btn:hover{opacity:.9}
+.btn.secondary{background:#27272a;color:var(--text);border:1px solid var(--border)}
+.result{margin-top:12px;font-size:0.85rem;color:var(--muted)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<h1>⌨️ Typing Speed Test</h1>
+<nav><a href="index.html" style="color:#6366f1">Back to Home</a></nav>
+<div class="container">
+<div class="panel stats">
+<div id="timer">⏱️ <span id="timer-val">60</span>s</div>
+<div id="wpm">⚡ <span id="wpm-val">0</span> WPM</div>
+<div id="acc">🎯 <span id="acc-val">100</span>% Acc</div>
+<div id="chrs">🔤 <span id="char-val">0</span>/40</div>
+</div>
+<div class="panel test-area" id="test-area" tabindex="0" autofocus></div>
+<button id="start-btn" class="btn">▶ Start Test</button>
+<button id="reset-btn" class="btn secondary">↺ Reset</button>
+<div class="result hidden" id="result-panel"></div>
+</div>
+<script>
+const text='The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!';
+const area=document.getElementById('test-area'),btnStart=document.getElementById('start-btn'),btnReset=document.getElementById('reset-btn'),pTimer=document.getElementById('timer-val'),pWpm=document.getElementById('wpm-val'),pAcc=document.getElementById('acc-val'),pChar=document.getElementById('char-val'),pResult=document.getElementById('result-panel');let startTime,timeout,chars='';let timeLeft=60,typed='',wrong=0,wpm=0;const charsArr=text.split('');function shuffle(){return charsArr.sort(()=>Math.random()-0.5).slice(0,40).join('');}function reset(){timeLeft=60;typed='';wrong=0;wpm=0;chars=shuffle();startTime=0;timeout=0;area.value=chars;pTimer.textContent=timeLeft;pWpm.textContent=wpm;pAcc.textContent=100;pChar.textContent='0/40';area.readOnly=false;btnStart.classList.remove('hidden');btnReset.classList.remove('hidden');pResult.classList.add('hidden');area.focus();}function start(){startTime=Date.now();area.readOnly=true;btnStart.classList.add('hidden');btnReset.disabled=true;timeout=setInterval(()=>{timeLeft=Math.ceil((endTime-Date.now())/1000);if(timeLeft<=0)end();else{pTimer.textContent=timeLeft;area.scrollTop=area.scrollHeight;}});}function end(){clearInterval(timeout);btnReset.disabled=false;const correct=chars.split('').filter((c,i)=>c===area.value[i]).length;wpm=Math.round((correct/5)*(60/timeLeft)||0);wrong=chars.length-correct;pAcc=Math.round(((correct)/chars.length)*100)||0;area.value='';pTimer.textContent='⏱️ Done';pWpm.textContent=wpm;pAcc.textContent=pAcc.textContent===0?100:pAcc.textContent;pChar.textContent=chars.length;const msg=`⏱️ ${timeLeft}s | ⚡ ${wpm} WPM | 🎯 ${pAcc}% Acc | 🔤 ${correct}/${chars.length} correct`;pResult.textContent=msg;pResult.classList.remove('hidden');area.focus();}function endTime=Date.now()+timeLeft*1000;btnStart.addEventListener('click',start);btnReset.addEventListener('click',reset);area.addEventListener('input',()=>{const input=area.value;if(input.length>chars.length){chars+=input.charAt(input.length-1);}if(chars.length>0){typed=chars;const correct=typed.split('').filter((c,i)=>c===area.value[i]).length;wpm=Math.round((correct/5)*(60/timeLeft)||0);wrong=typed.length-correct;pAcc=Math.round(((correct)/typed.length)*100)||0;pWpm.textContent=wpm;pAcc.textContent=pAcc.textContent===0?100:pAcc.textContent;pChar.textContent=typed.length+'/'+chars.length;}});area.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();area.focus();area.value+=' ';}});area.focus();reset();</script>
+</body>
+</html>
