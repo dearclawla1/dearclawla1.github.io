@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:20px;}
+h1{color:#6366f1;margin-bottom:15px;}
+input,button{padding:8px 12px;margin:5px 10px;border-radius:4px;border:1px solid #6366f1;}
+button{background:#6366f1;color:#0a0a0a;font-weight:bold;}
+.result{background:#1a1a1a;padding:10px;border-radius:4px;margin-top:10px;}
+a{color:#6366f1;}
+</style>
+</head>
+<body>
+<h1>Hex Color Mixer</h1>
+<input id="hex1" type="text" placeholder="#FF0000" style="width:120px;">
+<input id="hex2" type="text" placeholder="#00FF00" style="width:120px;">
+<button onclick="mixColors()">Mix Colors</button>
+<div id="result" class="result"></div>
+<p>Or pick random colors:</p>
+<button onclick="randomColors()">Random</button>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function hexToRgb(hex) {
+let h = hex.replace('#','');
+return {r:parseInt(h.substr(0,2),16),g:parseInt(h.substr(2,2),16),b:parseInt(h.substr(4,2),16)};
+}
+function rgbToHex(r,g,b) {
+return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+function mixColors() {
+let h1 = document.getElementById('hex1').value;
+let h2 = document.getElementById('hex2').value;
+if(!h1 || !h2) {document.getElementById('result').innerHTML='Please enter both colors.';return;}
+let rgb1 = hexToRgb(h1), rgb2 = hexToRgb(h2);
+let avg = {r:(rgb1.r+rgb2.r)/2,g:(rgb1.g+rgb2.g)/2,b:(rgb1.b+rgb2.b)/2};
+let hex = rgbToHex(Math.round(avg.r),Math.round(avg.g),Math.round(avg.b));
+let rgb = 'rgb('+Math.round(avg.r)+','+Math.round(avg.g)+','+Math.round(avg.b)+')';
+document.getElementById('result').innerHTML='Mixed: '+hex+' ('+rgb+')';
+}
+function randomColors() {
+let r=Math.floor(Math.random()*256),g=Math.floor(Math.random()*256),b=Math.floor(Math.random()*256);
+let hex = rgbToHex(r,g,b);
+document.getElementById('hex1').value=hex;
+document.getElementById('hex2').value=hex;
+document.getElementById('result').innerHTML='Random: '+hex;
+}
+</script>
+</body>
+</html>
