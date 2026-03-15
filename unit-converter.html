@@ -1,112 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Unit Converter</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,sans-serif;background:#0a0a0a;color:#e4e4e4;min-height:100vh;display:flex;justify-content:center;padding:40px}
-.container{width:100%;max-width:500px;background:#111;border-radius:12px;padding:24px}
-a{color:#6366f1;text-decoration:none;font-size:14px;display:block;margin:-24px -24px 16px;padding:8px 24px}
-h1{font-size:24px;margin-bottom:16px;color:#e4e4e4}
-input,select,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #333;background:#222;color:#e4e4e4;font-size:14px}
-button{cursor:pointer;border-color:#6366f1}
-select{background:#222}
-result{margin-top:16px;padding:16px;background:#1a1a1a;border-radius:8px;font-size:18px;color:#6366f1}
-.options{display:flex;gap:8px;margin-bottom:16px}
-label{font-size:13px;color:#aaa;margin-left:4px}
-input[type="number"]{font-family:monospace}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+h1{color:#6366f1;margin-bottom:20px}
+a{color:#6366f1;text-decoration:none}
+.container{max-width:600px;margin:0 auto}
+section{margin:20px 0;background:#111;padding:15px;border-radius:8px;border:1px solid #333}
+input,select{width:100%;padding:10px;margin:5px 0;border:1px solid #444;background:#1a1a1a;color:#e4e4e4;border-radius:4px;font-size:14px}
+button{background:#6366f1;color:#fff;border:none;padding:12px 20px;border-radius:4px;cursor:pointer;font-size:14px;font-weight:bold}
+button:hover{background:#5558ff}
+.result{font-size:24px;color:#6366f1;font-weight:bold;margin:10px 0}
+.error{color:#ff6b6b;background:#2a1a1a;padding:10px;border-radius:4px;margin:10px 0}
 </style>
 </head>
 <body>
 <div class="container">
-<a href="index.html" style="color:#6366f1">Home</a>
+<a href="index.html" style="color:#6366f1;display:block;margin-bottom:15px">Home</a>
 <h1>Unit Converter</h1>
-<div class="options">
-<select id="category">
-<option value="length">Length</option>
-<option value="mass">Mass</option>
-<option value="temperature">Temperature</option>
-<option value="speed">Speed</option>
-</select>
-</div>
-<div id="length">
-<label for="from">From</label><input type="number" id="from" placeholder="Value">
-<select id="from-unit">
+<section>
+<h2>Length</h2>
+<input id="lengthValue" type="number" placeholder="Enter value">
+<select id="lengthFrom">
 <option value="m">Meters</option><option value="km">Kilometers</option><option value="cm">Centimeters</option><option value="mm">Millimeters</option><option value="mi">Miles</option><option value="yd">Yards</option><option value="ft">Feet</option><option value="in">Inches</option>
 </select>
-<label for="to">To</label><input type="number" id="to" placeholder="Result">
-<select id="to-unit">
+<select id="lengthTo">
 <option value="m">Meters</option><option value="km">Kilometers</option><option value="cm">Centimeters</option><option value="mm">Millimeters</option><option value="mi">Miles</option><option value="yd">Yards</option><option value="ft">Feet</option><option value="in">Inches</option>
 </select>
-</div>
-<div id="mass">
-<label for="from-m">From</label><input type="number" id="from-m" placeholder="Value">
-<select id="from-mass">
-<option value="kg">Kilograms</option><option value="g">Grams</option><option value="mg">Milligrams</option><option value="lb">Pounds</option><option value="oz">Ounces</option><option value="t">Metric Tonnes</option>
+<button onclick="convertLength()">Convert</button>
+<div id="lengthResult" class="result"></div>
+</section>
+<section>
+<h2>Weight</h2>
+<input id="weightValue" type="number" placeholder="Enter value">
+<select id="weightFrom">
+<option value="kg">Kilograms</option><option value="g">Grams</option><option value="mg">Milligrams</option><option value="lb">Pounds</option><option value="oz">Ounces</option>
 </select>
-<label for="to-m">To</label><input type="number" id="to-m" placeholder="Result">
-<select id="to-mass">
-<option value="kg">Kilograms</option><option value="g">Grams</option><option value="mg">Milligrams</option><option value="lb">Pounds</option><option value="oz">Ounces</option><option value="t">Metric Tonnes</option>
+<select id="weightTo">
+<option value="kg">Kilograms</option><option value="g">Grams</option><option value="mg">Milligrams</option><option value="lb">Pounds</option><option value="oz">Ounces</option>
 </select>
-</div>
-<div id="temperature">
-<label for="from-t">From</label><input type="number" id="from-t" placeholder="Temperature">
-<select id="from-temp">
+<button onclick="convertWeight()">Convert</button>
+<div id="weightResult" class="result"></div>
+</section>
+<section>
+<h2>Temperature</h2>
+<input id="tempValue" type="number" placeholder="Enter value">
+<select id="tempFrom">
 <option value="c">Celsius</option><option value="f">Fahrenheit</option><option value="k">Kelvin</option>
 </select>
-<label for="to-t">To</label><input type="number" id="to-t" placeholder="Result">
-<select id="to-temp">
+<select id="tempTo">
 <option value="c">Celsius</option><option value="f">Fahrenheit</option><option value="k">Kelvin</option>
 </select>
-</div>
-<div id="speed">
-<label for="from-s">From</label><input type="number" id="from-s" placeholder="Value">
-<select id="from-speed">
-<option value="m-s">Meters/Second</option><option value="km-h">Kilometers/Hour</option><option value="mi-h">Miles/Hour</option><option value="kn">Knots</option>
-</select>
-<label for="to-s">To</label><input type="number" id="to-s" placeholder="Result">
-<select id="to-speed">
-<option value="m-s">Meters/Second</option><option value="km-h">Kilometers/Hour</option><option value="mi-h">Miles/Hour</option><option value="kn">Knots</option>
-</select>
-</div>
-<div class="result" id="result">Enter a value to convert</div>
+<button onclick="convertTemp()">Convert</button>
+<div id="tempResult" class="result"></div>
+</section>
 </div>
 <script>
-const category=document.getElementById('category');
-const length=document.getElementById('length'),mass=document.getElementById('mass'),temp=document.getElementById('temperature'),speed=document.getElementById('speed');
-let currentCategory='length';
-category.addEventListener('change',()=>{
-currentCategory=category.value;
-length.style.display=mass.style.display=temp.style.display=speed.style.display='none';
-document.getElementById(currentCategory).style.display='block';
-});
-category.dispatchEvent(new Event('change'));
-document.querySelectorAll('input,select').forEach(el=>{
-el.addEventListener('input',convert);
-});
-function convert(){
-const from=document.getElementById(currentCategory).querySelector('input[placeholder="Value"]'),to=document.getElementById(currentCategory).querySelector('input[placeholder="Result"]');
-if(!from.value)return;
-let val=parseFloat(from.value),fromUnit=document.getElementById('from'+currentCategory.substring(1)).value,toUnit=document.getElementById('to'+currentCategory.substring(1)).value;
-if(currentCategory==='temperature'){
-if(fromUnit==='c'){val=(val*9/5)+32}
-else if(fromUnit==='f'){val=(val-32)*5/9}
-else{val=val-273.15}
+function convertLength(){
+const val=document.getElementById('lengthValue').value;
+const from=document.getElementById('lengthFrom').value;
+const to=document.getElementById('lengthTo').value;
+const toMeter={m:1,km:0.001,cm:0.01,mm:0.0001,mi:1609.34,yd:0.9144,ft:0.3048,in:0.0254};
+const result=(val*toMeter[from])*toMeter[to].toFixed(2);
+document.getElementById('lengthResult').textContent=result+' '+from.toUpperCase()+' = '+result+' '+to.toUpperCase();
 }
-if(currentCategory==='length'){
-const factors={m:1,km:1000,cm:0.01,mm:0.001,mi:1609.344,yd:0.9144,ft:0.3048,in:0.0254};
-val=val*factors[fromUnit];
+function convertWeight(){
+const val=document.getElementById('weightValue').value;
+const from=document.getElementById('weightFrom').value;
+const to=document.getElementById('weightTo').value;
+const toKg={kg:1,g:0.001,mg:0.000001,lb:0.453592,oz:0.0283495};
+const result=(val*toKg[from])*toKg[to].toFixed(4);
+document.getElementById('weightResult').textContent=result+' '+from.toUpperCase()+' = '+result+' '+to.toUpperCase();
 }
-if(currentCategory==='mass'){
-const factors={kg:1,g:0.001,mg:0.000001,lb:0.453592,oz:0.0283495,t:1000};
-val=val*factors[fromUnit];
-}
-if(currentCategory==='speed'){
-const factors={'m-s':1,'km-h':0.277778,'mi-h':0.44704,'kn':0.514444};
-val=val*factors[fromUnit];
-}
-to.value=val.toFixed(6);
+function convertTemp(){
+const val=document.getElementById('tempValue').value;
+const from=document.getElementById('tempFrom').value;
+const to=document.getElementById('tempTo').value;
+let celsius=val;
+if(from==='f')celsius=(val-32)*5/9;
+else if(from==='k')celsius=val-273.15;
+if(to==='f')celsius*celsius*9/5+32;
+else if(to==='k')celsius+273.15;
+document.getElementById('tempResult').textContent=val+' '+from.toUpperCase()+' = '+celsius.toFixed(2)+' '+to.toUpperCase();
 }
 </script>
 </body>
