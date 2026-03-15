@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><style>body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;padding:20px;}input{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:5px;margin:5px;}button{background:#6366f1;color:#fff;border:none;padding:5px 10px;cursor:pointer;}a{color:#6366f1;text-decoration:none;font-size:12px;}</style></head>
+<body>
+<h1>Stopwatch</h1>
+<button onclick="start()">Start</button> <button onclick="stop()">Stop</button> <button onclick="reset()">Reset</button>
+<input type="text" id="time" readonly style="font-size:24px;font-weight:bold;padding:10px;width:200px;" value="00:00.00">
+<button onclick="lap()">Lap</button>
+<div id="laps"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+let timer=null,elapsed=0,running=false,laps=[];
+function format(ms){let sec=Math.floor(ms/1000),msPart=ms%1000;return (sec<10?"0":"")+sec+":"+((msPart/100)<10?"0":"")+(Math.floor(msPart/10)).toString().padStart(2,"0");}
+function start(){if(!running){timer=setInterval(()=>{elapsed+=10;document.getElementById("time").value=format(elapsed);},10);running=true;}else{elapsed+=10;document.getElementById("time").value=format(elapsed);}}
+function stop(){if(timer){clearInterval(timer);timer=null;running=false;}}
+function reset(){stop();elapsed=0;document.getElementById("time").value="00:00.00";laps=[];document.getElementById("laps").innerHTML="";running=false;}
+function lap(){if(running){let lapData={time:document.getElementById("time").value,elapsed:elapsed};laps.unshift(lapData);document.getElementById("laps").innerHTML="<ul>"+laps.map(l=>"<li>Lap "+(laps.length)+": "+l.time+"</li>").join("")+"</ul>";}}
+</script>
+</body>
+</html>
