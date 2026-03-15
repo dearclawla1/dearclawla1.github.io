@@ -1,63 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSON Formatter Tool</title>
+<html lang="en" theme="dark">
+<head><meta charset="UTF-8"><title>JSON Formatter/Validator</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:monospace;background:#0a0a0a;color:#e4e4e4;min-height:100vh;display:flex;flex-direction:column;gap:10px;padding:20px}
-a{color:#8ab4f8}
-.container{max-width:900px;margin:0 auto}
-header{display:flex;justify-content:space-between;align-items:center}
-h1{font-size:1.5em}
-.input-group{display:flex;gap:10px}
-textarea,select,button{padding:10px;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;font-size:1em;resize:vertical}
-textarea{flex:1;height:200px}
-button{cursor:pointer;background:#2a5a9a;border:none}
-button:hover{background:#3a6abcb}
-button:disabled{opacity:0.5;cursor:not-allowed}
-#output{min-height:150px;background:#1a1a1a;border:1px solid #333;padding:10px;border-radius:4px;white-space:pre-wrap;font-family:monospace}
-.errors{color:#f8b4b4;font-size:0.85em;display:none}
-</style>
-</head>
-<body>
-<div class="container">
-<a href="index.html">Home</a>
-<header><h1>JSON Formatter</h1></header>
-<div class="input-group">
-<textarea id="input" placeholder="Paste JSON here..."></textarea>
-<select id="mode"><option value="format">Format</option><option value="minify">Minify</option><option value="validate">Validate</option></select>
-<button id="process" onclick="process()">Process</button>
-</div>
-<div id="output"></div>
-<div id="errors" class="errors"></div>
-</div>
-<script>
-function process(){
-const input=document.getElementById("input").value;
-const mode=document.getElementById("mode").value;
-const output=document.getElementById("output");
-const errors=document.getElementById("errors");
-errors.style.display="none";
-output.innerHTML="";
-if(!input.trim()){output.innerHTML="Please enter JSON...";return}
-try{
-let data;
-if(mode==="format"||mode==="validate"){data=JSON.parse(input)}else{data=input}
-if(mode==="format"){output.innerHTML=JSON.stringify(data,null,2)}
-if(mode==="minify"){output.innerHTML=JSON.stringify(data)}
-if(mode==="validate"){
-const formatted=JSON.stringify(data,null,2);
-output.innerHTML="Valid JSON:<br><br>" + formatted
-}
-}catch(e){
-errors.style.display="block";
-errors.innerHTML="Invalid JSON: " + e.message
-}
-}
-document.getElementById("input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();document.getElementById("input").value+=" ";}});
-process();
-</script>
-</body>
-</html>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
+a{color:#81a1c1;text-decoration:none;}
+input,button,select{width:100%;padding:10px;margin:10px 0;font-size:14px;}
+textarea{width:100%;min-height:150px;font-family:monospace;font-size:13px;padding:10px;box-sizing:border-box;}
+#output{background:#1f1f1f;border:1px solid #3a3a3a;padding:10px;margin-top:10px;}
+h1{margin:0 0 10px;font-size:18px;}
+</style></head>
+<body><a href="index.html">Home</a><h1>JSON Formatter/Validator</h1>
+<input type="file" id="file" accept=".json"><textarea id="input"></textarea>
+<button onclick="format()">Format</button>
+<button onclick="validate()">Validate</button>
+<button onclick="minify()">Minify</button>
+<button onclick="clear()">Clear</button>
+<div id="output"></div><script>
+function format(){const t=document.getElementById('input').value,o=JSON.parse(t||'{}');
+document.getElementById('output').innerHTML='<pre style="color:#c4a7e7;">'+JSON.stringify(o,null,2)+'</pre>'}
+function validate(){const t=document.getElementById('input').value;try{JSON.parse(t);
+document.getElementById('output').innerHTML='<div style="color:#50fa7b;">✔ Valid JSON</div>'}catch{
+document.getElementById('output').innerHTML='<div style="color:#ff5555;">✖ Invalid JSON</div>'}}
+function minify(){const t=document.getElementById('input').value,o=JSON.parse(t||'{}');
+document.getElementById('output').innerHTML='<pre style="color:#608b4c;">'+JSON.stringify(o)+'</pre>'}
+function clear(){document.getElementById('input').value='';document.getElementById('output').innerHTML=''}</script>
+</body></html>
