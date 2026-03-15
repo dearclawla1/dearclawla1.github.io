@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><title>Cron Builder</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px;}
+a{color:#8b5cf6;text-decoration:none;}
+.container{max-width:900px;margin:0 auto;}
+h1{margin:0 0 20px;font-size:1.6em;}
+grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
+field{display:flex;flex-direction:column;}
+label{font-size:0.85em;margin-bottom:4px;}
+input{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;border-radius:6px;font-size:0.95em;}
+input:focus{outline:2px solid #8b5cf6;border-color:transparent;}
+.btn{background:#8b5cf6;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:0.95em;margin:5px 5px 5px 0;}
+.btn:hover{background:#7c3aed;}
+.preview{background:#1a1a1a;padding:15px;border-radius:8px;font-family:monospace;font-size:1.1em;margin:20px 0;}
+.back-link{display:block;margin-bottom:20px;}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" class="back-link">Home</a>
+<h1>Cron Expression Builder</h1>
+<div id="grid"></div>
+<div class="controls" style="margin:15px 0;"></div>
+<div class="preview" id="preview"></div>
+<script>
+const fields=[['Minute','0-59'],['Hour','0-23'],['Day','1-31'],['Month','1-12'],['Week','0-7 (0=Sun)']];
+let values=['0','0','1','1','*'];
+function update(){
+let grid=document.getElementById('grid'),controls=document.querySelector('.controls');
+grid.innerHTML='';values=[];
+fields.forEach((f,i)=>{
+let field=document.createElement('div');field.className='field';
+field.innerHTML=`<label>${f[0]}</label><input id="f${i}" value="${values[i]}">`;
+let input=field.querySelector('input');
+grid.appendChild(field);
+});
+controls.innerHTML=`<button class="btn" onclick="clearAll()">Clear</button><button class="btn" onclick="randomize()">Random</button><button class="btn" onclick="copyToClip()">Copy</button>`;
+updatePreview();
+}
+function updatePreview(){
+let result=values.map(v=>v.padStart(2,'0')).join(' ');
+document.getElementById('preview').textContent=' '+result;
+}
+function clearAll(){values=['0','0','1','1','*'];update();}
+function randomize(){
+values=[Math.floor(Math.random()*60).toString(),Math.floor(Math.random()*24).toString(),Math.floor(Math.random()*31).toString(),Math.floor(Math.random()*12+1).toString(),Math.random()>0.5?'*':Math.floor(Math.random()*7).toString()];update();}
+function copyToClip(){navigator.clipboard.writeText(values.join(' '));alert('Copied to clipboard!');}
+update();
+</script>
+</div></body></html>
