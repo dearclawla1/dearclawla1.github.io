@@ -1,103 +1,70 @@
 <!DOCTYPE html>
-<html lang="en" style="background:#0a0a0a;color:#e4e4e4;font-family:sans-serif">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Habit Tracker</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem;background:#0a0a0a;color:#e4e4e4}
-h1{font-size:2rem;margin-bottom:1.5rem;text-align:center}
-a{color:#6366f1;text-decoration:none;font-size:0.9rem;margin-bottom:1rem}
-.container{max-width:500px;width:100%;background:#111;border-radius:12px;padding:1.5rem;box-shadow:0 4px 20px rgba(99,102,241,0.2)}
-h2{font-size:1.2rem;margin-bottom:1rem;border-bottom:1px solid #222;padding-bottom:0.5rem}
-.form-group{margin-bottom:1rem}
-.form-group label{display:block;margin-bottom:0.3rem;font-weight:600}
-.form-group input{width:100%;padding:0.7rem;border:2px solid #222;border-radius:8px;font-size:1rem;background:#111;color:#e4e4e4}
-button{width:100%;padding:0.9rem;margin-top:0.5rem;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer}
-.btn-primary{background:#6366f1;color:#fff}
-.btn-primary:hover{background:#5558ff}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-top:1.5rem}
-.stat{background:#111;padding:0.8rem;border-radius:8px;text-align:center;border:1px solid #222}
-.stat-value{font-size:1.5rem;font-weight:700;color:#6366f1}
-.stat-label{font-size:0.75rem;color:#aaa}
-h3{font-size:1rem;margin:1rem 0 0.5rem;border-bottom:1px solid #222;padding-bottom:0.3rem}
-h4{font-size:0.9rem;margin:0.8rem 0}
-.checkbox-item{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;background:#111;padding:0.5rem;border-radius:8px;border:1px solid #222}
-.checkbox-item input[type="checkbox"]{width:20px;height:20px;cursor:pointer}
-.checkbox-item input[type="checkbox"]:checked{accent-color:#6366f1}
-.reset-btn{background:#ef4444;color:#fff;margin-top:1rem}
-.reset-btn:hover{background:#dc2626}
-.progress-bar{height:8px;background:#111;border-radius:4px;margin-top:1rem;overflow:hidden}
-.progress-fill{height:100%;background:#6366f1;transition:width 0.3s ease}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px;}
+h1{text-align:center;margin-bottom:20px;}
+.stats{background:#1a1a1a;padding:15px;border-radius:8px;width:100%;max-width:400px;text-align:center;margin:20px 0;}
+.stats h2{margin:10px 0 5px 0;}
+.container{width:100%;max-width:500px;}
+.habit{display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid #222;}
+.habit input[type="checkbox"]{transform:scale(1.5);}
+.habit button{padding:8px 12px;border:none;border-radius:4px;background:#6366f1;color:white;cursor:pointer;}
+.habit button.complete{background:#10b981;}
+.habit button.reset{background:#ef4444;}
+.habit select{padding:8px;border-radius:4px;}
+.add-form{display:flex;flex-direction:column;margin-top:20px;}
+.add-form input, .add-form select{padding:10px;margin:5px 0;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#e4e4e4;}
+.add-form button{padding:12px;background:#6366f1;border:none;border-radius:4px;color:white;cursor:pointer;margin-top:10px;}
+.progress-bar{background:#1a1a1a;height:20px;border-radius:10px;overflow:hidden;margin:20px 0;}
+.progress-fill{background:#6366f1;height:100%;transition:width 0.3s;}
 </style>
 </head>
 <body>
-<h1>Habit Tracker</h1>
 <a href="index.html" style="color:#6366f1">Home</a>
-<div class="container">
-<h2>Add New Habit</h2>
-<div class="form-group">
-<label>Name:</label>
-<input type="text" id="habitName" placeholder="e.g., Exercise, Read, Meditate">
+<h1>🎯 Habit Tracker</h1>
+<div id="stats" class="stats">
+<h2>Completion Rate</h2>
+<p id="rate">0%</p>
 </div>
-<button class="btn-primary" id="addHabit">+ Add Habit</button>
-<h2>Today's Habits</h2>
-<div id="habitsList"></div>
-<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
-<h2>Completion Stats</h2>
-<div class="stats">
-<div class="stat"><div class="stat-value" id="todayCount">0</div><div class="stat-label">Done Today</div></div>
-<div class="stat"><div class="stat-value" id="totalCount">0</div><div class="stat-label">Total Habits</div></div>
-<div class="stat"><div class="stat-value" id="percent">0%</div><div class="stat-label">Completion</div></div>
-</div>
-<button class="reset-btn" id="resetStats">Reset Stats</button>
-</div>
+<div class="container" id="habits"></div>
+<div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+<form class="add-form">
+<input id="newHabit" placeholder="Enter habit name" required>
+<select id="newFreq"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select>
+<button type="submit">Add Habit</button>
+</form>
+<button onclick="clearHabits()" style="padding:10px;background:#ef4444;border:none;border-radius:4px;color:white;cursor:pointer;margin-top:10px;">Clear All</button>
 <script>
-const habits = [];
-let todayCount = 0;
-function renderHabits() {
-const list = document.getElementById('habitsList');
-list.innerHTML = habits.map((h,i) => '<div class="checkbox-item"><input type="checkbox" class="habit-check" data-index="'+i+'" '+ (h.done ? 'checked' : '') +'><span>'+h.name+'</span></div>').join('');
+let habits={};
+loadHabits();
+function loadHabits(){
+const saved=localStorage.getItem('habitTracker');
+if(saved){habits=JSON.parse(saved);}
+render();
 }
-function renderStats() {
-todayCount = document.querySelectorAll('.habit-check:checked').length;
-document.getElementById('todayCount').textContent = todayCount;
-document.getElementById('totalCount').textContent = habits.length;
-const percent = habits.length > 0 ? Math.round((todayCount/habits.length)*100) : 0;
-document.getElementById('percent').textContent = percent + '%';
-document.getElementById('progress').style.width = percent + '%';
+function render(){
+const container=document.getElementById('habits');
+container.innerHTML=Object.keys(habits).map(name=>{
+const h=habits[name];
+return '<div class="habit"><input type="checkbox" onclick="toggle(this)" checked> '+name+' <span>('+h.freq+')<\/span> <button onclick="complete(\''+name+'\')">✓<\/button> <button class="reset" onclick="reset(\''+name+'\')">✕<\/button><select onchange="changeFreq(\''+name+'\',this.value)"><option value="daily"'+(h.freq==='daily'?'':' selected')+'>Daily<\/option><option value="weekly"'+(h.freq==='weekly'?'':' selected')+'>Weekly<\/option><option value="monthly"'+(h.freq==='monthly'?'':' selected')+'>Monthly<\/option><\/select><\/div>';
+}).join('');
+updateStats();
 }
-document.getElementById('addHabit').addEventListener('click', () => {
-const name = document.getElementById('habitName').value.trim();
-if (name) {
-habits.push({name:name,done:false});
-document.getElementById('habitName').value = '';
-renderHabits();
-renderStats();
+function toggle(cb){
+cb.checked=!cb.checked;updateStats();}
+function complete(name){habits[name].complete=true;save();render();updateStats();}
+function reset(name){habits[name].complete=false;save();render();updateStats();}
+function changeFreq(name,val){habits[name].freq=val;save();render();}
+function updateStats(){
+const total=Object.keys(habits).length;
+const completed=Object.values(habits).filter(h=>h.complete).length;
+document.getElementById('rate').textContent=total?Math.round(completed/total*100)+'%':'0%';
+document.getElementById('progress').style.width=total?completed/total*100+'%':'0%';
 }
-});
-document.querySelectorAll('.habit-check').forEach(cb => {
-cb.addEventListener('change', () => {
-const idx = cb.dataset.index;
-habits[idx].done = cb.checked;
-renderStats();
-localStorage.setItem('habits', JSON.stringify(habits));
-});
-});
-document.getElementById('resetStats').addEventListener('click', () => {
-habits.forEach(h => h.done = false);
-document.querySelectorAll('.habit-check').forEach(cb => cb.checked = false);
-renderStats();
-localStorage.setItem('habits', JSON.stringify(habits));
-});
-try {
-const saved = localStorage.getItem('habits');
-if (saved) {
-habits.push(...JSON.parse(saved));
-}
-} catch(e) {}
-renderHabits();
-renderStats();
+function save(){localStorage.setItem('habitTracker',JSON.stringify(habits));}
+function clearHabits(){habits={};save();render();updateStats();}
+loadHabits();
 </script>
 </body>
 </html>
