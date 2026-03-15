@@ -1,42 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Word Counter</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px;min-height:100vh;display:flex;flex-direction:column;gap:10px;}
-textarea{width:100%;height:200px;border:2px solid #1a1a1a;border-radius:8px;font-size:14px;padding:10px;background:#111;resize:vertical;}
-button{background:#6366f1;color:#fff;border:none;border-radius:6px;padding:10px 16px;font-size:14px;cursor:pointer;}
-button:hover{background:#5558e6;}
-.stats{background:#111;padding:16px;border-radius:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-.stat{background:#1a1a1a;padding:12px;border-radius:6px;text-align:center;}
-.stat-value{font-size:24px;font-weight:bold;color:#6366f1;}
-.stat-label{font-size:12px;color:#888;}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+h1{margin:0 0 10px;font-size:24px}
+a{color:#6366f1;text-decoration:none}
+textarea{width:100%;height:150px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;border-radius:8px;padding:10px;font-size:14px;resize:vertical}
+button{background:#6366f1;color:#fff;border:none;border-radius:6px;padding:10px 20px;font-size:14px;cursor:pointer;margin:5px}
+button:hover{background:#5558ff}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+.stat-box{background:#1a1a1a;border-radius:6px;padding:15px;text-align:center}
+.stat-label{font-size:12px;color:#888}
+.stat-value{font-size:28px;color:#6366f1;font-weight:bold}
 </style>
 </head>
 <body>
 <a href="index.html" style="color:#6366f1">Home</a>
 <h1>Word Counter</h1>
-<textarea id="input" placeholder="Type or paste your text here..."></textarea>
-<button onclick="update()">Count Words</button>
+<textarea id="text" placeholder="Type or paste text here..."></textarea>
 <div class="stats">
-<div class="stat"><div class="stat-value" id="words">0</div><div class="stat-label">Words</div></div>
-<div class="stat"><div class="stat-value" id="chars">0</div><div class="stat-label">Characters</div></div>
-<div class="stat"><div class="stat-value" id="lines">0</div><div class="stat-label">Lines</div></div>
-<div class="stat"><div class="stat-value" id="syllables">0</div><div class="stat-label">Syllables</div></div></div>
+<div class="stat-box">
+<div class="stat-label">Words</div>
+<div class="stat-value" id="words">0</div>
+</div>
+<div class="stat-box">
+<div class="stat-label">Characters</div>
+<div class="stat-value" id="chars">0</div>
+</div>
+<div class="stat-box">
+<div class="stat-label">Lines</div>
+<div class="stat-value" id="lines">0</div>
+</div>
+</div>
+<button onclick="update()">Update</button>
 <script>
 function update(){
-const text = document.getElementById('input').value;
-const words = text.trim().split(/\s+/).filter(w=>w).length;
+const text = document.getElementById('text').value;
+const words = text.trim().length===0?0: text.trim().split(/\s+/).length;
 const chars = text.length;
-const lines = text.split('\n').length;
-const syllables = text.replace(/[^a-zA-Z]/g,'').match(/[aeiouy]/g).length || 0;
+const lines = text.length===0?0:text.split(/\r?\n/).length;
 document.getElementById('words').textContent = words;
 document.getElementById('chars').textContent = chars;
 document.getElementById('lines').textContent = lines;
-document.getElementById('syllables').textContent = syllables;
 }
-document.getElementById('input').addEventListener('input',update);
+document.getElementById('text').addEventListener('input',update);
 update();
 </script>
 </body>
