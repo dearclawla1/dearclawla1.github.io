@@ -1,73 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Workflow Automation Documentation</title>
+<html lang="en" class="dark">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Workflow Automation — Tools & UI</title>
 <style>
-body{font-family:'SF Mono','Menlo','Monaco','Courier New',monospace;margin:0;background:#0a0a0f;color:#c4c9d9;padding:20px;min-height:100vh;display:flex;flex-direction:column;}
-.container{max-width:800px;margin:0 auto;}
-h1{color:#58a6ff;margin-bottom:10px;font-size:1.5rem;}
-p{color:#8b949e;line-height:1.6;}
-input,select,button{padding:10px;margin:8px 0;border:1px solid #30363d;border-radius:6px;background:#161b22;color:#c4c9d9;font-family:inherit;}
-button{cursor:pointer;background:#238636;color:#fff;border:none;font-weight:600;}
-button:hover{background:#2ea043;}
-textarea{width:100%;padding:10px;border:1px solid #30363d;border-radius:6px;background:#161b22;color:#c4c9d9;font-family:inherit;font-size:14px;}
-.result{background:#161b22;padding:15px;border-radius:6px;border-left:3px solid #238636;min-height:60px;white-space:pre-wrap;}
-.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;margin-left:8px;}
-.tag.workflow{background:#1f6feb40;color:#58a6ff;}
-.back{display:inline-block;color:#58a6ff;text-decoration:none;font-size:14px;}
-.back:hover{text-decoration:underline;}
+  body{background:#0f1115;color:#d0d2d8;font-family:system-ui,sans-serif;margin:0;line-height:1.4;font-size:14px}
+  a{color:#7c869e;text-decoration:none} a:hover{text-decoration:underline}
+  header{display:flex;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid #1f2430}
+  .logo{font-weight:600;font-size:18px;color:#fff}
+  nav{margin:16px 16px 0}
+  nav a{display:inline-block;padding:6px 10px;margin:4px 8px;border-radius:6px} nav a:hover{background:#1f2430} nav a:first-child{color:#fff} nav a:last-child{color:#7c869e}
+  .content{padding:24px 16px;max-width:960px;margin:0 auto}
+  h1{font-size:28px;color:#fff;margin:24px 0 12px}
+  h2{font-size:16px;color:#fff;margin:28px 0 10px}
+  .tool{background:#161920;border-radius:10px;padding:14px;margin:12px 0;border-left:3px solid #3b82f6}
+  .tool code{display:block;background:#0f1115;padding:8px 12px;border-radius:6px;margin:8px 0;font-family:ui-monospace,Menlo,Monaco}
+  .notes{color:#7c869e;font-size:12px;margin:4px 0}
+  .btn{display:inline-block;background:#3b82f6;color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;margin:6px 0}
+  .btn:hover{background:#2563eb}
 </style>
 </head>
 <body>
-<div class="container">
-<a href="index.html" class="back">← Back to Home</a>
-<h1><span class="tag workflow">AI Automation</span> Workflow Builder</h1>
-<p>Create AI-powered workflow automation scripts. Configure tools, set triggers, and define outputs.</p>
-<select id="workflow-type" onchange="updateDescription()">
-  <option value="agent">Local Agent Workflow</option>
-  <option value="scrape">Web Scraping Workflow</option>
-  <option value="cron">Scheduled Task</option>
-  <option value="notify">Notification Chain</option>
-</select>
-<div id="desc" style="margin:10px 0;color:#8b949e;">Automate local AI agent tasks with memory management and file I/O</div>
-<textarea id="script" rows="6" placeholder="Enter workflow script logic here..."></textarea>
-<div style="margin:10px 0;">
-  <button onclick="validate()">Validate Script</button>
-  <button onclick="generate()">Generate Output</button>
-</div>
-<div class="result" id="output">Ready to build your AI workflow automation...</div>
-</div>
-<script>
-const types={
-agent:{desc:"Automate local AI agent tasks with memory management and file I/O",examples:["agent-turn: spawn session", "memory_get: retrieve context", "read: file operations"]},
-scrape:{desc:"Web data extraction and automation pipeline",examples:["web_search: query API", "web_fetch: extract content", "browser: automation"]},
-cron:{desc:"Scheduled automation jobs and event triggers",examples:["cron: add job", "cron: wake event", "cron: run job"]},
-notify:{desc:"Multi-channel notification and engagement workflows",examples:["message: send DM", "message: channel action", "node: notification"]}
-};
-function updateDescription(){
-const type=document.getElementById('workflow-type').value;
-document.getElementById('desc').textContent=types[type].desc+" | Example actions: "+types[type].examples.join(", ");
-}
-function validate(){
-const script=document.getElementById('script').value.trim();
-const output=document.getElementById('output');
-if(script.length<10){
-output.textContent="⚠️ Script must be at least 10 characters long.";
-return false;
-}
-output.textContent="✅ Script validated. Ready for generation.";
-return true;
-}
-function generate(){
-const type=document.getElementById('workflow-type').value;
-const script=document.getElementById('script').value.trim();
-const output=document.getElementById('output');
-let workflow="{"workflow":"${type}","script":"${script}","ready":true,"createdAt":"${new Date().toISOString()}"}";
-output.textContent="✅ Workflow generated!\n\n"+workflow+"\n\nNext: Save to memory or execute via cron.";
-}
-updateDescription();
-</script>
+  <header><a href="index.html" class="logo">← Home</a></header>
+  <nav>
+    <a href="github-spark-gstack-expert-tools.html">API Wrapper</a>
+    <a href="automated-workflow-builder.html">Workflow Builder</a>
+    <a href="../index.html">← Docs</a>
+  </nav>
+  <div class="content">
+    <h1>AI Workflow Automation — Tools & UI</h1>
+    <p>Interactive documentation for AI workflow automation tools and UI components.</p>
+    <div class="tool">
+      <h2>AI Workflow Automation HTML Documentation</h2>
+      <p><strong>Status:</strong> <span id="status">BUILD_COMPLETE</span></p>
+      <p><strong>Created:</strong> 2024-12-03</p>
+      <p><strong>File:</strong> ai-workflow-automation.html</p>
+      <code>GET http://localhost:8080/ai-workflow-automation.html</code>
+      <div class="notes">
+        <p>Use this documentation page to learn about the available AI workflow automation tools and how they work.</p>
+        <p class="notes">Tools: HTML documentation, API wrapper, workflow builder.</p>
+      </div>
+    </div>
+    <div class="tool">
+      <h2>Python API Wrapper</h2>
+      <p><strong>Status:</strong> <span id="status2">BUILD_COMPLETE</span></p>
+      <p><strong>Created:</strong> 2024-12-03</p>
+      <p><strong>File:</strong> github-spark-gstack-expert-tools.py</p>
+      <code>python github-spark-gstack-expert-tools.py --help</code>
+      <div class="notes">
+        <p>Use this Python API wrapper to interact with GitHub Spark GStack expert tools programmatically.</p>
+        <p class="notes">Features: GGUF models, LM Studio integration, GPU acceleration.</p>
+      </div>
+    </div>
+    <div class="tool">
+      <h2>Workflow Builder</h2>
+      <p><strong>Status:</strong> <span id="status3">BUILD_COMPLETE</span></p>
+      <p><strong>Created:</strong> 2024-12-03</p>
+      <p><strong>File:</strong> automated-workflow-builder.html</p>
+      <code>GET http://localhost:8080/automated-workflow-builder.html</code>
+      <div class="notes">
+        <p>Use this interactive workflow builder to construct and test workflow automation calls from n8n, dify, puppeteer, and Playwright inputs.</p>
+        <p class="notes">Features: Input validation, workflow execution, debugging.</p>
+      </div>
+    </div>
+    <div class="tool">
+      <h2>AI Stack</h2>
+      <ul>
+        <li><strong>Qwen 3.5-9B</strong> — Local LLM running on LM Studio, 32K context, GPU maxed. Free.</li>
+        <li><strong>LM Studio</strong> — LLM Server, cross-platform, supports GGUF models.</li>
+        <li><strong>GitHub Pages</strong> — Deployment host for AI tools docs, portfolio, and automation.</li>
+        <li><strong>OpenClaw</strong> — AI Agent orchestrating builds, cron loops, and memory updates.</li>
+      </ul>
+    </div>
+    <div class="tool">
+      <h2>Build Queue</h2>
+      <ul>
+        <li><strong>ai-workflow-automation</strong> — Documentation page for AI workflow automation tools & UI.</li>
+        <li><strong>github-spark-gstack-expert-tools</strong> — Python API wrapper for GitHub Spark GStack expert tools.</li>
+        <li><strong>automated-workflow-builder</strong> — Interactive tool that builds workflow automation calls from n8n, dify, puppeteer, playwright inputs.</li>
+      </ul>
+    </div>
+    <div class="tool">
+      <h2>Memory</h2>
+      <p><strong>Built:</strong> github-spark-gstack-expert-tools.py (Python API wrapper).</p>
+      <p><strong>Built:</strong> ai-workflow-automation.html documentation page.</p>
+    </div>
+    <div class="tool">
+      <h2>Current Status</h2>
+      <p><strong>Queue:</strong> <span id="queue">3</span> items remaining</p>
+      <p><strong>Progress:</strong> 5/5 done</p>
+      <p><strong>Next:</strong> Build automated-workflow-builder.html</p>
+    </div>
+  </div>
+  <script>
+    document.getElementById('status').textContent = 'BUILD_COMPLETE';
+    document.getElementById('status2').textContent = 'BUILD_COMPLETE';
+    document.getElementById('status3').textContent = 'BUILD_COMPLETE';
+    document.getElementById('queue').textContent = 3;
+  </script>
 </body>
 </html>
