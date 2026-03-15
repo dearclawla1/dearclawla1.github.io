@@ -13,49 +13,60 @@ h1 { font-size: 1.8rem; color: #7c3aed; margin-bottom: 0.5rem; }
 .back-link { display: inline-block; color: #60a5fa; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.5rem; }
 .back-link:hover { text-decoration: underline; }
 .panel { background: #1a1a20; border: 1px solid #2d2d35; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
-label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: #a0a0b0; }
-input[type="text"], textarea, select { width: 100%; padding: 0.75rem; background: #0f0f12; border: 1px solid #2d2d35; border-radius: 6px; color: #e0e0e0; font-size: 0.95rem; }
-input:focus, textarea:focus, select:focus { outline: none; border-color: #7c3aed; }
-textarea { min-height: 100px; resize: vertical; font-family: 'SF Mono', Monaco, Consolas, monospace; }
-button { background: #7c3aed; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 500; cursor: pointer; margin-top: 0.5rem; width: 100%; }
-button:hover { background: #6d28d9; }
-button.secondary { background: #374151; }
-button.secondary:hover { background: #4b5563; }
-.result-box { background: #1a1a20; border: 1px solid #2d2d35; border-radius: 6px; padding: 1rem; margin-top: 1rem; min-height: 60px; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 0.9rem; white-space: pre-wrap; word-wrap: break-word; }
-.result-box::before { content: 'Output:'; display: block; color: #6b7280; font-size: 0.8rem; margin-bottom: 0.5rem; }
-.steps { margin-top: 1rem; padding: 1rem; background: #1a1a20; border-radius: 6px; }
-.step { margin-bottom: 0.75rem; font-size: 0.9rem; }
+label { display: block; color: #9090a0; font-size: 0.9rem; margin-bottom: 0.5rem; }
+input[type="text"] { width: 100%; padding: 0.75rem; border: 1px solid #303040; border-radius: 6px; background: #14141a; color: #e0e0e0; font-size: 1rem; }
+input[type="text"]:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+input[type="text"]::placeholder { color: #505060; }
+textarea { width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #303040; border-radius: 6px; background: #14141a; color: #e0e0e0; font-size: 0.95rem; resize: vertical; }
+textarea:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+select { width: 100%; padding: 0.75rem; border: 1px solid #303040; border-radius: 6px; background: #14141a; color: #e0e0e0; font-size: 0.95rem; cursor: pointer; }
+select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+button { padding: 0.75rem 1.25rem; border: none; border-radius: 6px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+button:focus { outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.3); }
+.add-btn { background: #6366f1; color: #fff; }
+.add-btn:hover { background: #5558e6; }
+.clear-btn { background: #ef4444; color: #fff; }
+.clear-btn:hover { background: #dc2626; }
+.result-box { background: #14141a; border: 1px solid #2d2d35; border-radius: 6px; min-height: 100px; padding: 1rem; font-size: 0.9rem; color: #a0a0b0; word-wrap: break-word; }
+.steps { background: #14141a; border: 1px solid #2d2d35; border-radius: 6px; padding: 1rem; margin-top: 1rem; }
+.step { padding: 0.75rem 0; border-bottom: 1px solid #25252d; font-size: 0.9rem; color: #a0a0b0; }
+.step:last-child { border-bottom: none; }
 .step-number { color: #7c3aed; font-weight: 600; margin-right: 0.5rem; }
-.steps a { color: #60a5fa; text-decoration: none; }
-.steps a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 <div class="container">
 <header>
-<a href="index.html" class="back-link">&larr; Back to Home</a>
+<a href="#" class="back-link">← Back to Brain</a>
 <h1>AI Workflow Builder</h1>
-<p style="color:#a0a0b0; font-size:0.9rem;">Build your AI agent workflows and automation logic</p>
 </header>
+</div>
+<div class="container">
 <div class="panel">
 <label for="workflow-name">Workflow Name</label>
-<input type="text" id="workflow-name" placeholder="e.g., Data Pipeline Automation">
+<input type="text" id="workflow-name" placeholder="e.g., Customer Onboarding Process">
 </div>
 <div class="panel">
 <label for="step-type">Step Type</label>
 <select id="step-type">
-<option value="data-fetch">Data Fetch</option>
-<option value="process">Process Data</option>
-<option value="transform">Transform</option>
+<option value="input">Input Data</option>
+<option value="transform">Data Transformation</option>
+<option value="logic">Logic/Branching</option>
 <option value="output">Output to File/API</option>
 </select>
 </div>
 <div class="panel">
 <label for="step-logic">Step Logic (JavaScript)</label>
-<textarea id="step-logic" placeholder="function process(data) { ... return result; }"></textarea>
+<textarea id="step-logic" placeholder="function process(data) {
+  // Transform or process data here
+  return result;
+}"></textarea>
 </div>
 <div class="panel">
-<button onclick="addStep()">Add Step to Workflow</button>
+<button class="add-btn" onclick="addStep()">+ Add Step to Workflow</button>
+</div>
+<div class="panel">
+<button class="clear-btn" onclick="clearWorkflow()">Clear All</button>
 </div>
 <div class="panel">
 <label for="workflow-output">Workflow Output Preview</label>
@@ -65,83 +76,150 @@ button.secondary:hover { background: #4b5563; }
 <div class="step"><span class="step-number">1.</span>Enter workflow name and step details</div>
 <div class="step"><span class="step-number">2.</span>Select step type and logic</div>
 <div class="step"><span class="step-number">3.</span>Click "Add Step" to build your workflow</div>
-<div class="step"><span class="step-number">4.</span>View preview output and share workflow definition</div>
-<div class="step">
-Built with <a href="https://github.com/openclaw/openclaw" target="_blank">OpenClaw</a> — Build in public workflow tools
-</div>
+<div class="step"><span class="step-number">4.</span>Clear All to start fresh</div>
 </div>
 </div>
 <script>
 let workflowSteps = [];
+let workflowName = '';
 
 function addStep() {
-const name = document.getElementById('workflow-name').value.trim();
-const type = document.getElementById('step-type').value;
-const logic = document.getElementById('step-logic').value.trim();
-
-if (!name) {
-alert('Please enter a workflow name');
-return;
+  const stepType = document.getElementById('step-type').value;
+  const logic = document.getElementById('step-logic').value.trim();
+  workflowName = document.getElementById('workflow-name').value.trim();
+  
+  if (!workflowName) {
+    alert('Please enter a workflow name');
+    return;
+  }
+  
+  if (logic === '') {
+    alert('Please enter step logic');
+    return;
+  }
+  
+  workflowSteps.push({
+    type: stepType,
+    name: `${stepType.charAt(0).toUpperCase() + stepType.slice(1)} Step`,
+    logic: logic
+  });
+  
+  updatePreview();
 }
 
-if (!logic) {
-alert('Please enter step logic');
-return;
-}
-
-const step = { name, type, logic };
-workflowSteps.push(step);
-
-document.getElementById('workflow-name').value = '';
-document.getElementById('step-logic').value = '';
-
-updatePreview();
+function clearWorkflow() {
+  if (confirm('Are you sure you want to clear the entire workflow?')) {
+    workflowSteps = [];
+    workflowName = '';
+    document.getElementById('workflow-name').value = '';
+    document.getElementById('step-logic').value = '';
+    updatePreview();
+  }
 }
 
 function updatePreview() {
-const preview = document.getElementById('workflow-output');
-
-if (workflowSteps.length === 0) {
-preview.innerHTML = '';
-return;
-}
-
-let html = '<div style="margin-bottom:1rem;color:#a0a0b0;font-size:0.85rem;">';
-workflowSteps.forEach((step, i) => {
-html += `<div style="background:#1e1e24;padding:0.75rem;border-radius:4;margin-bottom:0.5rem;border-left:3px solid #7c3aed;">`;
-html += `<strong>${i+1}. ${step.name}</strong>`;
-html += `<div style="margin-top:0.25rem;color:#60a5fa;font-size:0.85rem;word-break:break-all;">${step.logic}</div>`;
-html += `</div>`;
-});
-html += '</div>';
-
-html += '<div style="background:#1e1e24;padding:0.75rem;border-radius:4;margin-bottom:0.5rem;"><strong>Workflow Definition:</strong></div>';
-html += '<code style="word-break:break-all;font-size:0.85rem;">';
-html += JSON.stringify(workflowSteps, null, 2);
-html += '</code>';
-
-html += '<div style="margin-top:1rem;color:#a0a0b0;font-size:0.85rem;">';
-html += `Total steps: ${workflowSteps.length}`;
-html += `<br>Ready to deploy workflow definition:`;
-html += `<br><a href="#" id="share-btn" onclick="shareWorkflow()" style="color:#7c3aed;text-decoration:none;">Share via clipboard</a>`;
-html += '</div>';
-
-preview.innerHTML = html;
-}
-
-function shareWorkflow() {
-const definition = JSON.stringify(workflowSteps, null, 2);
-navigator.clipboard.writeText(definition)
-.then(() => {
-alert('Workflow definition copied to clipboard!');
-})
-.catch(err => {
-console.error('Failed to copy:', err);
-});
+  const preview = document.getElementById('workflow-output');
+  
+  if (workflowSteps.length === 0) {
+    preview.innerHTML = '';
+    return;
+  }
+  
+  let html = '<div style="margin-bottom:1rem;color:#a0a0b0;font-size:0.85rem;">';
+  html += '<strong>Workflow Steps:</strong></div>';
+  workflowSteps.forEach((step, i) => {
+    html += '<div style="background:#1e1e24;padding:0.75rem;border-radius:4;margin-bottom:0.5rem;border-left:3px solid #6366f1;">';
+    html += `<strong>${i+1}. ${step.name}</strong>`;
+    html += `<div style="margin-top:0.25rem;color:#a0a0b0;font-size:0.85rem;font-family:monospace;white-space:pre-wrap;word-break:break-all;">${step.logic}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
+  
+  if (workflowSteps.length > 0) {
+    html += '<div style="background:#1e1e24;padding:0.75rem;border-radius:4;margin-bottom:0.5rem;"><strong>Workflow Summary:</strong></div>';
+    html += `<div style="color:#6366f1;font-size:0.85rem;">Total Steps: ${workflowSteps.length}</div>`;
+    html += `<div style="color:#9090a0;font-size:0.8rem;margin-top:0.25rem;">Workflow Name: ${workflowName}</div>`;
+    html += '</div>';
+  }
+  
+  preview.innerHTML = html;
 }
 
 // Initialize with empty preview
 updatePreview();
+
+// Add keyboard shortcut for Enter to add step
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Enter' && event.target.id === 'step-logic') {
+    event.preventDefault();
+    addStep();
+  }
+});
+
+// Save workflow data to localStorage
+function saveWorkflow() {
+  const data = {
+    workflowName: workflowName,
+    steps: workflowSteps
+  };
+  localStorage.setItem('ai-workflow-data', JSON.stringify(data));
+}
+
+// Load workflow data from localStorage on page load
+window.addEventListener('load', function() {
+  const savedData = localStorage.getItem('ai-workflow-data');
+  if (savedData) {
+    try {
+      const data = JSON.parse(savedData);
+      workflowName = data.workflowName || '';
+      workflowSteps = data.steps || [];
+      document.getElementById('workflow-name').value = workflowName;
+      
+      if (workflowSteps.length > 0) {
+        workflowSteps.forEach((step, index) => {
+          const stepType = step.type || 'input';
+          document.getElementById('step-type').value = stepType;
+          
+          if (index === 0) {
+            document.getElementById('step-logic').value = step.logic || '';
+          }
+        });
+        
+        if (workflowSteps.length > 0) {
+          updatePreview();
+        }
+      }
+    } catch (e) {
+      console.error('Error loading saved workflow:', e);
+    }
+  }
+});
+
+// Save workflow data on every change
+document.getElementById('workflow-name').addEventListener('input', function() {
+  workflowName = this.value;
+  saveWorkflow();
+});
+
+document.getElementById('step-logic').addEventListener('input', function() {
+  saveWorkflow();
+});
+
+document.getElementById('step-type').addEventListener('change', function() {
+  saveWorkflow();
+});
+
+// Clear localStorage on clear
+document.querySelector('.clear-btn').addEventListener('click', function() {
+  if (confirm('Are you sure you want to clear the entire workflow?')) {
+    workflowSteps = [];
+    workflowName = '';
+    document.getElementById('workflow-name').value = '';
+    document.getElementById('step-logic').value = '';
+    updatePreview();
+    localStorage.removeItem('ai-workflow-data');
+  }
+});
 </script>
 </body>
 </html>
