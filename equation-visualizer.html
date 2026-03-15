@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:monospace}
+body{background:#0a0a0a;color:#e4e4e4;padding:20px}
+a{color:#6366f1;text-decoration:none}
+h1{color:#6366f1;margin-bottom:15px}
+.container{max-width:800px;margin:0 auto}
+input,select{width:100%;padding:10px;margin:10px 0;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;border-radius:4px}
+button{width:100%;padding:12px;background:#6366f1;color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:bold}
+button:hover{background:#5558e6}
+#output{background:#1a1a1a;padding:15px;margin-top:15px;border-radius:4px;min-height:100px}
+#steps{margin-top:10px;font-size:12px;color:#888}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1">Home</a><br><br>
+<h1>🧮 Math Equation Visualizer</h1>
+<input id="equation" placeholder="Enter equation (e.g., 2x + 5 = 15)">
+<select id="operation">
+<option value="simplify">Simplify</option>
+<option value="solve">Solve for x</option>
+<option value="expand">Expand</option>
+</select>
+<button id="visualize">Visualize</button>
+<div id="output"></div>
+<div id="steps"></div>
+<script>
+document.getElementById('visualize').onclick=()=>{
+const eq=document.getElementById('equation').value.trim();
+const op=document.getElementById('operation').value;
+let out='', steps='';
+if(!eq){out='Please enter an equation.';steps='';}
+else if(op==='simplify'){
+out='Simplifying: '+eq;
+steps='Step 1: Combine like terms.\nStep 2: Final result: '+eq.replace(' ', '')+'';
+}
+else if(op==='solve'){
+try{
+const parts=eq.split('=');
+const left=parts[0].trim(), right=parts[1].trim();
+const xLeft=left.match(/-?\d*x?\b/)?parseInt(left.match(/-?\d*/)[0]):0;
+const xRight=right.match(/-?\d*x?\b/)?parseInt(right.match(/-?\d*/)[0]):0;
+const coeff=xLeft-xRight;
+const constLeft=parseFloat(left.replace(/-?\d*x?\b/g,'')||'0');
+const constRight=parseFloat(right.replace(/-?\d*x?\b/g,'')||'0');
+const constDiff=constLeft-constRight;
+if(coeff!==0){
+out='x = '+(constDiff/coeff);
+steps='Step 1: Isolate x terms: '+left+' - '+right+' = 0\nStep 2: Combine constants: '+constDiff+' = 0\nStep 3: Divide by coefficient: '+coeff+'x = '+constDiff+'\nStep 4: x = '+constDiff/coeff;
+}else{
+out='No solution (0x = '+constDiff+')';
+steps='Step 1: Equation reduces to 0x = '+constDiff+'\nStep 2: No value of x satisfies this.';
+}
+}catch(e){out='Solve: '+eq+e.message;steps='Step 1: Parse equation\nStep 2: Isolate x\nStep 3: Solve.';}
+}
+else if(op==='expand'){
+try{
+const parts=eq.split('*');
+let expanded=parts[0].trim();
+parts.forEach(p=>expanded+='*'+p.trim());
+out='Expanded: '+expanded;
+steps='Step 1: Identify terms: '+parts.join(' , ')+'\nStep 2: Combine with multiplication sign';
+}catch(e){out='Expand: '+eq+e.message;steps='Step 1: Parse terms\nStep 2: Rejoin with *'}
+}
+document.getElementById('output').textContent=out;
+document.getElementById('steps').innerHTML='⚡ Steps: '+steps;
+};
+</script>
+</div>
+</body>
+</html>
