@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CSS Gradient Builder</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: #0a0a0a;
+  color: #e4e4e4;
+  padding: 20px;
+  min-height: 100vh;
+}
+.container { max-width: 800px; margin: 0 auto; }
+h1 { color: #6366f1; text-align: center; }
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+input, select, button {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background-color: #1a1a1a;
+  color: #e4e4e4;
+  font-size: 14px;
+  width: 100%;
+}
+input[type="color"] { height: 44px; }
+button {
+  background-color: #6366f1;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 12px;
+}
+button:hover { background-color: #5558f1; }
+button.secondary { background-color: #333; }
+#preview {
+  width: 100%;
+  height: 150px;
+  border-radius: 8px;
+  border: 2px solid #333;
+  margin-bottom: 12px;
+  background-color: #1a1a1a;
+}
+#code {
+  background-color: #1a1a1a;
+  padding: 12px;
+  border-radius: 6px;
+  font-family: 'Consolas', monospace;
+  font-size: 13px;
+  border: 1px solid #333;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+a { display: block; text-align: center; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>CSS Gradient Builder</h1>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<div class="controls">
+<input type="color" id="color1" value="#6366f1" title="Start Color">
+<input type="color" id="color2" value="#6366f1" title="End Color">
+<select id="direction">
+<option value="linear-gradient(90deg,">Horizontal</option>
+<option value="linear-gradient(90deg,">Vertical</option>
+<option value="conic-gradient(360deg,">Cylindrical</option>
+<option value="repeating-linear-gradient(90deg,">Striped</option>
+</select>
+<select id="repeat">
+<option value="false">Single</option>
+<option value="true">Repeating</option>
+</select>
+</div>
+<canvas id="preview"></canvas>
+<button onclick="generate()">Generate Gradient</button>
+<button class="secondary" onclick="copyCode()">Copy CSS</button>
+<textarea id="code" readonly style="width:100%;min-height:80px;background:#1a1a1a;border:1px solid #333;color:#e4e44;"></textarea>
+</div>
+<script>
+const canvas = document.getElementById('preview');
+const ctx = canvas.getContext('2d');
+const width = canvas.width = canvas.offsetWidth;
+const height = canvas.height = 150;
+
+const generate = () => {
+const c1 = document.getElementById('color1').value;
+const c2 = document.getElementById('color2').value;
+const dir = document.getElementById('direction').value;
+const repeat = document.getElementById('repeat').value;
+let code = dir.replace('>', 'deg, ') + ` ${c1}, ${c2}>`;
+if (repeat === 'true') code = dir.replace('>', 'deg, ') + `, ${c1}, ${c2}>`;
+if (dir.includes('conic-gradient')) code = dir.replace('>', 'deg, ') + ` ${c1}, ${c2}>`;
+document.getElementById('code').value = code;
+drawGradient(c1, c2, dir.includes('conic-gradient'), repeat === 'true');
+};
+
+const drawGradient = (c1, c2, conic, repeat) => {
+ctx.clearRect(0, 0, width, height);
+const gradient = ctx.createLinearGradient(0, 0, width, height);
+if (!conic) {
+const [x, y] = conic.includes('90deg') ? [0, 0] : [0, 0];
+if (conic.includes('horizontal')) x = width, y = 0;
+if (conic.includes('vertical')) x = 0, y = height;
+const g = ctx.createLinearGradient(x, y, width, height);
+g.addColorStop(0, c1);
+g.addColorStop(1, c2);
+ctx.fillStyle = g;
+ctx.fillRect(0, 0, width, height);
+} else {
+const start = c1;
+const end = c2;
+const steps = repeat ? 20 : 1;
+const c1H = new HSL(start);
+const c2H = new HSL(end);
+const stepH = c2H.h - c1H.h;
+const stepS = c2H.s - c1H.s;
+const stepL = c2H.l - c1H.l;
+for (let i = 0; i <= steps; i++) {
+const t = i / steps;
+let h = c1H.h + stepH * t;
+let s = c1H.s + stepS * t;
+let l = c1H.l + stepL * t;
+h = Math.max(0, Math.min(360, h));
+s = Math.max(0, Math.min(100, s));
+l = Math.max(0, Math.min(100, l));
+const stepColor = `hsl(${h}, ${s}%, ${l}%)`;
+ctx.beginPath();
+const angle = (i / steps) * 360;
+const x = width * 0.5 + Math.cos(angle) * width * 0.4;
+const y = height * 0.5 + Math.sin(angle) * height * 0.4;
+ctx.arc(x, y, width * 0.4, 0, Math.PI * 2, true);
+ctx.fillStyle = stepColor;
+ctx.fill();
+}
+}
+};
+
+const HSL = (color) => {
+const rgb = new RGB(color);
+return {
+h: Math.round(rgb.h),
+s: Math.round(rgb.s * 100),
+l: Math.round(rgb.l * 100)
+};
+};
+
+const RGB = (color) => {
+const { r, g, b } = hexToRgb(color);
+let h, s, l;
+l = (Math.max(r, g, b) + Math.min(r, g, b)) / 2 / 255;
+const dr = g - b;
+const dm = Math.max(Math.max(r, g), b) - Math.min(Math.min(r, g), b);
+const dh = dm === 0 ? 0 : (dm === r ? ((b - g) / dm + 6) : (dm === g ? (b - r) / dm : (g - b) / dm));
+h = Math.round((dh * 60) % 360);
+s = l === 0 ? 0 : dm / ((Math.max(r, g, b) + Math.min(r, g, b)) / 255);
+return { h, s: s * 255, r, g, b };
+};
+
+const hexToRgb = (hex) => {
+const clean = hex.replace('#', '');
+return {
+r: parseInt(clean.slice(0, 2), 16),
+g: parseInt(clean.slice(2, 4), 16),
+b: parseInt(clean.slice(4, 6), 16)
+};
+};
+
+const copyCode = () => {
+navigator.clipboard.writeText(document.getElementById('code').value);
+alert('Gradient code copied to clipboard!');
+};
+
+generate();
+canvas.addEventListener('click', (e) => {
+canvas.style.cursor = 'none';
+canvas.style.cursor = 'auto';
+});
+</script>
+</body>
+</html>
