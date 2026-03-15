@@ -1,39 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px;}
-a{color:#e4e4e4;text-decoration:none;}
-a:hover{text-decoration:underline;}
-.container{max-width:800px;margin:0 auto;background:#1a1a1a;padding:20px;border-radius:8px;}
-h1{margin:0 0 15px;font-size:24px;}
-input,button{margin:5px 0;padding:8px 12px;border:1px solid #3a3a3a;border-radius:4px;background:#1a1a1a;color:#e4e4e4;font-size:14px;}
-button:hover{background:#333;}
-.hex-input{width:60px;}
-.color-display{background:#222;border-radius:4px;}
-.result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:15px;}
-.label{font-size:12px;color:#888;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;padding:20px}
+a{color:#88ff88}
+h1{margin-bottom:20px;color:#88ff88}
+input,button,select{margin:5px 5px 10px 0;padding:8px;border:1px solid #444;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
+button:hover{background:#333}
+.preview{background:#222;padding:10px;border-radius:4px;margin:10px 0}
+#result{color:#88ff88;font-weight:bold}
 </style>
 </head>
 <body>
 <a href="index.html">Home</a>
-<div class="container">
 <h1>Color Converter</h1>
-<input type="text" id="hexInput" placeholder="#FF0000" class="hex-input">
-<button onclick="convert()">Convert</button>
-<div id="error" style="color:#ff6b6b;font-size:12px;display:none;"></div>
-<div id="result" class="result-grid" style="display:none;">
-<div class="color-display"><input type="color" id="colorPicker" onchange="updateFromColor()" style="width:100%;height:40px;border:none;"></div>
-<div><span class="label">HEX:</span><span id="hexOut"></span></div>
-<div><span class="label">RGB:</span><span id="rgbOut"></span></div>
-<div><span class="label">HSV:</span><span id="hsvOut"></span></div>
-</div>
+<input type="text" id="hex" placeholder="Hex (e.g., #ff0000)" style="width:200px">
+<button onclick="toHex()">Convert to Hex</button>
+<input type="text" id="rgb" placeholder="RGB (e.g., 255, 0, 0)" style="width:200px">
+<button onclick="toRGB()">Convert to RGB</button>
+<input type="text" id="hsl" placeholder="HSL (e.g., 0, 100%, 50%)" style="width:200px">
+<button onclick="toHSL()">Convert to HSL</button>
+<div class="preview" id="preview" style="height:60px;background:#000;border-radius:4px"></div>
+<div id="result"></div>
 <script>
-function hexToRgb(hex){let h=hex.replace('#','');let r=parseInt(h.substring(0,2),16),g=parseInt(h.substring(2,4),16),b=parseInt(h.substring(4,6),16);return{r,g,b};}
-function rgbToHsv(r,g,b){let cmax=Math.max(r,g,b),cmin=Math.min(r,g,b),delta=cmax-cmin;let h, s,v= cmax/255;if(delta===0){h=0;s=0;}else{const red=(g-b)/(cmax-cmin);const green=(b-r)/(cmax-cmin);const blue=(r-g)/(cmax-cmin);s= (cmax===r?blue:cmax===g?red:green);}v/=2;if(v===0){h=0;}else{h= s===0? 0: (cmax===r?(60*Math.acos(red))+120:(cmax===g?60*(Math.acos(red))-120:60*(-Math.acos(red))+240))/60;s=v*(delta/cmax);}return{h:Math.round(h*100), s:Math.round(s*100), v:Math.round(v*100)};}
-function convert(){let hex=document.getElementById('hexInput').value.trim();let err=document.getElementById('error');let res=document.getElementById('result');let pick=document.getElementById('colorPicker');let hexO=document.getElementById('hexOut');let rgbO=document.getElementById('rgbOut');let hsvO=document.getElementById('hsvOut');if(hex!=='')try{let{r,g,b}=hexToRgb(hex);hexO.textContent=hex.toUpperCase();rgbO.textContent=`rgb(${r},${g},${b})`;let{h,s,v}=rgbToHsv(r,g,b);hsvO.textContent=`hsv(${h},${s},${v})`;res.style.display='grid';err.style.display='none';pick.value=`#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;}catch(e){err.textContent='Invalid hex color';err.style.display='block';res.style.display='none';}}
-function updateFromColor(){let hex= document.getElementById('colorPicker').value;if(hex==='')return;try{let{r,g,b}=hexToRgb(hex);document.getElementById('hexInput').value='#'+hex.toUpperCase();convert();}catch(e){}}
-document.getElementById('hexInput').addEventListener('keyup',convert);
+function rgbToHex(r,g,b){return'#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase()}
+function hexToRgb(hex){const c=hex.replace('#','');return{r:parseInt(c.substring(0,2),16),g:parseInt(c.substring(2,4),16),b:parseInt(c.substring(4,6),16)}}
+function toHex(){const h=document.getElementById('hex').value;if(!h)return;const rgb=hexToRgb(h);document.getElementById('preview').style.background=rgbToHex(rgb.r,rgb.g,rgb.b);document.getElementById('result').textContent='RGB: '+rgb.r+','+rgb.g+','+rgb.b}
+function toRGB(){const r=document.getElementById('rgb').value;if(!r)return;const rgb=rgb.match(/(\d+),\s*(\d+),\s*(\d+)/);if(rgb){const hex=rgbToHex(parseInt(rgb[1]),parseInt(rgb[2]),parseInt(rgb[3]));document.getElementById('preview').style.background=hex;document.getElementById('result').textContent='Hex: '+hex+' | HSL: '+hslFromRgb(parseInt(rgb[1]),parseInt(rgb[2]),parseInt(rgb[3]))}
+function toHSL(){const hsl=document.getElementById('hsl').value;if(!hsl)return;const match=hsl.match(/(\d+),\s*(\d+)%,\s*(\d+)%/);if(match){const rgb=rgbFromHsl(parseInt(match[1]),parseInt(match[2]),parseInt(match[3]));document.getElementById('preview').style.background=rgbToHex(rgb.r,rgb.g,rgb.b);document.getElementById('result').textContent='Hex: '+rgbToHex(rgb.r,rgb.g,rgb.b)+' | RGB: '+rgb.r+','+rgb.g+','+rgb.b}
+function hslFromRgb(r,g,b){const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min,h=0,l=(max+min)/2;if(max==min){h=0}else if(max==r){h=(g-b)/(d*(l<.5?2*l:2*(1-l)))}else if(max==g){h=(b-r)/(d*(l<.5?2*l:2*(1-l)))}else{h=(r-g)/(d*(l<.5?2*l:2*(1-l)))}return Math.round(Math.abs(h*60))+'%, '+Math.round(d/max*100)+'%, '+Math.round(l*100)+'%'}
+function rgbFromHsl(h,s,l){h/=360;l/=100;s/=100;let c=(1-Math.abs(2*l-1))*s;let x=c*(1-Math.abs(h%2-c*1));let m=l-c*1-(h%2-c*1)<0?0:c;let r1=x+m,g1=x+m,b1=x+m;let rh,g,b;switch(Math.floor(h/60)){case 0:{rh=r1;g=g1;b=b1;break}case 1:{rh=r1;g=b1;b=x+m;break}case 2:{rh=x+m;g=b1;b=r1;break}case 3:{rh=x+m;g=r1;b=b1;break}case 4:{rh=r1;g=x+m;b=b1;break}default:{rh=r1;g=b1;b=x+m;}}return{r:Math.round(rh*255),g:Math.round(g*255),b:Math.round(b*255)}}
 </script>
 </body>
 </html>
