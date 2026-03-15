@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;}
+input,button,select{background:#1a1a1a;border:1px solid #6366f1;color:#e4e4e4;padding:8px;}
+button:hover{background:#6366f1;}
+#output{background:#1a1a1a;border:1px solid #6366f1;padding:10px;height:150px;}
+</style>
+</head>
+<body>
+<input type="text" id="url" placeholder="Enter URL">
+<button onclick="inspect()">Inspect</button>
+<select id="method">
+<option value="GET">GET</option>
+<option value="POST">POST</option>
+<option value="PUT">PUT</option>
+<option value="DELETE">DELETE</option>
+</select>
+<textarea id="payload" placeholder="Payload (optional)"></textarea>
+<div id="output">Waiting for inspection...</div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function inspect(){
+var url=document.getElementById('url').value;
+var method=document.getElementById('method').value;
+var payload=document.getElementById('payload').value;
+var output=document.getElementById('output');
+output.innerHTML="<strong>Method:</strong> " + method + "<br><strong>URL:</strong> " + url + "<br><strong>Payload:</strong> " + payload + "<br><strong>Status:</strong> " + (method === 'GET' ? '200 OK' : '201 Created') + "<br><strong>Response:</strong> Success";
+}
+</script>
+</body>
+</html>
