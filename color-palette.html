@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"><title>Color Palette Generator</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px}
+a{color:#e4e4e4;text-decoration:none}
+.container{max-width:600px;margin:0 auto}
+h1{margin:0 0 15px}
+input[type="text"],select{width:100%;padding:10px;margin:5px 0;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:4px}
+button{width:100%;padding:10px;margin:5px 0;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:4px;cursor:pointer}
+button:hover{background:#2a2a2a}
+.palette{margin-top:20px;display:flex;flex-wrap:wrap;gap:5px}
+.swatch{width:60px;height:60px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:transform 0.2s}
+.swatch:hover{transform:scale(1.1)}
+.colors{margin-top:10px;font-family:monospace}
+.back{display:block;margin-bottom:15px}
+</style>
+</head>
+<body>
+<a href="index.html" class="back">Home</a>
+<div class="container">
+<h1>Color Palette Generator</h1>
+<input type="text" id="hex" placeholder="Enter a hex color (e.g., #FF5733)">
+<select id="type"><option value="analogous">Analogous</option><option value="complementary">Complementary</option><option value="triadic">Triadic</option><option value="split">Split-Complementary</option></select>
+<button onclick="generate()">Generate Palette</button>
+<div id="result" class="palette"></div>
+<div id="textColors" class="colors"></div>
+</div>
+<script>
+function generate(){
+let hex=document.getElementById('hex').value.trim();
+let type=document.getElementById('type').value;
+let result=document.getElementById('result');
+let colors=document.getElementById('textColors');
+if(!hex||!/^#[0-9A-Fa-f]{6}$/.test(hex)){alert('Enter a valid 6-digit hex color');return}
+let h=parseInt(hex.slice(1),16);
+let [r,g,b]=h>>16,h>>8&0xFF,h&0xFF;
+let [r1,g1,b1,r2,g2,b2,r3,g3,b3,r4,g4,b4]=r*0.3+r*0.7,g*0.3+g*0.7,b*0.3+b*0.7,1-b*0.3,r*0.5+r*0.5*0.5,g*0.5+g*0.5*0.5,b*0.5+b*0.5*0.5,1-r*0.3,r*0.6+r*0.4,g*0.6+g*0.4,b*0.6+b*0.4;
+let colorsArr=[
+[h>>16,h>>8&0xFF,h&0xFF],
+[r1,r1,r1],
+[r2,g2,b2],
+[r3,g3,b3],
+[r4,g4,b4]
+];
+result.innerHTML='';colors.innerHTML='';
+colorsArr.forEach(([r,g,b],i)=>{
+let swatch=document.createElement('div');
+swatch.className='swatch';
+swatch.style.backgroundColor=`rgb(${r},${g},${b})`;
+swatch.style.color=luminance(r,g,b)<0.18?'#e4e4e4':'#0a0a0a';
+swatch.textContent=`#${toHex(r,g,b)}`;
+swatch.onclick=()=>copyText(`#${toHex(r,g,b)}`);
+result.appendChild(swatch);
+colors.textContent+=`rgb(${r},${g},${b}) `;
+});
+}
+function luminance(r,g,b){return(r*0.2126+g*0.7152+b*0.0722)/255}
+function toHex(r,g,b){let n=Math.round(255*(r||g||b));return '#'+n.toString(16).padStart(6,'0')}`;
+function copyText(text){navigator.clipboard.writeText(text);alert('Copied: '+text)}
+</script>
+</body>
+</html>
