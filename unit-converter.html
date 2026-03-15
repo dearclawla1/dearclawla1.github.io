@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit Converter</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0a0a; color: #e4e4e4; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;
+    }
+    .container {
+      background: #111; border: 1px solid #333; border-radius: 12px; padding: 24px; width: 100%; max-width: 420px;
+    }
+    a { display: block; text-align: center; margin-bottom: 16px; font-size: 13px; }
+    h2 { text-align: center; margin-bottom: 16px; font-size: 18px; }
+    label { display: block; margin-bottom: 6px; font-size: 13px; color: #a0a0a0; }
+    input, select {
+      width: 100%; padding: 10px 12px; border: 1px solid #333; border-radius: 8px;
+      background: #1a1a1a; color: #e4e4e4; font-size: 14px; margin-bottom: 12px;
+    }
+    input:focus, select:focus { outline: none; border-color: #6366f1; }
+    button {
+      width: 100%; padding: 12px; border: none; border-radius: 8px;
+      background: #6366f1; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #5558e6; }
+    .result {
+      margin-top: 16px; padding: 12px; background: #1a1a1a; border-radius: 8px;
+      text-align: center; font-size: 14px; color: #a0a0a0;
+    }
+    .result span { color: #6366f1; font-size: 16px; }
+    .categories { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+    .cat-btn {
+      flex: 1; min-width: 50px; padding: 6px 8px; border: 1px solid #333; border-radius: 6px;
+      background: #1a1a1a; color: #a0a0a0; font-size: 12px; cursor: pointer;
+    }
+    .cat-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+    .cat-btn:hover:not(.active) { border-color: #6366f1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" style="color:#6366f1">Home</a>
+    <h2>Unit Converter</h2>
+    <div class="categories" id="categories"></div>
+    <select id="fromUnit"></select>
+    <input type="number" id="value" placeholder="Enter value" step="any">
+    <select id="toUnit"></select>
+    <button id="convertBtn">Convert</button>
+    <div class="result" id="result">Converted value will appear here</div>
+  </div>
+  <script>
+    const units = {
+      length: { name: 'Length', pairs: [
+        ['kilometers','km','meters','m'], ['miles','mi','kilometers','km'], ['meters','m','feet','ft'],
+        ['feet','ft','inches','in'], ['inches','in','centimeters','cm'], ['centimeters','cm','meters','m'],
+        ['miles','mi','kilometers','km'], ['feet','ft','meters','m']
+      ]},
+      weight: { name: 'Weight', pairs: [
+        ['kilograms','kg','grams','g'], ['pounds','lb','kilograms','kg'], ['grams','g','ounces','oz'],
+        ['ounces','oz','grams','g'], ['tons','ton','kilograms','kg'], ['kilograms','kg','pounds','lb']
+      ]},
+      data: { name: 'Data', pairs: [
+        ['bytes','B','kilobytes','KB'], ['kilobytes','KB','megabytes','MB'], ['megabytes','MB','gigabytes','GB'],
+        ['gigabytes','GB','terabytes','TB'], ['bytes','B','bits','b'], ['kilobytes','KB','megabytes','MB']
+      ]}
+    };
+    const categories = Object.values(units).map(c => ({ id: c.name, display: c.name, pairs: c.pairs }));
+    const catContainer = document.getElementById('categories');
+    categories.forEach(cat => {
+      const btn = document.createElement('button'); btn.className = 'cat-btn'; btn.textContent = cat.display;
+      catContainer.appendChild(btn);
+    });
+    categories.forEach((cat, i) => {
+      cat.btn.onclick = () => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        cat.btn.classList.add('active');
+        loadUnits(cat.pairs);
+      };
+    });
+    function loadUnits(pairs) {
+      const from = document.getElementById('fromUnit'); from.innerHTML = pairs.map(u => `<option value="${u[0]}">${u[0]}</option>`).join('');
+      const to = document.getElementById('toUnit'); to.innerHTML = pairs.map(u => `<option value="${u[1]}">${u[1]}</option>`).join('');
+    }
+    loadUnits(categories[0].pairs);
+    let selectedPairs = categories[0].pairs;
+    document.getElementById('convertBtn').onclick = () => {
+      const val = parseFloat(document.getElementById('value').value);
+      const from = document.getElementById('fromUnit').value;
+      const to = document.getElementById('toUnit').value;
+      const indexFrom = selectedPairs.findIndex(p => p[0] === from);
+      const indexTo = selectedPairs.findIndex(p => p[1] === to);
+      const base = selectedPairs[indexFrom][1];
+      const result = val * Math.pow(1000, indexTo - indexFrom) / (base === 'B' ? 1 : 1);
+      document.getElementById('result').textContent = `${val.toLocaleString()} ${from} = ${result.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}`;
+    };
+  </script>
+</body>
+</html>
