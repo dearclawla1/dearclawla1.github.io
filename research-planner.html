@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:Arial;margin:0;padding:20px;}
+input,button,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;margin:5px 0;border-radius:4px;}
+button:hover{background:#6366f1;border-color:#6366f1;}
+.task-list{margin-top:10px;}
+.task-item{background:#1a1a1a;padding:10px;margin:5px 0;border-radius:4px;border-left:3px solid #6366f1;}
+input[type="text"]{width:60%;}
+</style>
+</head>
+<body>
+<h2>Research Planner</h2>
+<p>Plan your research workflow with task templates</p>
+<input type="text" id="taskName" placeholder="Task name (e.g., Literature Review)">
+<input type="text" id="taskDesc" placeholder="Description">
+<select id="priority">
+<option value="high">High Priority</option>
+<option value="medium">Medium Priority</option>
+<option value="low">Low Priority</option>
+</select>
+<button onclick="addTask()">Add Task</button>
+<input type="text" id="researchTopic" placeholder="Research Topic" style="width:50%;">
+<button onclick="showSummary()">Show Summary</button>
+<div id="taskList" class="task-list"></div>
+<div id="summary"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+let tasks=[];
+function addTask(){
+const name=document.getElementById('taskName').value;
+const desc=document.getElementById('taskDesc').value;
+const priority=document.getElementById('priority').value;
+if(name&&desc){
+tasks.push({name,desc,priority});
+document.getElementById('taskName').value='';
+document.getElementById('taskDesc').value='';
+renderTasks();
+}
+}
+function renderTasks(){
+const list=document.getElementById('taskList');
+list.innerHTML='';
+tasks.forEach((t,i)=>{
+const div=document.createElement('div');
+div.className='task-item';
+div.innerHTML=`<strong>${t.name}</strong> (${t.priority}): ${t.desc}<button onclick="removeTask(${i})">Remove</button>`;
+list.appendChild(div);
+});
+}
+function removeTask(i){
+tasks.splice(i,1);
+renderTasks();
+}
+function showSummary(){
+const topic=document.getElementById('researchTopic').value;
+const summary=document.getElementById('summary');
+if(topic&&tasks.length>0){
+summary.innerHTML=`<strong>Research: ${topic}</strong><br>Topic: ${topic}<br>Priorities: ${tasks.map(t=>t.priority).join(', ')}<br>Total Tasks: ${tasks.length}`;
+}
+}
+</script>
+</body>
+</html>
