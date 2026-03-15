@@ -1,139 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Habit Tracker</title>
-  <style>
-    body {
-      background: #0a0a0a;
-      color: #e4e4e4;
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    .container { max-width: 400px; margin: 0 auto; }
-    h1 { color: #6366f1; margin-bottom: 10px; }
-    a { color: #6366f1; }
-    .habit {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .habit.completed { border-color: #6366f1; }
-    .habit.completed span { text-decoration: line-through; opacity: 0.5; }
-    input[type="checkbox"] {
-      width: 20px; height: 20px;
-      accent-color: #6366f1;
-      cursor: pointer;
-    }
-    .stats {
-      background: #1a1a1a;
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 20px;
-      text-align: center;
-    }
-    .stats div { font-size: 14px; color: #888; }
-    .stats strong { color: #e4e4e4; }
-  </style>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+.container{max-width:600px;margin:0 auto}
+h1{text-align:center;color:#6366f1}
+a{color:#6366f1}
+input[type="text"]{width:100%;padding:12px;margin:10px 0;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:6px;font-size:16px}
+button{padding:12px 24px;border:none;background:#6366f1;color:#fff;border-radius:6px;font-size:16px;cursor:pointer}
+button:hover{background:#5558ff}
+ul{list-style:none;padding:0}
+li{background:#1a1a1a;margin:8px 0;padding:12px;border-radius:6px;display:flex;justify-content:space-between;align-items:center}
+h2{text-align:center;margin:20px 0;color:#e4e4e4}
+.stats{text-align:center;padding:20px;background:#1a1a1a;border-radius:8px;margin-top:20px}
+.stats span{margin:0 15px}
+</style>
 </head>
 <body>
-  <div class="container">
-    <a href="index.html" style="color:#6366f1; display: block; margin-bottom: 10px;">Home</a>
-    <h1>Habit Tracker</h1>
-    <div id="habits"></div>
-    <div class="stats">
-      <div>Completion Rate: <strong id="completion">0%</strong></div>
-      <div>Days Tracked: <strong id="days">0</strong></div>
-    </div>
-    <div style="margin-top: 20px; text-align: center;">
-      <button onclick="addHabit()">+ Add Habit</button>
-      <button onclick="resetWeek()" style="background:#333; border:none; padding:10px 20px; color:#e4e4e4; border-radius:8px; margin-left:10px;">Reset Week</button>
-    </div>
-  </div>
-  <script>
-    let habits = ['Exercise', 'Read', 'Drink Water', 'Meditate', 'Sleep Early'];
-    let week = { 0:true,1:true,2:true,3:true,4:true,5:true,6:true };
-    const checkboxes = { Exercise:[], Read:[], Drink:[], Meditate:[], Sleep:[] };
-
-    function render() {
-      const container = document.getElementById('habits');
-      container.innerHTML = '';
-      habits.forEach(h => {
-        const div = document.createElement('div');
-        div.className = 'habit' + (checkWeek(h) ? ' completed' : '');
-        div.innerHTML = '<span>' + escapeHtml(h) + '</span><input type="checkbox" onchange="toggle(this)"><button onclick="deleteHabit(event)">×</button>';
-        container.appendChild(div);
-      });
-      updateStats();
-    }
-
-    function checkWeek(habit) {
-      if (checkboxes[habit] && checkboxes[habit][0]) return true;
-      return week[0];
-    }
-
-    function toggle(el) {
-      const habit = el.parentElement.querySelector('span').textContent;
-      const idx = el.parentElement.querySelectorAll('.habit').indexOf(el.parentElement);
-      if (el.checked) {
-        if (!checkboxes[habit]) checkboxes[habit] = [false,false,false,false,false,false,false];
-        checkboxes[habit][idx] = true;
-      } else {
-        checkboxes[habit][idx] = false;
-      }
-      render();
-    }
-
-    function deleteHabit(e) {
-      e.stopPropagation();
-      const habit = e.target.parentElement.querySelector('span').textContent;
-      if (habits.indexOf(habit) > -1) {
-        habits.splice(habits.indexOf(habit), 1);
-        delete checkboxes[habit];
-        render();
-      }
-    }
-
-    function addHabit() {
-      const habit = prompt('Enter new habit:', 'New Habit');
-      if (habit) {
-        habits.push(habit);
-        checkboxes[habit] = [false,false,false,false,false,false,false];
-        render();
-      }
-    }
-
-    function resetWeek() {
-      week = {0:true,1:true,2:true,3:true,4:true,5:true,6:true};
-      habits.forEach(h => { if(checkboxes[h]) checkboxes[h].forEach(x => x = false); });
-      render();
-    }
-
-    function updateStats() {
-      let total = 0, completed = 0;
-      habits.forEach(h => {
-        const habitCheckboxes = checkboxes[h];
-        if (habitCheckboxes) {
-          total += habitCheckboxes.filter(Boolean).length;
-          completed += habitCheckboxes.filter(Boolean).length;
-        }
-      });
-      const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-      document.getElementById('completion').textContent = rate + '%';
-      document.getElementById('days').textContent = total > 0 ? '1+' : '0';
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/[&<>'"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
-    }
-
-    render();
-  </script>
+<div class="container">
+<a href="index.html" style="color:#6366f1;display:block;text-align:center;margin-bottom:10px;">Home</a>
+<h1>📅 Habit Tracker</h1>
+<input type="text" id="habitInput" placeholder="Enter new habit (e.g., Read 30 min)" onkeydown="if(event.key==='Enter')addHabit()">
+<button onclick="addHabit()">Add Habit</button>
+<h2>Today's Progress</h2>
+<ul id="habitsList"></ul>
+<div class="stats">
+<span id="completeCount">0/0</span>
+</div>
+<script>
+const habits = JSON.parse(localStorage.getItem('habits')||'[]');
+function render(){habits.forEach((h,i)=>{const checked=habits[i].complete?1:0;document.getElementById('completeCount').textContent=`${checked}/${habits.length}`;document.getElementById('habitsList').innerHTML='';habits.forEach((h,i)=>{document.getElementById('habitsList').innerHTML+=`<li><span onclick="toggle(${i})" style="cursor:pointer;user-select:none">${h.habit}</span><button onclick="deleteHabit(${i})" style="padding:4px 8px;font-size:12px;background:#333">✕</button></li>`});});}
+function addHabit(){const input=document.getElementById('habitInput');if(!input.value.trim())return;habits.push({habit:input.value.trim(),complete:false});input.value='';localStorage.setItem('habits',JSON.stringify(habits));render()}
+function toggle(i){habits[i].complete=!habits[i].complete;localStorage.setItem('habits',JSON.stringify(habits));render()}
+function deleteHabit(i){habits.splice(i,1);localStorage.setItem('habits',JSON.stringify(habits));render()}
+render();
+</script>
+</div>
 </body>
 </html>
