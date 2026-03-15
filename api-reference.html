@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>API Quick Reference</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+h1{color:#6366f1}
+input,button,select{margin:5px 0;background:#333;color:#e4e4e4;border:1px solid #555;padding:5px;border-radius:4px}
+button{cursor:pointer}
+select{width:100%}
+pre{background:#1a1a1a;padding:10px;border-radius:4px;overflow:auto;white-space:pre-wrap}
+a{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h1>API Quick Reference</h1>
+<div>
+<label>Method:</label>
+<select id="method"><option value="GET">GET</option><option value="POST">POST</option><option value="PUT">PUT</option><option value="DELETE">DELETE</option></select>
+<label>Path:</label>
+<input id="path" placeholder="/users">
+<button onclick="generate()">Generate</button>
+</div>
+<pre id="output">Select method, path and click Generate...</pre>
+<script>
+function generate(){
+const m=document.getElementById('method').value.toUpperCase();
+const p=document.getElementById('path').value;
+const o=document.getElementById('output');
+if(!p){o.textContent='Path is required';return}
+let status=200,desc='OK';
+if(m==='DELETE'){status=204;desc='No Content'}
+o.textContent=`Method: ${m}\nPath: ${p}\nStatus: ${status}\nDescription: ${desc}\n\nExample:\n${m} ${p}`;
+}
+generate();
+</script>
+</body>
+</html>
