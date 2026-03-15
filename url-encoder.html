@@ -1,47 +1,65 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8"><title>URL Encoder</title>
-<style>
-body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;}
-a{color:#e4e4e4;text-decoration:none;}a:hover{color:#8ab4f8;}
-.container{max-width:700px;margin:2rem auto;padding:0 1rem;}
-h1{font-size:1.8rem;margin:0 0 1rem 0;}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin:1rem 0;}
-input,button,select{font:inherit;padding:0.5rem;}
-input{background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#e4e4e4;}
-button{background:#333;color:#e4e4e4;border:none;border-radius:4px;cursor:pointer;}
-button:hover{background:#444;}
-textarea{width:100%;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#e4e4e4;padding:0.5rem;resize:vertical;}
-</style>
-</head>
+<head><meta charset="utf-8"><title>URL Encoder/Decoder</title>
+<style>body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;display:flex;justify-content:center;min-height:100vh;font-size:14px}
+a{color:#4ec4e8;text-decoration:none}a:hover{text-decoration:underline}
+.container{width:100%;max-width:800px}
+.header{text-align:center;margin-bottom:10px}
+.input-row{margin:15px 0;display:flex;gap:10px}
+input,select,button{border:1px solid #444;border-radius:4px;padding:8px 12px;font-size:13px;background:#1a1a1a;color:#e4e4e4}
+input:focus,select:focus{outline:2px solid #4ec4e8;outline-offset:2px}
+textarea{width:100%;height:120px;background:#1a1a1a;color:#e4e4e4;border:1px solid #444;border-radius:4px;font-family:monospace;font-size:13px;resize:vertical}
+button{cursor:pointer}
+button:hover{background:#2a2a2a;border-color:#6ec4e8}
+button:active{background:#3a3a3a}
+.result-box{background:#141414;padding:10px;border-radius:4px;min-height:50px;margin-top:5px;overflow:auto;max-height:100px}
+label{display:block;margin:5px 0 5px;cursor:pointer}
+.controls{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}
+</style></head>
 <body>
 <div class="container">
-<a href="index.html">Home</a>
-<h1>URL Encoder/Decoder</h1>
-<div class="grid">
-<input type="text" id="input1" placeholder="Enter text to encode"><input type="text" id="input2" placeholder="Enter text to decode"><button onclick="swap()">↔</button>
+<div class="header"><a href="index.html" style="display:inline-block;margin-bottom:10px;">Home</a>URL Encoder/Decoder</div>
+<div class="controls">
+<button onclick="encodeBase64()">Encode Base64</button>
+<button onclick="decodeBase64()">Decode Base64</button>
+<button onclick="encodeHtml()">Encode HTML</button>
+<button onclick="decodeHtml()">Decode HTML</button>
+<button onclick="encodeUrl()">Encode URL</button>
+<button onclick="decodeUrl()">Decode URL</button>
 </div>
-<textarea id="out1" placeholder="Encoded result" rows="4"></textarea>
-<textarea id="out2" placeholder="Decoded result" rows="4"></textarea>
-<div style="margin:1rem 0;">
-<button onclick="encode()">Encode</button>
-<button onclick="decode()">Decode</button>
-<button onclick="toggleHex()">Toggle Hex</button>
-<select id="type" onchange="setMode(this.value)">
-<option value="encode">Encode</option><option value="decode">Decode</option><option value="all">Auto</option>
-</select>
-</div>
+<div class="input-row"><label>Text:</label><textarea id="inputText" placeholder="Enter or paste text here..."></textarea></div>
+<div class="input-row" style="margin-top:0"><label>Method:</label><select id="method"><option value="base64">Base64</option><option value="html">HTML Entity</option><option value="url">URL Encoded</option></select></div>
+<div class="input-row"><label>Action:</label><select id="action"><option value="encode">Encode</option><option value="decode">Decode</option></select></div>
+<div class="result-box" id="result"></div>
 </div>
 <script>
-let hexMode=false,mode="encode";
-function swap(){const t1=document.getElementById("input1").value,t2=document.getElementById("input2").value;document.getElementById("input1").value=t2;document.getElementById("input2").value=t1;}
-function encode(){const t=document.getElementById("input1").value;document.getElementById("out1").value=encodeURI(t);}
-function decode(){const t=document.getElementById("input2").value;document.getElementById("out2").value=decodeURIComponent(t.replace(/%20/g," "").replace(/\+/g," ""));}
-function toggleHex(){hexMode=!hexMode;const t=document.getElementById("input1").value;document.getElementById("out1").value=hexMode?t.split("").map(c=>c.charCodeAt(0).toString(16)).join(" "):t;}
-function setMode(m){mode=m;if(m==="all"){encode();decode();}}
-document.getElementById("input1").oninput=setTimeout(()=>{if(mode==="all"||mode==="encode")encode()},300);
-document.getElementById("input2").oninput=setTimeout(()=>{if(mode==="all"||mode==="decode")decode()},300);
+const input=document.getElementById('inputText');
+const method=document.getElementById('method');
+const action=document.getElementById('action');
+const result=document.getElementById('result');
+function applyOp() {
+const text=input.value;
+const op=method.value;
+const ac=action.value;
+try {
+result.textContent=ac==='encode'?encode(op,text):decode(op,text);
+} catch(e) {
+result.textContent='Error: '+e.message;
+}
+}
+function encode(op,text) {
+if(op==='base64')return btoa(encodeURIComponent(text));
+if(op==='html')return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+return encodeURIComponent(text);
+}
+function decode(op,text) {
+if(op==='base64')try {return decodeURIComponent(atob(text));} catch {return text;};
+if(op==='html')try {return text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#x27;/g,"'");} catch {return text;};
+try {return decodeURIComponent(text);} catch {return text;};
+}
+input.addEventListener('input',applyOp);
+method.addEventListener('change',applyOp);
+action.addEventListener('change',applyOp);
 </script>
 </body>
 </html>
