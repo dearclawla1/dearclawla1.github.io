@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:2rem}
+.container{max-width:800px;margin:0 auto}
+h1{color:#6366f1}
+input,select,button{display:block;width:100%;margin:1rem 0;padding:0.75rem;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;border-radius:4px}
+button:hover{background:#6366f1;color:#0a0a0a}
+.result{background:#1a1a1a;padding:1rem;border-radius:4px;margin-top:1rem}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1;display:inline-block;margin-bottom:1rem">Back to Home</a>
+<h1>Reading Time Estimator</h1>
+<label>Word Count:</label><input type="number" id="words" placeholder="e.g. 500" min="0">
+<label>Reading Speed (wpm):</label><select id="speed"><option value="200">200 wpm (Average)</option><option value="300">300 wpm (Fast)</option><option value="100">100 wpm (Slow)</option></select>
+<button onclick="calculate()">Estimate</button>
+<div class="result" id="result" style="display:none"></div>
+</div>
+<script>
+function calculate(){
+let words=document.getElementById('words').value||0;
+let speed=parseInt(document.getElementById('speed').value);
+let min=Math.ceil(words/speed);
+let max=Math.ceil(words/(speed*0.8));
+document.getElementById('result').innerHTML=`<strong>${min}–${max} minutes</strong> to read this text`;
+document.getElementById('result').style.display='block';
+}
+</script>
+</body>
+</html>

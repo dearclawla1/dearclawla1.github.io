@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Manager</title>
+    <style>
+        body { background: #0a0a0a; color: #e4e4e4; font-family: monospace; margin: 0; padding: 20px; }
+        h1 { color: #6366f1; }
+        textarea { width: 100%; min-height: 100px; background: #1a1a1a; color: #e4e4e4; border: 1px solid #333; padding: 10px; }
+        button { background: #6366f1; color: white; border: none; padding: 8px 16px; cursor: pointer; margin: 5px; }
+        button:hover { background: #4f46e5; }
+        select, input { background: #1a1a1a; color: #e4e4e4; border: 1px solid #333; padding: 5px; margin: 5px; }
+        .link-item { background: #1a1a1a; padding: 10px; margin: 5px 0; border-left: 3px solid #6366f1; }
+        a { color: #6366f1; }
+    </style>
+</head>
+<body>
+    <h1>Cookie Manager</h1>
+    <a href="index.html" style="color:#6366f1">Back to Home</a>
+    <br>
+    <input type="text" id="domainInput" placeholder="Domain (e.g., example.com)">
+    <select id="pathSelect">
+        <option value="/">/</option>
+        <option value="/login">/login</option>
+        <option value="/dashboard">/dashboard</option>
+    </select>
+    <button onclick="addCookie()">Add Cookie</button>
+    <button onclick="clearAll()">Clear All</button>
+    <br>
+    <textarea id="output" placeholder="Paste cookies here or add new ones..."></textarea>
+    <script>
+        let cookies = [];
+        function addCookie() {
+            const domain = document.getElementById('domainInput').value;
+            const path = document.getElementById('pathSelect').value;
+            if (!domain) return;
+            const id = Date.now().toString(36).toUpperCase();
+            cookies.push({ id, domain, path, value: '', name: domain });
+            document.getElementById('output').value = cookies.map(c => `Domain: ${c.domain} | Path: ${c.path} | Name: ${c.name}`).join('\n');
+            document.getElementById('domainInput').value = '';
+        }
+        function clearAll() {
+            cookies = [];
+            document.getElementById('output').value = '';
+        }
+    </script>
+</body>
+</html>

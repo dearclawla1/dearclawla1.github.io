@@ -1,64 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>JSON Path Tester</title>
-<style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;padding:20px}
-input,button,select{background:#1a1a1a;color:#e4e4e4;border:1px solid #6366f1;padding:8px;margin:5px 0;border-radius:4px}
-textarea{background:#1a1a1a;color:#e4e4e4;border:1px solid #6366f1;width:100%;height:150px;padding:8px;font-family:monospace}
-button{background:#6366f1;color:#0a0a0a;font-weight:bold;cursor:pointer}
-button:hover{background:#4f46e5}
-#output{background:#1a1a1a;padding:10px;border:1px solid #6366f1;min-height:50px;white-space:pre-wrap}
-a{color:#6366f1;text-decoration:none}
-</style>
+<meta charset="utf-8"><title>JSON Path Tester</title>
+<style>body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px}
+.container{max-width:800px;margin:0 auto}
+input,select,button{padding:8px 12px;margin:5px 0;border-radius:4px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;font-size:14px}
+input,select{width:100%;box-sizing:border-box}
+button{background:#6366f1;color:white;border:none;cursor:pointer}
+button:hover{background:#5558e6}
+#json-input{min-height:150px;font-family:monospace;font-size:13px;padding:10px;background:#111;border:1px solid #333}
+#result{min-height:100px;font-family:monospace;font-size:13px;background:#111;padding:10px;white-space:pre-wrap}
+label{display:block;margin:10px 0 5px;font-weight:bold}</style>
 </head>
-<body>
-<a href="index.html" style="color:#6366f1">Back to Home</a><br><br>
+<body><a href="index.html" style="color:#6366f1">Back to Home</a><br>
 <h2>JSON Path Tester</h2>
-<textarea id="jsonInput"></textarea><br>
-<input type="text" id="pathInput" placeholder="Enter JSON path (e.g., $.store.banks[0].accounts[0].balance)">
-<button onclick="evaluatePath()">Test Path</button>
-<div id="output">Output will appear here...</div>
+<div class="container">
+<label>Enter JSON:</label>
+<input id="json-input"><br>
+<label>Select Path:</label>
+<select id="path-select">
+<option value=".">.</option><option value="$.">$.</option><option value="$..">$..</option>
+<option value="$.name">$.name</option><option value="$.store.address">$.store.address</option>
+<option value="$.address">$.address</option><option value="$.books">$.books</option>
+</select><br>
+<button onclick="evaluate()">Test</button><br>
+<label>Result:</label>
+<div id="result"></div>
+</div>
 <script>
-function evaluatePath(){
-const json=document.getElementById('jsonInput').value.trim();
-const path=document.getElementById('pathInput').value.trim();
-const output=document.getElementById('output');
-try{
-if(!json)throw new Error("No JSON provided");
-const obj=JSON.parse(json);
-if(!path)throw new Error("No path provided");
-const result=getPath(obj,path);
-if(result===undefined)output.textContent="Result: undefined (path not found)";
-else if(Array.isArray(result)){
-let str="Result (Array): [";
-result.forEach((r,i)=>str+=r+",".slice(0,-1));
-output.textContent="Result (Array): "+str.substring(0,str.length-1);
-}else{
-output.textContent="Result: "+JSON.stringify(result);
+const jsonExample = '{\n  "name": "John",\n  "age": 30,\n  "store": {\n    "address": "123 Main St"\n  },\n  "books": ["Book1", "Book2"]\n}';
+document.getElementById('json-input').value = jsonExample;
+function evaluate() {
+  const jsonStr = document.getElementById('json-input').value;
+  const path = document.getElementById('path-select').value;
+  try {
+    const obj = JSON.parse(jsonStr);
+    const result = eval(path);
+    document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+  } catch (e) {
+    document.getElementById('result').textContent = 'Error: ' + e.message;
+  }
 }
-}catch(e){
-output.textContent="Error: "+e.message;
-}
-}
-function getPath(obj,path){
-let result=obj;
-const segments=path.split('.').filter(s=>s);
-for(let i=0;i<segments.length;i++){
-const seg=segments[i];
-if(!result)break;
-if(seg.startsWith('$')||seg.startsWith('['))throw new Error("Invalid path: "+path);
-if(seg.includes('[')){
-const parts=seg.match(/^(.+)\[(\d+)\]$/);
-if(!parts)throw new Error("Invalid path: "+path);
-result=result[parts[1]][parts[2]];
-}else{
-result=result[seg];
-}
-}
-return result;
-}
+eval('evaluate');
 </script>
 </body>
 </html>

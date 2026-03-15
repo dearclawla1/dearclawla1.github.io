@@ -1,66 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>GitHub Trending Browser</title>
-<style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a{color:#6366f1;text-decoration:none}
-input,select,button{padding:8px 12px;margin:8px 0;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#e4e4e4}
-button{background:#6366f1;color:#0a0a0a;font-weight:bold;cursor:pointer;border:none}
-button:hover{opacity:0.9}
-#results{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:20px;width:100%;max-width:1200px}
-.repo{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:12px}
-.repo h3{margin:0 0 8px;color:#6366f1;font-size:1.1em}
-.repo p{margin:4px 0;color:#aaa;font-size:0.9em}
-.repo a{color:#6366f1;text-decoration:none}
-.repo a:hover{text-decoration:underline}</style>
-</head>
-<body>
-<h2 style="text-align:center;margin-bottom:16px">GitHub Trending Repositories</h2>
-<div style="display:flex;flex-direction:column;width:100%;max-width:1200px">
-<label>Language:</label>
-<select id="lang">
-<option value="all">All Languages</option>
-<option value="javascript">JavaScript</option>
-<option value="python">Python</option>
-<option value="rust">Rust</option>
-<option value="java">Java</option>
-<option value="go">Go</option>
-</select>
-<label>Sort By:</label>
-<select id="sort">
-<option value="stars">Stars</option>
-<option value="updated">Updated</option>
-</select>
-<button onclick="fetchTrending()">Refresh</button>
+<html style="background:#0a0a0a;color:#e4e4e4;font-family:system-ui">
+<head><title>GitHub Trending Browser</title></head>
+<body style="padding:1rem;display:flex;flex-direction:column;align-items:center">
+<h2 style="margin-top:0">GitHub Trending Repositories</h2>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<div style="margin-top:1rem;max-width:600px;width:100%">
+<input type="text" id="repoUrl" placeholder="https://github.com/owner/repo" style="width:100%;padding:0.5rem;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;border-radius:4px">
+<button onclick="fetchTrending()" style="margin-top:0.5rem;padding:0.5rem 1rem;background:#6366f1;color:#0a0a0a;border:none;border-radius:4px;cursor:pointer">Get Trending</button>
+<div id="result" style="margin-top:1rem;max-height:300px;overflow:auto;background:#1a1a1a;padding:1rem;border-radius:4px"></div>
 </div>
-<div id="results"></div>
 <script>
-async function fetchTrending(){
-const lang=document.getElementById('lang').value;
-const sort=document.getElementById('sort').value;
-const url=`https://api.github.com/search/repositories?q=trending:${sort}&sort=${sort}&order=desc&per_page=12`;
-try{
-const res=await fetch(url);
-const repos=await res.json();
-const container=document.getElementById('results');
-container.innerHTML='';
-repos.forEach(repo=>{
-const div=document.createElement('div');
-div.className='repo';
-div.innerHTML=`
-<h3>${repo.name}</h3>
-<p><a href="${repo.html_url}" target="_blank">${repo.description?.substring(0,100)}...</a></p>
-<p>⭐ ${repo.stargazers_count.toLocaleString()} | 🔗 <a href="${repo.html_url}" target="_blank">${repo.html_url}</a></p>
-`;
-container.appendChild(div);
-});
-}catch(e){
-container.innerHTML='<p style="color:#ff6b6b">Error loading data. Check your connection.</p>';
+async function fetchTrending() {
+const url = document.getElementById("repoUrl").value;
+const res = await fetch(`https://api.github.com/search/repositories?q=${encodeURIComponent(url)}&sort=stars&order=desc&per_page=10`);
+const data = await res.json();
+const div = document.getElementById("result");
+div.innerHTML = data.items.map(r => `<div style="border-bottom:1px solid #333;padding:0.5rem 0"><a href="${r.html_url}" target="_blank" style="color:#6366f1;text-decoration:none">${r.name}</a> - ${r.description || "No description"} (${r.stargazers_count.toLocaleString()} stars)</div>`).join("");
 }
-}
-fetchTrending();
 </script>
 </body>
 </html>
