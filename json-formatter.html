@@ -1,35 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>JSON Formatter/Validator</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-.container{max-width:900px;margin:0 auto}
-h1{margin:0 0 15px;font-size:24px}
-a{color:#8be9fd;text-decoration:none}
-textarea{width:100%;height:200px;background:#111;color:#e4e4e4;border:1px solid #333;padding:10px;box-sizing:border-box;font-family:monospace;font-size:13px;resize:vertical}
-button{background:#5e63ff;color:#fff;border:none;padding:10 20px;border-radius:6px;font-size:14px;cursor:pointer;margin:5px}
-button:hover{background:#4a4ecb}
-#error{color:#ff6b6b;margin:10px 0;padding:10px;background:#2a1a1a;border-radius:6px;display:none}
-#result{background:#1a2a1a;padding:10px;border-radius:6px;display:none;font-family:monospace;font-size:13px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0a;color:#e4e4e4;padding:20px}
+a{color:#81a1c1;text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:1.5rem;margin-bottom:1rem}
+.container{max-width:1200px;margin:0 auto}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem}
+input,button{padding:10px 15px;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#e4e4e4;font-size:0.9rem}
+input:hover,button:hover{border-color:#5c6370;background:#2a2a2a}
+input:focus{outline:2px solid #7aa2f7;outline-offset:2px}
+textarea{width:100%;height:200px;padding:12px;background:#1a1a1a;color:#c9d1d9;border:1px solid #333;border-radius:6px;font-family:Consolas,Monaco,'Courier New',monospace;font-size:0.9rem;resize:vertical}
+.result{width:100%;height:250px;margin-top:1rem;background:#1a1a1a;border:1px solid #333;border-radius:6px;font-family:Consolas,Monaco,'Courier New',monospace;font-size:0.85rem;overflow:auto;padding:12px;color:#c9d1d9}
+.error{color:#f5a7a7}
+.valid{color:#9ece6a}
+label{display:block;margin-bottom:5px;font-size:0.9rem}
 </style>
 </head>
 <body>
-<div class="container">
-<h1><a href="index.html">Home</a> - JSON Formatter/Validator</h1>
-<textarea id="input" placeholder="Paste your JSON here..."></textarea>
-<div id="error"></div>
-<div id="result"></div>
-<button onclick="format()">Format</button>
-<button onclick="minify()">Minify</button>
-<button onclick="validate()">Validate</button>
+<a href="index.html">Home</a>
+<h1>JSON Formatter/Validator</h1>
+<div class="controls">
+<button onclick="formatJSON()">Format JSON</button>
+<button onclick="validateJSON()">Validate JSON</button>
+<button onclick="clearAll()">Clear All</button>
 </div>
+<label>Input JSON:</label>
+<textarea id="input" placeholder="Paste your JSON here..."></textarea>
+<label>Result:</label>
+<div id="result" class="result"></div>
 <script>
-const input=document.getElementById('input'), error=document.getElementById('error'), result=document.getElementById('result');
-function format(){let t=input.value;try{let o=JSON.parse(t);input.value=JSON.stringify(o,null,2);error.style.display='none';result.style.display='none'}catch(e){error.textContent='Error: '+e.message;error.style.display='block';result.style.display='none'}}
-function minify(){let t=input.value;try{let o=JSON.parse(t);input.value=JSON.stringify(o);error.style.display='none';result.style.display='none'}catch(e){error.textContent='Error: '+e.message;error.style.display='block';result.style.display='none'}}
-function validate(){let t=input.value;try{JSON.parse(t);result.textContent='Valid JSON ✓';result.style.display='block';error.style.display='none'}catch(e){result.style.display='none';error.textContent='Invalid JSON: '+e.message;error.style.display='block'}}
+const sampleJSON='{ "name": "Gwen", "version": "1.0.0", "features": ["AI Builder", "Autonomous", "Smart"], "active": true }';
+document.getElementById('input').value=sampleJSON;
+function escapeHTML(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function highlightJSON(json){try{const tokens=json.replace(/("(\\u[a-fA-F0-9]{4}|\\[^"\\\n\r]*|"(?:\\"|[^"])*)")/g,'"$1$2"').replace(/(:)/g,'$1$2').replace(/(,)/g,'$1$2');return tokens.replace(/\b(\d+)\b/g,'<$span class="number">$&</span>').replace(/\b(true|false|null)\b/g,'<$span class="boolean">$&</span>').replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)\b/g,'<$span class="string">$&</span>');}catch(e){return escapeHTML(json);}}
+function formatJSON(){const input=document.getElementById('input').value;let output;try{output=JSON.stringify(JSON.parse(input),null,2);document.getElementById('result').innerHTML='<span class="valid">Formatted JSON:</span>'+'\n'+'<pre>'+'\n'+'<code>'+'\n'+''+highlightJSON(output)+'\n'+'</code>'+'\n'+'</pre>';document.getElementById('result').scrollIntoView({behavior:'smooth'});}catch(e){document.getElementById('result').innerHTML='<span class="error">Error:</span>\n'+e.message;}}
+function validateJSON(){const input=document.getElementById('input').value;try{JSON.parse(input);document.getElementById('result').innerHTML='<span class="valid">✓ Valid JSON</span>';return true;}catch(e){document.getElementById('result').innerHTML='<span class="error">✗ Invalid JSON</span>\nError: ' + e.message;return false;}finally{document.getElementById('input').focus();}}
+function clearAll(){document.getElementById('input').value='';document.getElementById('result').innerHTML='';}
+formatJSON();
 </script>
 </body>
 </html>
