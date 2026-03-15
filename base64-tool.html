@@ -1,27 +1,32 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Base64 Encoder/Decoder</title>
-<style>body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:1rem}
-input,button,select{margin:0.5rem 0.25rem 0;padding:0.5rem 1rem;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:4px}
-a{color:#4caf50;text-decoration:none}</style></head>
-<body><a href="index.html">Home</a>
-<h2>Base64 Encoder/Decoder</h2>
-<input id="text" placeholder="Enter text to encode/decode">
-<select id="mode"><option value="encode">Encode to Base64</option><option value="decode">Decode from Base64</option></select>
-<button onclick="process()">Process</button>
-<div id="result" style="margin-top:1rem;padding:0.5rem;background:#1a1a1a;border:1px solid #333;min-height:2rem"></div>
+<head>
+<meta charset='utf-8'>
+<style>
+body{margin:0;padding:15px;background:#0a0a0a;color:#e4e4e4;font-family:monospace}
+a{color:#88cc88}
+h1{color:#aaa;margin:0 0 15px 0}
+.toolbar{display:flex;gap:8px;margin-bottom:15px}
+input,button{padding:8px 12px;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;font-size:13px}
+button{cursor:pointer}
+textarea{width:100%;min-height:120px;padding:8px;border:1px solid #333;border-radius:4px;background:#111;color:#e4e4e4;font-family:monospace;font-size:13px}
+section{margin-top:15px}
+label{display:block;margin:5px 0 5px 0;color:#888}
+</style>
+</head>
+<body>
+<a href='index.html'>Home</a>
+<h1>Base64 Encoder/Decoder</h1>
+<div class='toolbar'><button onclick='encode()'>Encode</button><button onclick='decode()'>Decode</button><button onclick='clear()'>Clear</button></div>
+<section><label>Input:</label><textarea id='input'></textarea></section>
+<section><label>Output:</label><textarea id='output'></textarea></section>
+<section><label>Type:</label><span id='type'>-</span></section>
 <script>
-function process(){
-var t=document.getElementById('text').value;
-var m=document.getElementById('mode').value;
-var r=document.getElementById('result');
-if(m==='encode'){
-var e=window.btoa(encodeURIComponent(t));
-r.textContent=e?e:'Error: Invalid input';
-}else{
-var d=window.atob(t);
-r.textContent=d?decodeURIComponent(d.replace(/[^\x00-\xFF]/g,'')):'Error: Invalid Base64';
-}
-}
-</script></body>
+function encode(){let i=document.getElementById('input').value;try{let o=btoa(i);document.getElementById('output').value=o}catch(e){alert('Error: Invalid input for Base64 encoding');return}showType()};
+function decode(){let i=document.getElementById('input').value;try{let o=atob(i);document.getElementById('output').value=o}catch(e){alert('Error: Invalid Base64');return}showType()};
+function showType(){let t=document.getElementById('output').value;let c=t.charCodeAt(0);let s='';if(c>=65&&c<=90)s='Uppercase';else if(c>=97&&c<=122)s='Lowercase';else if(c>=48&&c<=57)s='Digit';else if(c===45)s='Hyphen';else if(c===43)s='Plus';else if(c===47)s='Slash';else if(c===61)s='Equals';else s='Binary';document.getElementById('type').textContent=s}
+function clear(){document.getElementById('input').value='';document.getElementById('output').value='';document.getElementById('type').textContent='-'};
+document.getElementById('input').oninput=showType
+</script>
+</body>
 </html>
