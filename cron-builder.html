@@ -1,76 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cron Expression Builder</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:16px}
-a{color:#e4e4e4}
-input,select,button{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:6px;min-width:80px;margin:4px}
-button:hover{background:#2a2a2a}
-textarea{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:8px;width:100%;min-height:80px;resize:vertical}
-label{display:block;margin:8px 0}
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:4px}
-h2{margin:16px 0 8px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Monaco,Consolas,Courier New,monospace}
+body{background:#0a0a0a;color:#e4e4e4;padding:20px}
+a{color:#4ec9b0;text-decoration:none}
+a:hover{text-decoration:underline}
+h1{color:#4ec9b0;margin-bottom:20px}
+.container{max-width:800px;margin:0 auto}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:15px;margin-bottom:20px}
+.field{display:flex:flex-direction:column}
+label{font-size:12px;color:#888;margin-bottom:5px}
+input,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;border-radius:4px;font-size:12px}
+input:focus,select:focus{outline:none;border-color:#4ec9b0}
+#expression{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;border-radius:4px;font-size:13px;width:100%;margin-bottom:15px;display:block}
+button{background:#4ec9b0;border:none;color:#0a0a0a;padding:10px 20px;border-radius:4px;font-size:12px;cursor:pointer;margin-right:10px}
+button:hover{background:#46b09e}
+#validate{background:#ff6b6b}
+#validate:hover{background:#e55a5a}
+#output{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;font-size:12px;white-space:pre-wrap;min-height:40px}
+#output.error{border:1px solid #ff6b6b}
 </style>
 </head>
-<body><a href="index.html">Home</a><h2>Cron Expression Builder</h2>
-<label><textarea id="cronInput" placeholder="0 0 * * * ?"></textarea></label>
-<label>Second</label><select id="secOpts"><option>every</option><option>none</option><option>every2</option><option>every5</option><option>every10</option><option>every15</option><option>every30</option><option>every60</option><option>every120</option></select><input id="secVal" type="number" min="0" max="59" value="0"><input id="secOff" type="number" min="0" max="59" value="0">
-<label>Minute</label><select id="minOpts"><option>every</option><option>none</option><option>every2</option><option>every5</option><option>every10</option><option>every15</option><option>every30</option></select><input id="minVal" type="number" min="0" max="59" value="0"><input id="minOff" type="number" min="0" max="59" value="0">
-<label>Hour</label><select id="hourOpts"><option>every</option><option>none</option><option>every2</option><option>every3</option><option>every6</option><option>every12</option></select><input id="hourVal" type="number" min="0" max="23" value="0"><input id="hourOff" type="number" min="0" max="23" value="0">
-<label>Day</label><select id="dayOpts"><option>every</option><option>none</option><option>every2</option><option>weekdays</option><option>sunday</option><option>monday</option><option>tuesday</option><option>wednesday</option><option>thursday</option><option>friday</option><option>saturday</option></select><input id="dayVal" type="number" min="1" max="31" value="*"><input id="dayOff" type="number" min="1" max="31" value="0">
-<label>Month</label><select id="monthOpts"><option>every</option><option>jan</option><option>feb</option><option>mar</option><option>apr</option><option>may</option><option>jun</option><option>jul</option><option>aug</option><option>sep</option><option>oct</option><option>nov</option><option>dec</option></select><input id="monthVal" type="number" min="1" max="12" value="*"><input id="monthOff" type="number" min="1" max="12" value="0">
-<div style="display:flex;gap:4px;align-items:center">
-<label><input type="checkbox" id="noDayOfWeek" checked> No Day of Week</label>
-<label><input type="checkbox" id="noMonth" checked> No Month</label>
-</div><br>
-<button onclick="build()">Build</button><button onclick="validate()">Validate</button><button onclick="reset()">Reset</button>
-<label><textarea id="output" readonly></textarea></label>
+<body>
+<a href="index.html">Home</a>
+<div class="container">
+<h1>Cron Expression Builder</h1>
+<div class="fields">
+<div class="field"><label>Minute (0-59)</label><input type="number" id="minute" min="0" max="59" value="*"></div>
+<div class="field"><label>Hour (0-23)</label><input type="number" id="hour" min="0" max="23" value="*"></div>
+<div class="field"><label>Day of Month (1-31)</label><input type="number" id="day" min="1" max="31" value="*"></div>
+<div class="field"><label>Month (1-12)</label><input type="number" id="month" min="1" max="12" value="*"></div>
+<div class="field"><label>Day of Week (0-7)</label><input type="number" id="dow" min="0" max="7" value="*"></div>
+</div>
+<input type="text" id="expression" placeholder="CRON Expression" readonly>
+<button onclick="validate()">Validate</button>
+<button id="validate" onclick="validate()">Validate</button>
+<div id="output"></div>
+</div>
 <script>
-function getOpt(sel,def) {return sel.options[sel.selectedIndex].text.toLowerCase()}
-function getNum(id) {return document.getElementById(id).value}
-function toNum(v) {return parseInt(v)||0}
-function build() {
-const sec=getOpt(document.getElementById('secOpts'),0)+' '+(getNum('secVal')).toString().padStart(2,'0')
-const min=getOpt(document.getElementById('minOpts'),0)+' '+(getNum('minVal')).toString().padStart(2,'0')
-const hour=getOpt(document.getElementById('hourOpts'),0)+' '+(getNum('hourVal')).toString().padStart(2,'0')
-const day=getOpt(document.getElementById('dayOpts'),0)+' '+(getNum('dayVal')).toString().padStart(2,'0')
-const month=getOpt(document.getElementById('monthOpts'),0)+' '+(getNum('monthVal')).toString().padStart(2,'0')
-const dayOff=toNum(getNum('dayOff')).toString()
-const monthOff=toNum(getNum('monthOff')).toString()
-const out=document.getElementById('output')
-out.value=`${sec} ${min} ${hour} ${day} ${month} ${dayOff} ${monthOff} ${getNum('noDayOfWeek')?'?':'1'}`
-document.getElementById('cronInput').value=out.value.trim()}
-function reset() {
-document.getElementById('cronInput').value='0 0 * * * ?'
-document.getElementById('secVal').value=0;document.getElementById('secOff').value=0
-document.getElementById('minVal').value=0;document.getElementById('minOff').value=0
-document.getElementById('hourVal').value=0;document.getElementById('hourOff').value=0
-document.getElementById('dayVal').value='*';document.getElementById('dayOff').value=0
-document.getElementById('monthVal').value='*';document.getElementById('monthOff').value=0
-document.getElementById('noDayOfWeek').checked=true;document.getElementById('noMonth').checked=true
-document.getElementById('output').value=''
-document.getElementById('secOpts').selectedIndex=0;document.getElementById('minOpts').selectedIndex=0
-document.getElementById('hourOpts').selectedIndex=0;document.getElementById('dayOpts').selectedIndex=0
-document.getElementById('monthOpts').selectedIndex=0}
-function validate() {
-const cron=document.getElementById('cronInput').value.trim().replace(/\s+/g,' ').split(' ')
-const valid=cron.length===8
-const out=document.getElementById('output')
-if(valid) {
-out.value='Valid cron expression. Parts:'
-for(let i=0;i<cron.length;i++) {
-const p=cron[i];const name=['second','minute','hour','day','month','dayOfWeek','monthOffset','yearOffset'][i]
-out.value+=`\n  ${name.charAt(0).toUpperCase()}+${name.slice(1)}: ${p}`
+function generate(){
+const m=document.getElementById('minute').value||'*';
+const h=document.getElementById('hour').value||'*';
+const d=document.getElementById('day').value||'*';
+const mo=document.getElementById('month').value||'*';
+const doo=document.getElementById('dow').value||'*';
+const expr=`${m} ${h} ${d} ${mo} ${doo}`;
+document.getElementById('expression').value=expr;
+return expr;
 }
-} else {
-out.value='Invalid cron expression (expected 8 parts). Got: ' + cron.join(' ')
+function parse(expr){
+const parts=expr.trim().split(/\s+/);
+if(parts.length<5)return null;
+return{min:parts[0],hour:parts[1],day:parts[2],month:parts[3],dow:parts[4]};
 }
-document.getElementById('secVal').value=toNum(cron[1]||0);document.getElementById('minVal').value=toNum(cron[2]||0)
-document.getElementById('hourVal').value=toNum(cron[3]||0);document.getElementById('dayVal').value=cron[4]||'*'
-document.getElementById('monthVal').value=cron[5]||'*';document.getElementById('output').value=out.value.trim()}
+function validate(){
+const expr=document.getElementById('expression').value;
+const p=parse(expr);
+const output=document.getElementById('output');
+let valid=true;
+let msg='Valid CRON Expression';
+if(!p){output.classList.add('error');msg='Invalid format';valid=false;document.getElementById('expression').value=generate();}
+else{
+const check=(v,min,max)=>Number.isInteger(Number(v))&&Number(v)>=min&&Number(v)<=max||v==='*';
+if(!check(p.min,0,59)){msg='Minute must be 0-59 or *';valid=false;}}
+if(!check(p.hour,0,23)){msg='Hour must be 0-23 or *';valid=false;}
+if(!check(p.day,1,31)){msg='Day must be 1-31 or *';valid=false;}
+if(!check(p.month,1,12)){msg='Month must be 1-12 or *';valid=false;}
+if(!check(p.dow,0,7)){msg='Day of week must be 0-7 or *';valid=false;}
+if(valid){output.classList.remove('error');output.textContent=`✓ ${msg}\n\nExpression: ${expr}\n\nSchedule: Runs at ${getSchedule(expr)}`;}}
+}
+function getSchedule(expr){
+const p=parse(expr);
+if(p.min==='*')return 'Every minute';
+if(p.hour==='*')return 'At minute '+(parseInt(p.min)+1)+' after every hour';
+if(p.day==='*')return 'At '+(parseInt(p.hour)+1)+':'+(parseInt(p.min)+'0')+` on every day`;
+if(p.month==='*')return 'At '+(parseInt(p.hour)+1)+':'+(parseInt(p.min)+'0')+` on day ${p.day}`;
+if(p.dow==='*')return 'At '+(parseInt(p.hour)+1)+':'+(parseInt(p.min)+'0')+` in month ${p.month}`;
+return 'Custom schedule';
+}
+document.getElementById('minute').onchange=generate;
+document.getElementById('hour').onchange=generate;
+document.getElementById('day').onchange=generate;
+document.getElementById('month').onchange=generate;
+document.getElementById('dow').onchange=generate;
+generate();
 </script>
 </body>
 </html>
