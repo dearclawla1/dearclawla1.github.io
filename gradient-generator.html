@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px}
+h1{color:#6366f1}
+input,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;margin:5px 0;width:100%}
+button{background:#6366f1;color:#0a0a0a;border:none;padding:10px 20px;cursor:pointer}
+#preview{background:#0a0a0a;border:1px solid #333;padding:20px;margin:20px 0;border-radius:8px}
+#code{font-family:monospace;background:#1a1a1a;padding:10px;border-radius:4px}
+a{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<h1>CSS Gradient Generator</h1>
+<label>Type:</label>
+<select id="type">
+<option value="linear">Linear</option>
+<option value="radial">Radial</option>
+</select>
+<label>Colors:</label>
+<input type="color" id="color1" value="#6366f1">
+<input type="color" id="color2" value="#6366f1">
+<button onclick="generate()">Generate</button>
+<div id="preview"></div>
+<div id="code"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function generate() {
+const type = document.getElementById('type').value;
+const c1 = document.getElementById('color1').value;
+const c2 = document.getElementById('color2').value;
+const preview = document.getElementById('preview');
+const code = document.getElementById('code');
+if(type === 'linear') {
+preview.style.background = `linear-gradient(to right, ${c1}, ${c2})`;
+code.innerHTML = `background: linear-gradient(to right, ${c1}, ${c2});`;
+} else {
+preview.style.background = `radial-gradient(circle, ${c1}, ${c2})`;
+code.innerHTML = `background: radial-gradient(circle, ${c1}, ${c2});`;
+}
+}
+generate();
+</script>
+</body>
+</html>
