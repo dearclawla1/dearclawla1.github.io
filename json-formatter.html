@@ -2,71 +2,69 @@
 <html>
 <head>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
-a{color:#818cf8;text-decoration:none;}
-a:hover{text-decoration:underline;}
-.container{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:400px;}
-textarea{width:100%;height:100%;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;border-radius:5px;resize:none;font-family:monospace;font-size:13px;}
-button{background:#4c4c9c;color:#fff;border:none;padding:10px 15px;border-radius:5px;cursor:pointer;}
-button:hover{background:#5c5cb5;}
-.error{color:#f38ba8;border:1px solid #f38ba8;}
-.success{color:#94e7ff;border:1px solid #94e7ff;}
-.pre{white-space:pre-wrap;font-size:13px;}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+h1{color:#0f0;margin-bottom:10px}
+a{color:#0f0;text-decoration:none}
+.container{max-width:900px;margin:0 auto}
+textarea{width:100%;min-height:200px;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;font-family:monospace;font-size:13px}
+button{background:#0f0;color:#0a0a0a;border:none;padding:10px 20px;cursor:pointer;margin:5px}
+button:hover{background:#0c0}
+.result{background:#1a1a1a;padding:15px;border:1px solid #333;margin-top:10px}
+.error{color:#f55}
+.success{color:#0f0}
+.controls{margin-bottom:15px}
+label{display:block;margin:5px 0}
 </style>
 </head>
 <body>
 <a href="index.html">Home</a>
-<h2>JSON Formatter</h2>
-<div class="container">
-<textarea id="input" placeholder='{"name":"Gwen","active":true}'></textarea>
-<div class="output" id="output"></div>
+<h1>JSON Formatter</h1>
+<div class="controls">
+<label>Input JSON:</label>
+<textarea id="input"></textarea>
 </div>
-<div style="margin-top:10px;">
-<button onclick="format()">Format</button>
-<button onclick="validate()">Validate</button>
-<button onclick="clear()">Clear</button>
+<div class="controls">
+<button onclick="formatJSON()">Beautify</button>
+<button onclick="validateJSON()">Validate</button>
+<button onclick="minify()">Minify</button>
+<button onclick="clearAll()">Clear</button>
 </div>
+<div class="result" id="output"></div>
 <script>
-const output = document.getElementById('output');
-const input = document.getElementById('input');
-const formatBtn = document.querySelector('button[onclick="format()"]');
-const clearBtn = document.querySelector('button[onclick="clear()"]');
-function escapeHtml(str) {return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function format() {
-try {
-const json = JSON.parse(input.value);
-const formatted = JSON.stringify(json, null, 2);
-output.innerHTML = '<pre class="success">' + escapeHtml(formatted) + '</pre>';
-output.classList.add('success');
-output.classList.remove('error');
-formatBtn.disabled = true;
-formatBtn.textContent = 'Formatted';
-} catch(e) {
-output.innerHTML = '<pre class="error">Parse error: ' + escapeHtml(e.message) + '</pre>';
-output.classList.add('error');
-output.classList.remove('success');
-formatBtn.disabled = false;
-formatBtn.textContent = 'Format';
+function formatJSON(){
+try{
+const input=document.getElementById('input').value;
+const obj=JSON.parse(input);
+document.getElementById('input').value=JSON.stringify(obj,null,2);
+document.getElementById('output').innerHTML='<span class="success">✓ Formatted successfully</span>';
+}catch(e){
+document.getElementById('output').innerHTML='<span class="error">✗ Invalid JSON: ' + e.message + '</span>';
 }
 }
-function validate() {
-try {
-JSON.parse(input.value);
-output.innerHTML = '<pre class="success">Valid JSON</pre>';
-} catch(e) {
-output.innerHTML = '<pre class="error">Invalid JSON: ' + escapeHtml(e.message) + '</pre>';
+function validateJSON(){
+try{
+const input=document.getElementById('input').value;
+JSON.parse(input);
+document.getElementById('output').innerHTML='<span class="success">✓ Valid JSON</span>';
+document.getElementById('output').innerHTML+='<pre id="parsed" style="margin-top:5px">' + JSON.stringify(JSON.parse(input),null,2) + '</pre>';
+}catch(e){
+document.getElementById('output').innerHTML='<span class="error">✗ Invalid JSON: ' + e.message + '</span>';
 }
 }
-function clear() {
-input.value = '';
-output.innerHTML = '';
-formatBtn.disabled = false;
-formatBtn.textContent = 'Format';
+function minify(){
+const input=document.getElementById('input').value;
+try{
+const obj=JSON.parse(input);
+document.getElementById('input').value=JSON.stringify(obj);
+document.getElementById('output').innerHTML='<span class="success">✓ Minified</span>';
+}catch(e){
+document.getElementById('output').innerHTML='<span class="error">✗ Invalid JSON: ' + e.message + '</span>';
 }
-input.addEventListener('input', function() {
-formatBtn.disabled = false;
-formatBtn.textContent = 'Format';
-});
+}
+function clearAll(){
+document.getElementById('input').value='';
+document.getElementById('output').innerHTML='';
+}
 </script>
 </body>
 </html>
