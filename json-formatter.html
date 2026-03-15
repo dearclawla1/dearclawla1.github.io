@@ -1,27 +1,116 @@
 <!DOCTYPE html>
-<html lang="en" theme="dark">
-<head><meta charset="UTF-8"><title>JSON Formatter/Validator</title>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JSON Formatter</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
-a{color:#81a1c1;text-decoration:none;}
-input,button,select{width:100%;padding:10px;margin:10px 0;font-size:14px;}
-textarea{width:100%;min-height:150px;font-family:monospace;font-size:13px;padding:10px;box-sizing:border-box;}
-#output{background:#1f1f1f;border:1px solid #3a3a3a;padding:10px;margin-top:10px;}
-h1{margin:0 0 10px;font-size:18px;}
-</style></head>
-<body><a href="index.html">Home</a><h1>JSON Formatter/Validator</h1>
-<input type="file" id="file" accept=".json"><textarea id="input"></textarea>
-<button onclick="format()">Format</button>
-<button onclick="validate()">Validate</button>
-<button onclick="minify()">Minify</button>
-<button onclick="clear()">Clear</button>
-<div id="output"></div><script>
-function format(){const t=document.getElementById('input').value,o=JSON.parse(t||'{}');
-document.getElementById('output').innerHTML='<pre style="color:#c4a7e7;">'+JSON.stringify(o,null,2)+'</pre>'}
-function validate(){const t=document.getElementById('input').value;try{JSON.parse(t);
-document.getElementById('output').innerHTML='<div style="color:#50fa7b;">✔ Valid JSON</div>'}catch{
-document.getElementById('output').innerHTML='<div style="color:#ff5555;">✖ Invalid JSON</div>'}}
-function minify(){const t=document.getElementById('input').value,o=JSON.parse(t||'{}');
-document.getElementById('output').innerHTML='<pre style="color:#608b4c;">'+JSON.stringify(o)+'</pre>'}
-function clear(){document.getElementById('input').value='';document.getElementById('output').innerHTML=''}</script>
-</body></html>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui;background:#0a0a0a;color:#e4e4e4;padding:20px}
+.container{max-width:800px;margin:0 auto}
+a{color:#e4e4e4;text-decoration:underline}
+input,textarea{width:100%;padding:12px;margin:10px 0;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:4px;font-family:monospace;font-size:13px}
+textarea{min-height:200px;resize:vertical}
+input::placeholder{color:#888}
+button{width:100%;padding:12px;margin:8px 0;border:none;background:#333;color:#e4e4e4;border-radius:4px;cursor:pointer;font-size:14px}
+button:hover{background:#444}
+#formatBtn{background:#4CAF50}
+#formatBtn:hover{background:#45a049}
+#clearBtn{background:#f44336}
+#clearBtn:hover{background:#e53935}
+#loading{display:none;text-align:center;padding:20px}
+#loading.active{display:block}
+#result{background:#1a1a1a;padding:15px;border-radius:4px;min-height:100px;white-space:pre-wrap;font-family:monospace;font-size:13px}
+#error{background:#f44336;padding:10px;border-radius:4px;color:#fff;margin:10px 0;display:none}
+@media(max-width:600px){
+.container{max-width:100%;padding:0 10px}
+textarea{min-height:150px}
+}</style>
+</head>
+<body>
+<div class="container">
+<h1>JSON Formatter</h1>
+<p>Paste your JSON below to format, validate, or minify.</p>
+<textarea id="jsonInput" placeholder="Paste your JSON here... e.g., {&quot;name&quot;: &quot;test&quot;}&quot;: 123}"></textarea>
+<div id="loading"><span>Loading...</span></div>
+<div id="error"></div>
+<button id="formatBtn">Format JSON</button>
+<button id="minifyBtn">Minify JSON</button>
+<button id="validateBtn">Validate JSON</button>
+<button id="clearBtn">Clear</button>
+<div id="result"></div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+const input = document.getElementById('jsonInput');
+const result = document.getElementById('result');
+const error = document.getElementById('error');
+const loading = document.getElementById('loading');
+const formatBtn = document.getElementById('formatBtn');
+const minifyBtn = document.getElementById('minifyBtn');
+const validateBtn = document.getElementById('validateBtn');
+const clearBtn = document.getElementById('clearBtn');
+
+// Try-catch error handling
+function processJSON(jsonString, operation) {
+try {
+loading.classList.add('active');
+result.textContent = '';
+error.style.display = 'none';
+setTimeout(() => {
+const data = JSON.parse(jsonString);
+switch(operation) {
+case 'format':
+const formatted = JSON.stringify(data, null, 2);
+result.textContent = formatted;
+break;
+case 'minify':
+result.textContent = JSON.stringify(data);
+break;
+case 'validate':
+if (jsonString.trim() === '') {
+error.textContent = 'Error: Empty input';
+error.style.display = 'block';
+} else if (data === null) {
+error.textContent = 'Error: Invalid JSON';
+error.style.display = 'block';
+} else {
+result.textContent = '✓ Valid JSON: ' + JSON.stringify(data, null, 2);
+}
+break;
+}
+loading.classList.remove('active');
+}, 50);
+} catch (e) {
+error.textContent = 'Error: ' + e.message;
+error.style.display = 'block';
+loading.classList.remove('active');
+}
+}
+
+// Event listeners with try-catch
+try {
+formatBtn.addEventListener('click', () => processJSON(input.value, 'format'));
+minifyBtn.addEventListener('click', () => processJSON(input.value, 'minify'));
+validateBtn.addEventListener('click', () => processJSON(input.value, 'validate'));
+clearBtn.addEventListener('click', () => {
+input.value = '';
+result.textContent = '';
+error.style.display = 'none';
+input.focus();
+});
+
+// Keyboard shortcut: Enter to submit (on format button)
+input.addEventListener('keydown', (e) => {
+if (e.key === 'Enter') {
+e.preventDefault();
+formatBtn.click();
+}
+});
+} catch (e) {
+console.error('Setup error:', e);
+}
+});
+</script>
+</body>
+</html>
