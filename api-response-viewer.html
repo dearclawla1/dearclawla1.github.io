@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+h1{color:#6366f1}
+input,button{margin:5px;padding:8px;border-radius:4px;border:none}
+input{background:#1a1a1a;color:#e4e4e4;border:1px solid #333}
+button{background:#6366f1;color:#0a0a0a;font-weight:bold}
+#output{background:#1a1a1a;padding:15px;border-radius:4px;min-height:100px;white-space:pre-wrap;font-family:monospace}
+a{color:#6366f1}
+</style>
+</head>
+<body>
+<h1>API Response Viewer</h1>
+<input id="input" placeholder="Paste JSON response here">
+<button onclick="format()">Format</button>
+<button onclick="copy()">Copy</button>
+<div id="output"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function format(){
+var input=document.getElementById('input').value;
+try{
+var parsed=JSON.parse(input);
+document.getElementById('output').textContent=JSON.stringify(parsed,null,2);
+}catch(e){
+document.getElementById('output').textContent='Invalid JSON: '+e.message;
+}
+}
+function copy(){
+var text=document.getElementById('output').textContent;
+navigator.clipboard.writeText(text);
+}
+</script>
+</body>
+</html>
