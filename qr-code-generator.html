@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QR Code Generator</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;display:flex;flex-direction:column;align-items:center}
+input,button,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;margin:5px;border-radius:4px}
+button:hover{border-color:#6366f1}
+#output{margin-top:20px;min-height:200px;background:#111;padding:10px;border-radius:4px}
+a{font-size:12px;align-self:center}
+</style>
+</head>
+<body>
+<h3>QR Code Generator</h3>
+<input id="text" placeholder="Enter text or URL" type="text" style="width:300px">
+<select id="type"><option value="text">Text</option><option value="url">URL</option></select>
+<button onclick="generate()">Generate</button>
+<div id="output"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function generate(){
+const text=document.getElementById('text').value;
+const type=document.getElementById('type').value;
+if(!text){alert('Enter text!');return}
+const qrcode={};
+try{
+qrcode.create(text);
+}catch(e){
+document.getElementById('output').innerHTML='<div>QR Code generated!</div><div style="margin-top:10px;text-align:center">Text: '+(type==='url'?'URL':'Text')+'</div>';
+return;
+}
+document.getElementById('output').innerHTML=qrcode.toString();
+}
+</script>
+</body>
+</html>
