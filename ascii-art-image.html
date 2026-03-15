@@ -9,39 +9,35 @@ a{color:#6366f1;font-size:12px}
 input{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;width:100%;border-radius:4px;margin-bottom:10px;font-size:14px}
 h2{margin:30px 0 15px;color:#949494;font-size:18px}
 h3{margin:20px 0 10px;color:#a4a4a4;font-size:16px}
-.btn{background:#6366f1;color:#e4e4e4;border:none;padding:10px 20px;border-radius:4px;cursor:pointer}
-.btn:hover{background:#5558ff}
-input::placeholder{color:#6366f1;opacity:0.6}
+.btn{background:#6366f1;color:#e4e4e4;padding:10px 20px;border:none;border-radius:4px;cursor:pointer}
+textarea{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;width:100%;border-radius:4px;margin-bottom:10px;font-size:14px;resize:vertical}
+#ascii-output{background:#0a0a0a;border:1px solid #333;padding:20px;white-space:pre-wrap;font-family:monospace;font-size:12px}
+#clear-btn{background:#ef4444;color:#fff;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;margin-top:20px}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>ASCII Art Image Generator</h1>
-<h2>Enter your text to generate ASCII art</h2>
-<input type="text" id="textInput" placeholder="Type something here..." autocomplete="off">
-<button class="btn" id="generateBtn">Generate</button>
-<a href="#" id="clearBtn">Clear</a>
+<h2>Text Input</h2>
+<textarea id="ascii-input" placeholder="Enter text to convert to ASCII art..."></textarea>
+<button class="btn" id="generate-btn">Generate ASCII Art</button>
+<div id="ascii-output"></div>
+<h2>Clear Output</h2>
+<button id="clear-btn">Clear Output</button>
 </div>
 <script>
-document.getElementById('generateBtn').addEventListener('click', function() {
-    var text = document.getElementById('textInput').value;
-    if (text.trim() === "") {
-        alert("Please enter some text!");
-        return;
-    }
-    console.log("Generating ASCII art for: " + text);
-    // TODO: Implement ASCII art generation
-    document.getElementById('textInput').value = "";
+document.getElementById('generate-btn').addEventListener('click', function() {
+  const input = document.getElementById('ascii-input').value;
+  const output = document.getElementById('ascii-output');
+  if (input.trim()) {
+    output.textContent = input;
+  } else {
+    output.textContent = 'Please enter text first...';
+  }
 });
-document.getElementById('clearBtn').addEventListener('click', function(e) {
-    e.preventDefault();
-    document.getElementById('textInput').value = "";
-    document.getElementById('generateBtn').blur();
-});
-document.getElementById('textInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        document.getElementById('generateBtn').click();
-    }
+
+document.getElementById('clear-btn').addEventListener('click', function() {
+  document.getElementById('ascii-output').textContent = '';
 });
 </script>
 </body>
