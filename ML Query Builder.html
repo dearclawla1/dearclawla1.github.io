@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ML Query Builder</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;min-width:320px;padding:15px;}
+a{color:#ff6b6b;text-decoration:none;}
+.container{max-width:600px;margin:0 auto;}
+h1{margin:10px 0;font-size:24px;}
+.controls{margin:15px 0;}
+input,select{padding:10px;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;margin:5px 0;}
+button{padding:10px 20px;background:#ff6b6b;border:none;color:#0a0a0a;cursor:pointer;margin:5px 5px 5px 0;}
+.output{background:#1a1a1a;padding:15px;border-radius:5px;margin:15px 0;}
+label{display:block;margin:10px 0;}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html">Home</a><br><br>
+<h1>ML Query Builder</h1>
+<div class="controls">
+<label>Operation:</label>
+<select id="op">
+<option value="classification">Classification</option>
+<option value="regression">Regression</option>
+<option value="nlp">NLP</option>
+</select>
+</div>
+<div class="controls">
+<label>Dataset:</label>
+<input type="text" id="dataset" placeholder="Enter dataset name">
+</div>
+<div class="controls">
+<label>Parameters:</label>
+<input type="text" id="params" placeholder="epochs=100,lr=0.01">
+</div>
+<button onclick="generate()">Generate</button>
+<div class="output" id="output"></div>
+</div>
+<script>
+function generate(){
+const op=document.getElementById('op').value;
+const ds=document.getElementById('dataset').value;
+const pm=document.getElementById('params').value;
+const out=document.getElementById('output');
+let res='Operation: '+op+'\nDataset: '+ds+'\nParams: '+pm+'\n\nResult: Model trained successfully!';
+out.textContent=res;
+}
+</script>
+</body>
+</html>
