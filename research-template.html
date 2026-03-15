@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Markdown Research Template Generator</title>
+    <style>
+        :root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1;--card:#1a1a1a}
+        *{box-sizing:border-box}
+        body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);padding:20px}
+        .container{max-width:800px;margin:0 auto}
+        h1{text-align:center;margin-bottom:20px}
+        .controls{display:grid;gap:10px;margin-bottom:20px}
+        input,select,button{padding:10px;border:none;border-radius:6px;font-size:14px}
+        input,select{background:#222;color:var(--text);border:1px solid #333}
+        button{background:var(--primary);color:white;cursor:pointer}
+        button:hover{opacity:0.9}
+        textarea{width:100%;min-height:300px;background:#111;color:#ddd;border:1px solid #333;padding:10px;border-radius:6px;font-family:monospace;font-size:14px}
+        .preview{background:#1a1a1a;padding:15px;border-radius:6px;margin-top:20px;border:1px solid #333}
+        a{color:var(--primary)}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Markdown Research Template Generator</h1>
+        <div class="controls">
+            <input type="text" id="titleInput" placeholder="Research Title" oninput="generate()">
+            <input type="text" id="authorInput" placeholder="Author Name" oninput="generate()">
+            <input type="date" id="dateInput" oninput="generate()">
+            <select id="sectionSelect" onchange="generate()">
+                <option value="full">Full Template</option>
+                <option value="abstract">Abstract Only</option>
+                <option value="outline">Outline Only</option>
+            </select>
+            <button onclick="copyToClipboard()">Copy Markdown</button>
+        </div>
+        <textarea id="output" readonly></textarea>
+        <div class="preview" id="preview"></div>
+        <div style="text-align:center;margin-top:20px">
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </div>
+    </div>
+    <script>
+        const title=document.getElementById('titleInput');
+        const author=document.getElementById('authorInput');
+        const date=document.getElementById('dateInput');
+        const section=document.getElementById('sectionSelect');
+        const output=document.getElementById('output');
+        const preview=document.getElementById('preview');
+        
+        function escape(text){return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+        
+        function generate(){
+            const t=escape(title.value) || 'Untitled Research';
+            const a=escape(author.value) || 'Unknown';
+            const d=date.value || new Date().toISOString().split('T')[0];
+            const s=section.value;
+            
+            let md='';
+            if(s==='full'){
+                md=`# ${t}
+**Author**: ${a}
+**Date**: ${d}
+
+## Abstract
+> This section provides a concise summary of the research topic, methods, and key findings.
+
+## Introduction
+In this section, we introduce the research question, background context, and objectives.
+
+## Methodology
+Describe the methods, tools, and procedures used in the research.
+
+## Results
+Present the key findings, data, or observations from the study.
+
+## Discussion
+Analyze the results, their implications, and how they relate to existing literature.
+
+## Conclusion
+Summarize the main conclusions and suggest directions for future research.
+
+## References
+List all cited sources in a consistent citation style.
+`;
+            }else if(s==='abstract'){
+                md=`# ${t}
+**Author**: ${a}
+**Date**: ${d}
+
+## Abstract
+> This section provides a concise summary of the research topic, methods, and key findings.
+`;
+            }else{
+                md=`# ${t}
+
+## Outline
+- [ ] Introduction
+- [ ] Methodology
+- [ ] Results
+- [ ] Discussion
+- [ ] Conclusion
+- [ ] References
+`;
+            }
+            
+            output.value=md;
+            preview.innerHTML=`<pre style="white-space:pre-wrap;font-family:monospace;font-size:13px">${md}</pre>`;
+        }
+        
+        function copyToClipboard(){
+            const textarea=document.getElementById('output');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Markdown copied to clipboard!');
+        }
+        
+        generate();
+    </script>
+</body>
+</html>
