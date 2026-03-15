@@ -1,16 +1,86 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>JSON Formatter</title><style>body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:monospace}a{color:#81a3c0;text-decoration:none}input,button{padding:8px;margin:5px;border:1px solid #4f4f4f;background:#1a1a1a;color:#e4e4e4;border-radius:4px}button:hover{background:#2a2a2a}#result{width:95%;height:300px;overflow:auto;background:#141414;border:1px solid #3f3f3f;padding:5px;font-size:12px}#preview{display:none;}</style></head>
-<body><a href="index.html">Home</a><h3>JSON Formatter - Pretty Print & Validate</h3>
-<label>Input JSON:</label><textarea id="input" rows="6" cols="50" placeholder='{"key":"value"}'>{"name":"JSON Formatter","version":"1.0"}
-</textarea><br>
-<button onclick="format()">Pretty Print</button><button onclick="validate()">Validate</button><button onclick="minify()">Minify</button><br>
-<div id="result"></div>
+<head>
+<meta charset="UTF-8"><title>JSON Formatter</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:10px;}
+a{color:#4ec9b0;text-decoration:none;}
+a:hover{text-decoration:underline;}
+h1{margin:10px 0;font-size:24px;}
+.form-group{margin:10px 0;}
+label{display:block;margin-bottom:5px;}
+input,textarea,button{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:8px;border-radius:4px;}
+input:focus,textarea:focus{outline:none;border-color:#4ec9b0;}
+button{cursor:pointer;margin-right:5px;}
+.errors{color:#ff6b6b;font-size:14px;margin-bottom:10px;}
+.valid{color:#4ec9b0;font-weight:bold;}
+</style></head>
+<body>
+<a href="index.html">Home</a>
+<h1>JSON Formatter</h1>
+<div class="errors" id="output"></div>
+<div class="form-group">
+<label>Enter JSON:</label>
+<textarea id="input" rows="10" cols="50" placeholder='{"name":"example","value":123}'></textarea>
+</div>
+<div class="form-group">
+<button onclick="format()">Pretty Print</button>
+<button onclick="validate()">Validate</button>
+<button onclick="minify()">Minify</button>
+</div>
+<div class="form-group">
+<label>Format:</label>
+<select id="formatType" onchange="updateOutput()">
+<option value="2">2 spaces</option>
+<option value="4">4 spaces</option>
+<option value="tab">Tab</option>
+</select>
+</div>
+<div class="form-group">
+<label>Output:</label>
+<textarea id="output" rows="10" cols="50" readonly></textarea>
+</div>
 <script>
-var input=document.getElementById('input'),result=document.getElementById('result');
-function format(){try{var j=JSON.parse(input.value);result.textContent=JSON.stringify(j,null,2)}catch(e){result.textContent='Invalid JSON: '+e.message}}
-function validate(){try{JSON.parse(input.value);result.innerHTML='<span style="color:#5faf5f">Valid JSON ✓</span><br><span style="color:#81a3c0">Pretty Print:</span><br>'+JSON.stringify(JSON.parse(input.value),null,2)}catch(e){result.innerHTML='<span style="color:#fa5757">Invalid JSON ✗</span><br>'+e.message}}
-function minify(){try{var j=JSON.parse(input.value);result.textContent=JSON.stringify(j)}catch(e){result.textContent='Invalid JSON: '+e.message}}
-format();
-</script></body>
+document.getElementById('input').addEventListener('input', updateOutput);
+function updateOutput(){
+  try{
+    const input = document.getElementById('input').value;
+    document.getElementById('output').value = input;
+  }catch(e){}
+}
+function format(){
+  try{
+    const obj = JSON.parse(document.getElementById('input').value);
+    const spaces = document.getElementById('formatType').value;
+    const pretty = JSON.stringify(obj, null, spaces);
+    document.getElementById('output').value = pretty;
+    document.getElementById('output').style.color = '#4ec9b0';
+  }catch(e){
+    document.getElementById('output').value = 'Error: Invalid JSON\n' + e.message;
+    document.getElementById('output').style.color = '#ff6b6b';
+  }
+}
+function validate(){
+  try{
+    const obj = JSON.parse(document.getElementById('input').value);
+    document.getElementById('output').value = '✓ Valid JSON: ' + JSON.stringify(obj);
+    document.getElementById('output').style.color = '#4ec9b0';
+  }catch(e){
+    document.getElementById('output').value = '✗ Invalid JSON: ' + e.message;
+    document.getElementById('output').style.color = '#ff6b6b';
+  }
+}
+function minify(){
+  try{
+    const obj = JSON.parse(document.getElementById('input').value);
+    document.getElementById('output').value = JSON.stringify(obj);
+    document.getElementById('output').style.color = '#4ec9b0';
+  }catch(e){
+    document.getElementById('output').value = 'Error: Invalid JSON\n' + e.message;
+    document.getElementById('output').style.color = '#ff6b6b';
+  }
+}
+updateOutput();
+</script>
+</body>
 </html>
