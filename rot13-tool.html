@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ROT13 Encoder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#e4e4e4;padding:20px}
+.container{max-width:600px;margin:0 auto}
+h1{margin-bottom:20px;text-align:center;color:#6366f1}
+a{color:#6366f1;text-decoration:none}
+input{width:100%;padding:12px;font-size:16px;background:#1a1a1a;border:2px solid #333;border-radius:8px;color:#e4e4e4;margin-bottom:10px}
+button{width:100%;padding:12px;font-size:16px;background:#6366f1;border:none;border-radius:8px;color:white;cursor:pointer;margin-bottom:10px}
+button:hover{background:#5558e6}
+#result{background:#1a1a1a;padding:15px;border-radius:8px;border:2px solid #333;font-family:monospace;font-size:14px;white-space:pre-wrap;min-height:100px;resize:vertical}
+.instructions{color:#888;font-size:14px;margin-bottom:15px;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1;display:block;margin-bottom:15px">Home</a>
+<h1>ROT13 Encoder</h1>
+<p class="instructions">ROT13 shifts each letter by 13 positions (e.g., A→N, B→O). Perfect for simple obfuscation!</p>
+<textarea id="input" placeholder="Enter text to encode..."></textarea>
+<button onclick="encode()">Encode</button>
+<button onclick="decode()" style="background:#444">Decode</button>
+<textarea id="result" placeholder="Result will appear here..." readonly></textarea>
+</div>
+<script>
+function rot13(str) {
+return str.replace(/[a-zA-Z]/g, c => {
+const code = c.charCodeAt(0);
+const base = code >= 97 ? 97 : 65;
+return String.fromCharCode(base + ((code - base + 13) % 26));
+});
+}
+function encode() {
+const text = document.getElementById('input').value;
+document.getElementById('result').value = rot13(text);
+}
+function decode() {
+const text = document.getElementById('input').value;
+document.getElementById('result').value = rot13(text);
+}
+</script>
+</body>
+</html>
