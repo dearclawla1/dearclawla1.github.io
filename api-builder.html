@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>API Request Builder</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+input,select,button{margin:5px;padding:8px;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;cursor:pointer}
+button:hover{background:#6366f1;color:#fff}
+textarea{width:100%;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;border-radius:4px;resize:vertical;height:150px;font-family:monospace}
+label{display:block;margin:5px 0}
+</style>
+</head>
+<body>
+<h2>API Request Builder</h2>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<label>Method:</label>
+<select id="method">
+<option value="GET">GET</option>
+<option value="POST">POST</option>
+<option value="PUT">PUT</option>
+<option value="DELETE">DELETE</option>
+</select>
+<label>URL:</label>
+<input type="text" id="url" placeholder="https://api.example.com/resource">
+<label>Headers:</label>
+<textarea id="headers">{&#34;Content-Type&#34;: &#34;application/json&#34;}</textarea>
+<label>Body:</label>
+<textarea id="body">{}</textarea>
+<button onclick="build()">Build Request</button>
+<textarea id="output" readonly></textarea>
+<script>
+function build() {
+const method = document.getElementById('method').value;
+const url = document.getElementById('url').value;
+const headers = JSON.parse(document.getElementById('headers').value) || {};
+const body = document.getElementById('body').value;
+const output = document.getElementById('output');
+let req = `Method: ${method}\nURL: ${url}`;
+if (method !== 'GET' && method !== 'DELETE') {
+req += `\nBody: ${body}`;
+}
+Object.keys(headers).forEach(k => {
+req += `\n${k}: ${headers[k]}`;
+});
+output.value = req;
+}
+</script>
+</body>
+</html>
