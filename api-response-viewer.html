@@ -1,1 +1,197 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px;}.container{background:#111;padding:20px;border-radius:8px;max-width:800px;width:100%;}.input{width:100%;padding:10px;margin:10px 0;border:none;border-radius:4px;background:#222;color:#e4e4e4;}.button{background:#6366f1;color:#fff;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;margin:5px 0;}.output{background:#1a1a1a;padding:10px;border-radius:4px;overflow:auto;max-height:300px;}</style></head><body><div class="container"><h2>API Response Viewer</h2><input type="text" class="input" id="apiUrl" placeholder="Enter API URL (e.g., https://jsonplaceholder.typicode.com/posts/1)"><button class="button" id="fetchBtn">Fetch Response</button><div class="output" id="output"></div></div><script>document.getElementById('fetchBtn').addEventListener('click', async () => {const apiUrl = document.getElementById('apiUrl').value;if(!apiUrl){document.getElementById('output').innerHTML = '<span style="color:#ff6b6b">Please enter an API URL!</span>';return;}try{const response = await fetch(apiUrl);const data = await response.json();const output = document.getElementById('output');output.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';catch(err){output.innerHTML = '<span style="color:#ff6b6b">Error: ' + err.message + '</span>';}});</script></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #0a0a0a;
+      color: #e4e4e4;
+      font-family: sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: #111;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 800px;
+      width: 100%;
+      position: relative;
+    }
+    .input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 4px;
+      background: #222;
+      color: #e4e4e4;
+      box-sizing: border-box;
+    }
+    .button {
+      background: #6366f1;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 0 5px;
+    }
+    .button:hover {
+      background: #5558f3;
+    }
+    .button:disabled {
+      background: #333;
+      cursor: not-allowed;
+    }
+    .button.clear {
+      background: #ef4444;
+    }
+    .button.clear:hover {
+      background: #dc2626;
+    }
+    .response {
+      background: #1a1a1a;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 10px;
+      overflow-x: auto;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .loading {
+      display: none;
+      color: #6366f1;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .error {
+      color: #ef4444;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .status {
+      font-size: 12px;
+      color: #888;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>API Response Viewer</h1>
+    <input type="text" class="input" id="urlInput" placeholder="Enter API response URL or JSON content">
+    <div class="loading" id="loading">Loading...</div>
+    <div class="error" id="error"></div>
+    <div class="status" id="status"></div>
+    <div class="response" id="response"></div>
+    <button class="button" id="submitBtn">Submit</button>
+    <button class="button clear" id="clearBtn">Clear</button>
+  </div>
+
+  <script>
+    const urlInput = document.getElementById('urlInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const responseDiv = document.getElementById('response');
+    const loadingDiv = document.getElementById('loading');
+    const errorDiv = document.getElementById('error');
+    const statusDiv = document.getElementById('status');
+
+    let isLoading = false;
+
+    submitBtn.addEventListener('click', handleInput);
+    clearBtn.addEventListener('click', clearResponse);
+    urlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleInput();
+      }
+    });
+
+    function handleInput() {
+      if (isLoading) return;
+      const input = urlInput.value.trim();
+
+      if (!input) {
+        showError('Please enter a URL or JSON content');
+        return;
+      }
+
+      isLoading = true;
+      submitBtn.disabled = true;
+      loadingDiv.style.display = 'block';
+      errorDiv.textContent = '';
+      responseDiv.textContent = '';
+
+      try {
+        if (isValidUrl(input)) {
+          fetchAndDisplay(input);
+        } else {
+          displayJson(input);
+        }
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        isLoading = false;
+        submitBtn.disabled = false;
+        loadingDiv.style.display = 'none';
+      }
+    }
+
+    function isValidUrl(string) {
+      try {
+        new URL(string);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function fetchAndDisplay(url) {
+      statusDiv.textContent = 'Fetching from: ' + url;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        displayJson(data);
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    function displayJson(data) {
+      try {
+        const jsonString = JSON.stringify(data, null, 2);
+        responseDiv.textContent = jsonString;
+        statusDiv.textContent = 'Response loaded successfully';
+      } catch (err) {
+        showError('Invalid JSON: ' + err.message);
+      }
+    }
+
+    function showError(message) {
+      errorDiv.textContent = message;
+      statusDiv.textContent = '';
+    }
+
+    function clearResponse() {
+      urlInput.value = '';
+      responseDiv.textContent = '';
+      errorDiv.textContent = '';
+      statusDiv.textContent = '';
+      urlInput.focus();
+    }
+  </script>
+</body>
+</html>
