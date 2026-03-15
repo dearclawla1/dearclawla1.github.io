@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CORS Checker</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:2rem}
+input,button,select{background:#1a1a1a;border:1px solid #6366f1;color:#e4e4e4;padding:0.5rem 1rem;margin:0.5rem;font-family:monospace}
+input,button,select:focus{outline:2px solid #6366f1}
+</style>
+</head>
+<body>
+<h2>CORS Checker</h2>
+<label>Origin: <input type="text" id="origin" placeholder="https://example.com"></label>
+<label>Method: <select id="method"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option><option>OPTIONS</option></select></label>
+<button onclick="check()">Check</button>
+<label>Status: <span id="status"></span></label>
+<label>Headers: <pre id="headers"></pre></label>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+async function check() {
+const origin = document.getElementById('origin').value;
+const method = document.getElementById('method').value;
+if(!origin) {document.getElementById('status').innerText='Enter origin';return}
+try {
+const res = await fetch(origin, {method, headers:{'Origin':origin}});
+const headers = Object.fromEntries(res.headers.entries());
+document.getElementById('status').innerText=`Status: ${res.status}`;
+document.getElementById('headers').innerText=JSON.stringify(headers,null,2);
+} catch(e) {
+document.getElementById('status').innerText='Error: ' + e.message;
+document.getElementById('headers').innerText='';
+}
+}
+</script>
+</body>
+</html>
