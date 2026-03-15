@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Unit Converter Plus</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a; color: #e4e4e4; padding: 20px;
+    }
+    .container { max-width: 500px; margin: 0 auto; }
+    a { color: #6366f1; text-decoration: none; }
+    h1 { font-size: 1.5rem; margin-bottom: 20px; color: #a3a3a3; }
+    .card { background: #1a1a1a; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+    label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #a3a3a3; }
+    input, select, button {
+      width: 100%; padding: 12px; border: 2px solid #333; border-radius: 8px;
+      font-size: 1rem; background: #0a0a0a; color: #e4e4e4;
+    }
+    input:focus, select:focus { outline: none; border-color: #6366f1; }
+    button {
+      background: #6366f1; border: none; cursor: pointer; font-weight: 600;
+      margin-top: 8px; transition: background 0.2s;
+    }
+    button:hover { background: #5558e6; }
+    .result {
+      background: #1a1a1a; border-radius: 8px; padding: 15px;
+      font-size: 1.2rem; text-align: center; border: 1px solid #333;
+    }
+    .result span { color: #6366f1; font-weight: bold; }
+    .rates {
+      font-size: 0.75rem; color: #777; margin-top: 10px; text-align: left;
+    }
+    .nav { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <a href="index.html" style="color:#6366f1">Home</a>
+  </div>
+  <div class="container">
+    <h1>Unit Converter Plus</h1>
+    
+    <div class="card">
+      <label for="category">Category</label>
+      <select id="category" onchange="updateRates()">
+        <option value="length">Length</option>
+        <option value="mass">Mass</option>
+        <option value="temperature">Temperature</option>
+        <option value="data">Data</option>
+        <option value="time">Time</option>
+      </select>
+    </div>
+    
+    <div class="card">
+      <label for="value">Value</label>
+      <input type="number" id="value" value="1" placeholder="Enter value">
+    </div>
+    
+    <div class="card">
+      <label from="fromUnit">From Unit</label>
+      <select id="fromUnit"></select>
+    </div>
+    
+    <div class="card">
+      <label for="toUnit">To Unit</label>
+      <select id="toUnit"></select>
+    </div>
+    
+    <button onclick="convert()">Convert</button>
+    
+    <div class="result" id="result">Result will appear here</div>
+    
+    <div class="rates" id="rates"></div>
+  </div>
+  
+  <script>
+    const units = {
+      length: { m: {name: "meters", base: 1}, km: {name: "km", base: 1000}, cm: {name: "cm", base: 0.01}, mm: {name: "mm", base: 0.001}, mi: {name: "miles", base: 1609.34}, yd: {name: "yards", base: 0.9144}, ft: {name: "feet", base: 0.3048}, in: {name: "inches", base: 0.0254} },
+      mass: { kg: {name: "kg", base: 1}, g: {name: "grams", base: 0.001}, mg: {name: "mg", base: 0.000001}, lb: {name: "pounds", base: 0.453592}, oz: {name: "oz", base: 0.0283495}, t: {name: "tonnes", base: 1000} },
+      temperature: { c: {name: "Celsius"}, f: {name: "Fahrenheit"}, k: {name: "Kelvin"} },
+      data: { B: {name: "bytes", base: 1}, KB: {name: "KB", base: 1024}, MB: {name: "MB", base: 1048576}, GB: {name: "GB", base: 1073741824}, TB: {name: "TB", base: 1099511627776} },
+      time: { s: {name: "seconds", base: 1}, min: {name: "minutes", base: 60}, h: {name: "hours", base: 3600}, d: {name: "days", base: 86400} }
+    };
+
+    function init() {
+      populateSelect('fromUnit', units[document.getElementById('category').value]);
+      populateSelect('toUnit', units[document.getElementById('category').value]);
+      updateRates();
+    }
+
+    function populateSelect(id, unitMap) {
+      const select = document.getElementById(id);
+      Object.keys(unitMap).forEach(key => {
+        const option = document.createElement('option');
+        option.value = key; option.textContent = unitMap[key].name;
+        select.appendChild(option);
+      });
+    }
+
+    function updateRates() {
+      const cat = document.getElementById('category').value;
+      const unitMap = units[cat];
+      const from = document.getElementById('fromUnit');
+      const to = document.getElementById('toUnit');
+      const rates = document.getElementById('rates');
+      from.innerHTML = ''; to.innerHTML = '';
+      Object.keys(unitMap).forEach(key => {
+        const option = document.createElement('option');
+        option.value = key; option.textContent = unitMap[key].name;
+        from.appendChild(option.cloneNode(true));
+        to.appendChild(option.cloneNode(true));
+      });
+      rates.textContent = `Conversion rates: ${cat === 'temperature' ? '' : (Object.keys(unitMap)[0] === 'base' ? '1' : '1 ' + unitMap[Object.keys(unitMap)[0]].name + ' = 1')} = 0 ' + unitMap[Object.keys(unitMap)[1]].name + ' = ' + (unitMap[Object.keys(unitMap)[1]].base / unitMap[Object.keys(unitMap)[0]].base).toFixed(2) + ' ' + unitMap[Object.keys(unitMap)[0]].name;
+    }
+
+    function convert() {
+      const cat = document.getElementById('category').value;
+      const val = parseFloat(document.getElementById('value').value) || 0;
+      const from = document.getElementById('fromUnit').value;
+      const to = document.getElementById('toUnit').value;
+      const unitMap = units[cat];
+      
+      if (cat === 'temperature') {
+        let celsius;
+        if (from === 'c') celsius = val;
+        else if (from === 'f') celsius = (val - 32) * 5/9;
+        else if (from === 'k') celsius = val - 273.15;
+        let result;
+        if (to === 'c') result = celsius;
+        else if (to === 'f') result = celsius * 9/5 + 32;
+        else if (to === 'k') result = celsius + 273.15;
+        document.getElementById('result').innerHTML = `${val} ${unitMap[from].name} = <span>${result.toFixed(2)}</span> ${unitMap[to].name}`;
+      } else {
+        const baseVal = val * unitMap[from].base;
+        const converted = baseVal / unitMap[to].base;
+        document.getElementById('result').innerHTML = `${val} ${unitMap[from].name} = <span>${converted.toFixed(4)}</span> ${unitMap[to].name}`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
