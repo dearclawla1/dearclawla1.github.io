@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CSS Gradient Generator</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;padding:20px;}
+input,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;margin:5px 0;}
+button{background:#6366f1;color:#fff;border:none;padding:10px 20px;cursor:pointer;}
+button:hover{background:#5558e6;}
+#result{background:#1a1a1a;padding:15px;margin-top:15px;border-radius:5px;}
+a{color:#6366f1;}
+</style>
+</head>
+<body>
+<h1>CSS Gradient Generator</h1>
+<label>Type:</label>
+<select id="type">
+<option value="linear">Linear</option>
+<option value="radial">Radial</option>
+</select>
+<label>Colors (comma-separated):</label>
+<input id="colors" value="#ff0000,#00ff00,#0000ff">
+<button onclick="generate()">Generate</button>
+<div id="result"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function generate(){
+const type=document.getElementById('type').value;
+const colors=document.getElementById('colors').value;
+let css='';
+if(type==='linear') css=`linear-gradient(to right, ${colors})`;
+else css=`radial-gradient(circle, ${colors})`;
+document.getElementById('result').innerHTML=`<code>${css}</code><br><button onclick="copy()">Copy</button>`;
+}
+function copy(){
+navigator.clipboard.writeText(document.getElementById('result').innerText);
+}
+generate();
+</script>
+</body>
+</html>
