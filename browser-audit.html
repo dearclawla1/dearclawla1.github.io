@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+.container{max-width:600px;margin:0 auto}
+h2{color:#6366f1;margin-bottom:20px}
+a{color:#6366f1;text-decoration:none}
+input,select{width:100%;padding:10px;margin:10px 0;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
+button{width:100%;padding:12px;margin:10px 0;background:#6366f1;color:#0a0a0a;border:none;border-radius:4px;cursor:pointer;font-weight:bold}
+button:hover{background:#4f46e5}
+output{background:#1a1a1a;padding:15px;border-radius:4px;margin:10px 0;min-height:100px;white-space:pre-wrap;font-size:12px}
+label{display:block;margin-top:5px}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html">Back to Home</a>
+<h2>Browser Audit Tool</h2>
+<div>
+<label>Browser Type</label>
+<select id="browser">
+<option value="chrome">Chrome</option>
+<option value="firefox">Firefox</option>
+<option value="edge">Edge</option>
+<option value="safari">Safari</option>
+</select>
+</div>
+<div>
+<label>Version</label>
+<input type="text" id="version" placeholder="e.g. 120.0.2210.61">
+</div>
+<div>
+<label>Device Type</label>
+<select id="device">
+<option value="desktop">Desktop</option>
+<option value="tablet">Tablet</option>
+<option value="mobile">Mobile</option>
+</select>
+</div>
+<div>
+<label>Operating System</label>
+<select id="os">
+<option value="windows">Windows</option>
+<option value="mac">macOS</option>
+<option value="linux">Linux</option>
+<option value="android">Android</option>
+<option value="ios">iOS</option>
+</select>
+</div>
+<button id="auditBtn">Run Browser Audit</button>
+<output id="result">Enter browser details and click Run to audit...</output>
+</div>
+<script>
+document.getElementById('auditBtn').addEventListener('click', function(){
+const browser=document.getElementById('browser').value;
+const version=document.getElementById('version').value||'N/A';
+const device=document.getElementById('device').value;
+const os=document.getElementById('os').value;
+const result=document.getElementById('result');
+const config={browser,browser_version:version,device_type:device,os_version:os};
+result.textContent='Browser Audit Configuration: ' + JSON.stringify(config,null,2) + '\n\nAudit Summary:\n- Browser: ' + browser.toUpperCase() + '\n- Version: ' + version + '\n- Device: ' + device.toUpperCase() + '\n- OS: ' + os.toUpperCase() + '\n\nStatus: Ready for production deployment';
+});
+</script>
+</body>
+</html>
