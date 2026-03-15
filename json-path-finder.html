@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+input,button,select{background:#1a1a1a;border:1px solid #6366f1;color:#e4e4e4;padding:8px;border-radius:4px;margin:5px 0}
+button:hover{background:#6366f1}
+#output{background:#1a1a1a;border:1px solid #6366f1;padding:10px;border-radius:4px;height:150px;overflow:auto}
+nav{margin-bottom:15px}
+nav a{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<nav><a href="index.html">Back to Home</a></nav>
+<h2>JSON Path Finder</h2>
+<textarea id="jsonInput" rows="6" cols="40" placeholder='{"name":"John","age":30,"city":"NYC"}'></textarea>
+<button onclick="parseJson()">Parse JSON</button>
+<button onclick="findPath()">Find Path</button>
+<select id="pathType"><option value="root">Root</option><option value="simple">Simple</option><option value="dot">Dot Notation</option></select>
+<h3>Output:</h3>
+<div id="output"></div>
+<script>
+function parseJson(){try{var j=document.getElementById('jsonInput').value;if(!j)return;var obj=JSON.parse(j);var paths=[];paths.push({name:"Root",path:""});for(var k in obj)paths.push({name:k,path:"."+k});document.getElementById('output').innerHTML=paths.map(function(p){return'<strong>'+p.name+'</strong> → '+p.path}).join('<br>');}catch(e){document.getElementById('output').innerHTML='Invalid JSON: '+e.message;}document.getElementById('pathType').value='root';}
+function findPath(){if(!document.getElementById('jsonInput').value)return;var obj=JSON.parse(document.getElementById('jsonInput').value);var type=document.getElementById('pathType').value;var paths=[];paths.push({name:"Root",path:""});for(var k in obj)paths.push({name:k,path:"."+k});if(type==='simple'){paths=paths.filter(function(p){return p.path.length>1});}if(type==='dot'){paths=paths.map(function(p){return p.path.length>1?p.path:p.name});}document.getElementById('output').innerHTML=paths.map(function(p){return'<strong>'+p.name+'</strong> → '+p.path}).join('<br>');}
+</script>
+</body>
+</html>

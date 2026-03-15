@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px;}
+input,button{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:8px 12px;margin:5px 0;border-radius:4px;}
+button:hover{background:#2a2a2a;}
+#tree{margin-top:20px;}
+.node{margin-left:20px;border-left:1px solid #333;padding-left:10px;}
+.icon{cursor:pointer;color:#6366f1;}
+.hidden{display:none;}
+a{color:#6366f1;}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h2>JSON Tree Viewer</h2>
+<input type="text" id="jsonInput" placeholder="Paste JSON here">
+<button onclick="parseJSON()">Parse JSON</button>
+<div id="tree"></div>
+<script>
+function parseJSON(){
+const input=document.getElementById('jsonInput').value;
+try{const json=JSON.parse(input);renderTree(json);}catch(e){document.getElementById('tree').innerHTML='<span style="color:#ff6b6b">'+e.message+'</span>';return;}
+}
+function renderTree(obj,container){
+const div=document.createElement('div');div.className='node';const icon=document.createElement('span');icon.className='icon';icon.innerHTML='(±)';icon.onclick=function(){this.parentElement.classList.toggle('hidden');};const text=document.createElement('span');text.style.color='#e4e4e4';if(Array.isArray(obj)){text.innerHTML='Array ['+obj.length+']';}else{text.innerHTML=typeof obj+' = "'+obj+'"';}div.appendChild(icon);div.appendChild(text);container.appendChild(div);if(Array.isArray(obj)){obj.forEach((item,i)=>{renderTree(item,div);});}}
+</script>
+</body>
+</html>

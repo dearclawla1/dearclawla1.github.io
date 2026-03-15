@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Response Previewer</title>
+<style>
+body{font-family:sans-serif;margin:0;padding:20px;background:#0a0a0a;color:#e4e4e4}
+a{color:#6366f1}
+h1{margin:0 0 20px}
+textarea{width:100%;height:150px;margin:10px 0;padding:10px;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;resize:vertical}
+button{padding:10px 20px;background:#6366f1;color:#fff;border:none;cursor:pointer;margin:5px}
+button:hover{background:#5558e6}
+#status{margin:10px 0;padding:10px;border-radius:5px;display:none}
+#status.success{background:#0a0a0a;border:1px solid #0a0a0a;color:#0a0a0a}
+#status.error{background:#0a0a0a;border:1px solid #e4e4e4;color:#e4e4e4}
+pre{background:#1a1a1a;padding:15px;border-radius:5px;overflow-x:auto;white-space:pre-wrap;font-size:13px}
+</style>
+</head>
+<body>
+<h1>API Response Previewer</h1>
+<p>Paste your API response payload below:</p>
+<textarea id="input" placeholder='{"status":"ok","data":[1,2,3]}'></textarea>
+<button onclick="parse()">Parse JSON</button>
+<div id="status"></div>
+<pre id="output"></pre>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function parse(){
+var txt=document.getElementById("input").value;
+var out=document.getElementById("output");
+var st=document.getElementById("status");
+try{
+var j=JSON.parse(txt);
+var s=JSON.stringify(j,null,2);
+out.innerHTML=s;
+st.style.display="block";
+st.className="success";
+st.innerHTML="✅ Valid JSON";
+}catch(e){
+out.innerHTML="";
+st.style.display="block";
+st.className="error";
+st.innerHTML="❌ Invalid JSON: "+e.message;
+}
+}
+</script>
+</body>
+</html>
