@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Base64 Encoder</title>
+  <style>
+    body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:1rem}
+    a{color:#e4e4e4;text-decoration:none}
+    input,button{margin:0.5rem 0}
+    label{display:block;margin-bottom:0.25rem}
+    textarea{width:100%;min-height:100px;font-family:monospace}
+    button{background:#333;color:#e4e4e4;border:1px solid #444;padding:0.5rem 1rem;cursor:pointer}
+    button:hover{background:#444}
+    .result{background:#1a1a1a;padding:1rem;border-radius:0.25rem;margin-top:1rem}
+  </style>
+</head>
+<body>
+  <a href="index.html">Home</a>
+  <h2>Base64 Encoder/Decoder</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <label>
+      Encode:
+      <input type="text" id="encodeInput" placeholder="Enter text to encode...">
+    </label>
+    <label>
+      Decode:
+      <input type="text" id="decodeInput" placeholder="Enter base64 to decode...">
+    </label>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <label>
+      Output:
+      <textarea id="encodeOutput" readonly placeholder="Encoded base64 will appear here..."></textarea>
+    </label>
+    <label>
+      Output:
+      <textarea id="decodeOutput" readonly placeholder="Decoded text will appear here..."></textarea>
+    </label>
+  </div>
+  <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+    <button onclick="encode()">Encode</button>
+    <button onclick="decode()">Decode</button>
+    <button onclick="clearAll()">Clear All</button>
+  </div>
+  <div class="result" id="result"></div>
+  <script>
+    function encode() {
+      const input = document.getElementById('encodeInput').value;
+      const output = document.getElementById('encodeOutput');
+      if (input) output.value = btoa(encodeURIComponent(input));
+    }
+    function decode() {
+      const input = document.getElementById('decodeInput').value;
+      const output = document.getElementById('decodeOutput');
+      if (input) {
+        try {
+          output.value = decodeURIComponent(atob(input));
+        } catch (e) {
+          output.value = 'Invalid base64 input';
+        }
+      }
+    }
+    function clearAll() {
+      document.getElementById('encodeInput').value = '';
+      document.getElementById('decodeInput').value = '';
+      document.getElementById('encodeOutput').value = '';
+      document.getElementById('decodeOutput').value = '';
+      document.getElementById('result').textContent = '';
+    }
+    document.getElementById('encodeInput').addEventListener('input', encode);
+    document.getElementById('decodeInput').addEventListener('input', decode);
+    encode();
+    decode();
+  </script>
+</body>
+</html>
