@@ -1,52 +1,9 @@
 <!DOCTYPE html>
 <html>
-<head>
-<style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
-a{color:#89c;}</style>
-</head>
-<body>
-<a href="index.html">Home</a>
-<h3>Color Picker</h3>
-<input type="text" id="hexInput" value="#3498db" style="font-size:20px;padding:8px;">
-<button onclick="updateColor()">Update Preview</button>
-<select id="preset" style="padding:8px;margin:10px;">
-<option value="#e74c3c">Red</option>
-<option value="#3498db">Blue</option>
-<option value="#2ecc71">Green</option>
-<option value="#f1c40f">Yellow</option>
-<option value="#9b59b6">Purple</option>
-<option value="#e91e63">Pink</option>
-<option value="#00bcd4">Cyan</option>
-</select>
-<canvas id="preview" width="200" height="200"></canvas>
-<div id="copied" style="margin-top:10px;"></div>
+<head><style>body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}a{color:#4caf50;text-decoration:none;}h1{font-size:1.2em;margin-bottom:20px;}</style></head>
+<body><a href="index.html">Home</a><h1>Color Picker</h1>
+<input id="hex" type="text" placeholder="#ffffff" style="width:120px;padding:8px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;margin:5px 0;"><button onclick="updateColor()" style="padding:8px 15px;background:#4caf50;color:#fff;border:none;cursor:pointer;">Update</button><input id="rgb" type="text" placeholder="rgb(255,255,255)" style="width:180px;padding:8px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;margin:5px 0;"><input id="r" type="range" min="0" max="255" onchange="updateFromRange()" style="width:100%;margin:5px 0 10px 0;">
 <script>
-const canvas=document.getElementById("preview");
-const ctx=canvas.getContext("2d");
-function updateColor(){
-const hex=document.getElementById("hexInput").value;
-const preset=document.getElementById("preset").value;
-const color=document.getElementById("hexInput").value.startsWith("#")?hex:preset;
-ctx.fillStyle=color||"#000";
-ctx.fillRect(0,0,200,200);
-ctx.strokeStyle="white";
-ctx.strokeRect(0,0,200,200);
-copyToClipboard(color);
-}
-function copyToClipboard(text){
-navigator.clipboard.writeText(text).then(()=>{
-document.getElementById("copied").innerText="Copied to clipboard: "+text;
-});
-}
-document.getElementById("hexInput").onkeydown=function(e){
-if(e.key==="Enter")updateColor();
-};
-document.getElementById("preset").onchange=function(){
-document.getElementById("hexInput").value=this.value;
-updateColor();
-};
-updateColor();
-</script>
-</body>
-</html>
+function updateColor(){let h=document.getElementById('hex').value.toLowerCase();if(!h.startsWith('#'))h='#'+h;let r=parseInt((h>>16)&255),g=parseInt((h>>8)&255),b=(h&255);document.getElementById('rgb').value='rgb('+r+','+g+','+b+')';document.getElementById('r').value=r;}
+function updateFromRange(){let r=document.getElementById('r').value;document.getElementById('hex').value='#'+r.toString(16).padStart(2,'0');updateColor();}</script>
+</body></html>
