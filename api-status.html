@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <style>
 body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
 input,button,select{margin:5px;padding:8px;border:1px solid #6366f1;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
@@ -12,37 +13,52 @@ a{color:#6366f1;text-decoration:none}
 </head>
 <body>
 <h2>API Status Checker</h2>
-<select id="endpoints">
-  <option value="https://api.github.com">GitHub API</option>
-  <option value="https://api.githubstatus.com">GitHub Status API</option>
-  <option value="https://api.github.com/contents/:path">GitHub Contents API</option>
+<select id="endpoints" onchange="checkEndpoints()">
+  <option value="">Select API Endpoint...</option>
+  <option value="/api/health">/api/health</option>
+  <option value="/api/status">/api/status</option>
+  <option value="/api/version">/api/version</option>
 </select>
-<br>
-<button id="check">Check Status</button>
-<br>
-<div id="output">Loading...</div>
-</body>
+<button onclick="checkEndpoints()">Check Status</button>
+<button onclick="clearOutput()">Clear</button>
+<div id="output"></div>
 <script>
-document.getElementById('check').addEventListener('click', async () => {
+function checkEndpoints() {
   const endpoint = document.getElementById('endpoints').value;
   const output = document.getElementById('output');
   
-  // Error handling for empty or invalid endpoint
-  if (!endpoint || endpoint === ':path') {
-    output.innerHTML = '<span style="color:#fbbf24">⚠ Warning: Please select a valid endpoint</span>';
+  if (!endpoint) {
+    output.innerHTML = '<span style="color:#e4e4e4">Please select an endpoint first.</span>';
     return;
   }
   
-  try {
-    const response = await fetch(endpoint);
-    if (response.ok) {
-      output.innerHTML = '<span style="color:#4ade80">✓ Success</span>';
-    } else {
-      output.innerHTML = '<span style="color:#f87171">✗ Error: ' + response.status + '</span>';
-    }
-  } catch (error) {
-    output.innerHTML = '<span style="color:#f87171">✗ Network Error: ' + error.message + '</span>';
+  output.innerHTML = '<span style="color:#6366f1">Checking ' + endpoint + '...</span>';
+  
+  fetch(endpoint)
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Status: ' + response.status);
+      }
+    })
+    .then(data => {
+      output.innerHTML = '<span style="color:#e4e4e4">Response: ' + JSON.stringify(data) + '</span>';
+    })
+    .catch(error => {
+      output.innerHTML = '<span style="color:#ff6b6b">Error: ' + error.message + '</span>';
+    });
+}
+
+function clearOutput() {
+  document.getElementById('output').innerHTML = '';
+}
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Enter') {
+    checkEndpoints();
   }
 });
 </script>
+</body>
 </html>
