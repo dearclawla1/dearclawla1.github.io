@@ -1,75 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Base64 Encoder/Decoder</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;padding:20px}
-a{color:#4ec9b0;text-decoration:none}
-.container{max-width:800px;margin:0 auto}
-h1{color:#f0f0f0;margin-bottom:20px;text-align:center}
-input,textarea,button{width:100%;padding:12px;margin:10px 0;border-radius:5px;border:1px solid #333}
-input,textarea{background:#1a1a1a;color:#e4e4e4;font-family:monospace}
-input:focus,textarea:focus{outline:2px solid #4ec9b0}
-button{background:#3a3a3a;color:#e4e4e4;cursor:pointer;font-weight:bold}
-button:hover{background:#4a4a4a}
-button.primary{background:#4ec9b0;color:#0a0a0a}
-button.primary:hover{background:#3eb099}
-#result{background:#1a1a1a;padding:15px;border-radius:5px;min-height:60px;margin-top:10px;word-break:break-all}
-label{display:block;margin:10px 0 5px;color:#aaa}
-.toggle{display:flex;gap:10px;align-items:center;margin:10px 0}
+*{margin:0;padding:0;font-family:system-ui,sans-serif}
+body{background:#0a0a0a;color:#e4e4e4;padding:20px}
+a{color:#8b5cf6;text-decoration:none}
+a:hover{text-decoration:underline}
+.container{max-width:600px;margin:0 auto}
+h1{margin-bottom:20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px}
+input,select{width:100%;padding:10px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:5px}
+button{width:100%;padding:12px;border:none;background:#8b5cf6;color:#fff;border-radius:5px;cursor:pointer;margin:5px 0}
+button:hover{background:#7c3aed}
+textarea{width:100%;min-height:150px;padding:12px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:5px;font-family:monospace;font-size:13px}
+#error{color:#ef4444;margin-top:10px;font-size:14px;display:none}
 </style>
 </head>
 <body>
-<div class="container">
 <a href="index.html">Home</a>
+<div class="container">
 <h1>Base64 Encoder/Decoder</h1>
-<input type="text" id="input" placeholder="Enter text or Base64 string...">
-<div class="toggle">
-<input type="checkbox" id="encodeToggle">
-<label for="encodeToggle" style="margin:0">Encode Text → Base64</label>
+<div class="grid">
+<input id="inputText" placeholder="Enter text to encode/decode">
+<div>
+<select id="mode">
+<option value="encode">Encode to Base64</option>
+<option value="decode">Decode from Base64</option>
+<option value="auto">Auto-Detect</option>
+</select>
 </div>
-<div class="toggle">
-<input type="checkbox" id="decodeToggle">
-<label for="decodeToggle" style="margin:0">Decode Base64 → Text</label>
 </div>
-<button class="primary" onclick="process()">Process</button>
-<textarea id="result" readonly></textarea>
-<button onclick="copy()">Copy Result</button>
+<button id="btn">Convert</button>
+<textarea id="output" readonly></textarea>
+<div id="error"></div>
 </div>
 <script>
-function process(){
-const txt=document.getElementById('input').value;
-const encode=document.getElementById('encodeToggle').checked;
-const decode=document.getElementById('decodeToggle').checked;
-let result='';
-if(encode){
-try{result=btoa(txt);result+=\nError: Invalid characters for Base64 encoding};catch(e){}
-}else if(decode){
-try{result=atob(txt);result+=\nError: Invalid Base64 string};catch(e){}
-}else{
-result=Select encoding mode: Check Encode or Decode
+document.getElementById('btn').addEventListener('click',convert);
+function convert(){
+const input=document.getElementById('inputText').value.trim();
+const mode=document.getElementById('mode').value;
+const output=document.getElementById('output');
+const error=document.getElementById('error');
+error.style.display='none';output.value='';
+if(!input)return;
+try{
+if(mode==='encode')output.value=btoa(input);
+else if(mode==='decode'){
+try{output.value=atob(input);}catch{throw new Error('Invalid Base64');}
 }
-document.getElementById('result').value=result;
+else{
+if(isBase64(input))output.value=btoa(input);
+else output.value=atob(input);
 }
-function copy(){
-const txt=document.getElementById('result').value;
-navigator.clipboard.writeText(txt).then(()=>alert('Copied!'))
+}catch(e){error.innerText=e.message;error.style.display='block';}
 }
-function autoProcess(){
-const txt=document.getElementById('input').value;
-if(txt.length>0){
-const e=document.getElementById('encodeToggle').checked;
-const d=document.getElementById('decodeToggle').checked;
-if(e)process();
-else if(d)process();
-else autoProcess();
+function isBase64(s){
+try{atob(s);return!/[\s+=]/.test(s);return false;}catch{return false;}
 }
-}
-document.getElementById('input').oninput=setTimeout(autoProcess,100);
-process();
 </script>
 </body>
 </html>
