@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro Timer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;background:#0a0a0a;color:#e4e4e4;display:flex;justify-content:center;align-items:center;min-height:100vh;flex-direction:column}
+a{color:#6366f1;text-decoration:none}
+h1{color:#6366f1;margin-bottom:2rem;text-align:center}
+.container{max-width:400px;padding:2rem;text-align:center;background:#1a1a1a;border-radius:1rem;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+.timer{font-size:3rem;font-weight:bold;margin-bottom:2rem;min-height:3rem;display:flex;align-items:center;justify-content:center}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.btn{padding:0.75rem 1.5rem;font-size:1rem;border:none;border-radius:0.5rem;background:#6366f1;color:#e4e4e4;cursor:pointer;font-weight:600;transition:all 0.2s}
+.btn:hover{background:#5558e6;transform:translateY(-2px)}
+.btn-outline{background:transparent;border:2px solid #6366f1;color:#6366f1}
+.btn-outline:hover{background:#6366f1;color:#0a0a0a}
+.work{background:#0a0a0a}
+.break{background:#051408}
+.mode-toggle{display:flex;justify-content:center;margin-bottom:1.5rem;gap:0.5rem}
+.mode-toggle label{cursor:pointer;padding:0.5rem 1rem;border-radius:0.5rem;transition:all 0.2s}
+.mode-toggle input{display:none}
+#work-mode:checked~#work-label{background:#6366f1;color:#0a0a0a}
+#break-mode:checked~#break-label{background:#6366f1;color:#0a0a0a}
+#work-label,#break-label{padding:0.5rem 1rem;border-radius:0.5rem;cursor:pointer;user-select:none}
+.stats{display:flex;justify-content:space-around;margin-top:2rem;padding-top:1rem;border-top:1px solid #333;font-size:0.9rem}
+.progress-bar{height:6px;background:#333;border-radius:3px;overflow:hidden;margin-bottom:1.5rem}
+.progress-fill{height:100%;background:#6366f1;width:0%;transition:width 1s linear}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1;margin-bottom:1rem;display:block">Home</a>
+<h1>Pomodoro Timer</h1>
+<div class="container">
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="mode-toggle"><label id="work-label" for="work-mode">🍅 Work (25m)</label><label id="break-label" for="break-mode">☕ Break (5m)</label><input type="radio" name="mode" id="work-mode" value="work" checked><input type="radio" name="mode" id="break-mode" value="break"></div>
+<div class="timer" id="timer">25:00</div>
+<div class="controls"><button class="btn" id="start">Start</button><button class="btn btn-outline" id="pause">Pause</button><button class="btn btn-outline" id="reset">Reset</button></div>
+<div class="stats"><span>🍅 Sessions: <span id="work-sessions">0</span></span><span>☕ Breaks: <span id="break-count">0</span></span></div>
+</div>
+<script>
+class PomodoroTimer{constructor(){this.workTime=25*60;this.breakTime=5*60;this.timer=null;this.mode='work';this.workSessions=0;this.breakCount=0;this.totalTime=this.workTime;this.timeLeft=this.workTime;this.init();}init(){document.getElementById('start').addEventListener('click',()=>this.start());document.getElementById('pause').addEventListener('click',()=>this.pause());document.getElementById('reset').addEventListener('click',()=>this.reset());document.querySelectorAll('input[name="mode"]').forEach(input=>input.addEventListener('change',()=>this.switchMode()));this.updateDisplay();this.startTimer();}switchMode(){const workMode=document.getElementById('work-mode');const breakMode=document.getElementById('break-mode');if(workMode.checked){this.mode='work';this.workSessions=parseInt(document.getElementById('work-sessions').innerText);this.totalTime=this.workTime;this.timeLeft=this.workTime;document.querySelector('.break').style.display='none';document.querySelector('.work').style.display='block';}else{this.mode='break';this.totalTime=this.breakTime;this.timeLeft=this.breakTime;document.querySelector('.break').style.display='block';document.querySelector('.work').style.display='none';}this.updateDisplay();this.updateProgress();this.startTimer();}start(){if(this.timer)return clearInterval(this.timer);this.timer=setInterval(()=>this.tick(),1000);document.getElementById('start').innerText='Running...';}pause(){clearInterval(this.timer);this.timeLeft=this.totalTime-this.elapsed;this.updateDisplay();document.getElementById('start').innerText='Start';document.getElementById('pause').innerText='Pause';}reset(){clearInterval(this.timer);this.timeLeft=this.totalTime;this.updateDisplay();document.getElementById('start').innerText='Start';document.getElementById('pause').innerText='Pause';}tick(){this.timeLeft--;this.updateDisplay();this.updateProgress();if(this.timeLeft<=0){this.complete();}this.startTimer();}updateDisplay(){const minutes=Math.floor(this.timeLeft/60).toString().padStart(2,'0');const seconds=(this.timeLeft%60).toString().padStart(2,'0');document.getElementById('timer').innerText=`${minutes}:${seconds}`;this.container=document.querySelector('.container');this.container.classList.remove('work','break');this.container.classList.add(this.mode);}updateProgress(){const percent=(this.timeLeft/this.totalTime)*100;document.getElementById('progress').style.width=`${percent}%`;this.startTimer();}complete(){if(this.mode==='work'){this.workSessions++;document.getElementById('work-sessions').innerText=this.workSessions;this.mode='break';this.totalTime=this.breakTime;this.timeLeft=this.breakTime;this.container.classList.remove('work');this.container.classList.add('break');document.querySelector('.work').style.display='none';document.querySelector('.break').style.display='block';document.getElementById('work-label').style.background='#333';document.getElementById('break-label').style.background='#6366f1';}else{this.breakCount++;document.getElementById('break-count').innerText=this.breakCount;this.mode='work';this.totalTime=this.workTime;this.timeLeft=this.workTime;this.container.classList.remove('break');this.container.classList.add('work');document.querySelector('.break').style.display='none';document.querySelector('.work').style.display='block';document.getElementById('break-label').style.background='#333';document.getElementById('work-label').style.background='#6366f1';alert('🍅 Break complete! Time to focus on your work!');}this.updateDisplay();this.updateProgress();this.startTimer();}startTimer(){if(this.timer)clearInterval(this.timer);this.timer=setInterval(()=>{this.timeLeft--;this.updateDisplay();this.updateProgress();if(this.timeLeft<=0)this.complete();},1000);}elapsed=(this.totalTime-this.timeLeft)/1000;}
+</script>
+</body>
+</html>
