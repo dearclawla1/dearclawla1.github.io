@@ -12,8 +12,8 @@
         }
         body {
             font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-            background: #1e1e1e;
-            color: #d4d4d4;
+            background: #0a0a0a;
+            color: #e4e4e4;
             padding: 20px;
             min-height: 100vh;
         }
@@ -30,305 +30,361 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-bottom: 20px;
+            margin-top: 20px;
         }
-        .json-input {
-            display: block;
+        .editor-box {
+            position: relative;
+        }
+        textarea {
             width: 100%;
-            min-height: 200px;
-            background: #2d2d30;
-            border: 1px solid #3e3e42;
+            height: 400px;
+            background: #1e1e1e;
             color: #d4d4d4;
+            border: 2px solid #3c3c3c;
+            border-radius: 8px;
             padding: 12px;
-            font-family: inherit;
+            font-family: 'Monaco', 'Menlo', monospace;
             font-size: 14px;
-            border-radius: 6px;
             resize: vertical;
+            min-width: 200px;
         }
-        .json-input:focus {
+        textarea:focus {
             outline: none;
             border-color: #61dafb;
         }
-        .buttons {
+        .placeholder {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            color: #666;
+            pointer-events: none;
+        }
+        .actions {
+            margin-top: 20px;
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
             flex-wrap: wrap;
         }
         button {
-            padding: 10px 20px;
-            background: #0e639c;
+            background: #61dafb;
+            color: #000;
             border: none;
+            padding: 10px 20px;
             border-radius: 6px;
-            color: white;
-            font-family: inherit;
             font-size: 14px;
             cursor: pointer;
-            transition: background 0.2s;
+            font-weight: bold;
+            min-width: 120px;
         }
         button:hover {
-            background: #1177bb;
+            background: #4fa8c7;
         }
         button:disabled {
-            background: #3e3e42;
+            background: #3c3c3c;
             cursor: not-allowed;
         }
-        .diff-result {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
+        button.clear {
+            background: #c74fa8;
         }
-        .diff-panel {
-            background: #252526;
-            border: 1px solid #3e3e42;
-            border-radius: 6px;
+        button.clear:hover {
+            background: #a84fa8;
+        }
+        #diffResult {
+            margin-top: 20px;
             padding: 15px;
-            min-height: 300px;
-            font-family: inherit;
-            font-size: 13px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            border-left: 4px solid #61dafb;
+            min-height: 100px;
             white-space: pre-wrap;
             word-break: break-all;
-            overflow-x: auto;
         }
-        .diff-panel.added {
-            border-color: #34d399;
-            background: rgba(52, 211, 153, 0.05);
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #61dafb;
         }
-        .diff-panel.removed {
-            border-color: #f87171;
-            background: rgba(248, 113, 113, 0.05);
+        .loading.visible {
+            display: block;
         }
-        .diff-panel.match {
-            border-color: #61dafb;
-            background: rgba(97, 218, 251, 0.05);
-        }
-        .diff-panel .line.added {
-            color: #76ff03;
-        }
-        .diff-panel .line.removed {
-            color: #ff7676;
-        }
-        .diff-panel .line.match {
-            color: #d4d4d4;
-        }
-        .sync-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        .sync-btn {
-            padding: 8px 16px;
-            background: #238636;
-            border: none;
+        .error {
+            color: #ff6b6b;
+            background: #2d1e1e;
+            padding: 10px;
             border-radius: 6px;
-            color: white;
-            font-family: inherit;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        .sync-btn:hover {
-            background: #2ea043;
-        }
-        .status {
             margin-top: 10px;
+        }
+        @media (max-width: 768px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+            .actions {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+        }
+        .shortcut-hint {
+            color: #666;
             font-size: 12px;
-            color: #858585;
+            margin-top: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔀 JSON Diff Tool</h1>
+        <h1>JSON Diff Tool</h1>
+        <p style="color:#888;margin-bottom:20px;">Compare two JSON objects or arrays. Paste JSON on the left and right, then click "Compare JSON" to see the differences.</p>
+        
+        <div class="loading" id="loading">
+            Processing JSON...
+        </div>
         
         <div class="editor-container">
-            <div>
-                <label><strong>JSON 1:</strong></label>
-                <textarea id="json1" class="json-input" placeholder='Enter first JSON...'></textarea>
+            <div class="editor-box">
+                <textarea id="json1" placeholder="Paste first JSON here..."></textarea>
+                <div class="shortcut-hint">Press Enter to clear, or use Ctrl+Enter to compare</div>
             </div>
-            <div>
-                <label><strong>JSON 2:</strong></label>
-                <textarea id="json2" class="json-input" placeholder='Enter second JSON...'></textarea>
-            </div>
-        </div>
-        
-        <div class="buttons">
-            <button onclick="compareJSON()">Compare JSON</button>
-            <button onclick="loadExample()">Load Example</button>
-            <button onclick="clearAll()">Clear All</button>
-        </div>
-        
-        <div class="diff-result">
-            <div id="diff-added" class="diff-panel added">
-                <strong>Added:</strong>
-                <div id="added-content"></div>
-            </div>
-            <div id="diff-removed" class="diff-panel removed">
-                <strong>Removed:</strong>
-                <div id="removed-content"></div>
+            <div class="editor-box">
+                <textarea id="json2" placeholder="Paste second JSON here..."></textarea>
+                <div class="shortcut-hint">Press Enter to clear</div>
             </div>
         </div>
         
-        <div class="buttons">
-            <button onclick="syncChanges('forward')">Sync → JSON 2</button>
-            <button onclick="syncChanges('backward')">Sync → JSON 1</button>
-            <button onclick="diffHighlight()">Visual Diff</button>
+        <div class="actions">
+            <button id="compareBtn">Compare JSON</button>
+            <button id="minifyBtn">Minify JSON</button>
+            <button id="validateBtn" class="clear">Validate JSON</button>
+            <button id="clearBtn" class="clear">Clear All</button>
         </div>
         
-        <div id="sync-status" class="status"></div>
+        <div id="diffResult"></div>
+        
+        <div id="errorMessage" class="error" style="display:none;"></div>
     </div>
     
     <script>
         const json1 = document.getElementById('json1');
         const json2 = document.getElementById('json2');
-        const addedContent = document.getElementById('added-content');
-        const removedContent = document.getElementById('removed-content');
-        const syncStatus = document.getElementById('sync-status');
+        const diffResult = document.getElementById('diffResult');
+        const compareBtn = document.getElementById('compareBtn');
+        const minifyBtn = document.getElementById('minifyBtn');
+        const validateBtn = document.getElementById('validateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
         
-        function parseJSON(text) {
+        let prevJson1 = '';
+        let prevJson2 = '';
+        
+        function showLoading(show) {
+            loading.classList.toggle('visible', show);
+        }
+        
+        function hideError() {
+            errorMessage.style.display = 'none';
+            diffResult.innerHTML = '';
+        }
+        
+        function showShortcuts(event) {
+            if (event.key === 'Enter' && event.target === json1) {
+                hideError();
+                json1.value = '';
+            }
+        }
+        
+        function validateJson(jsonStr) {
             try {
-                return JSON.parse(text);
+                JSON.parse(jsonStr);
+                return true;
             } catch (e) {
-                return null;
+                return false;
             }
         }
         
-        function objectToTree(obj, parentPath = '') {
-            let tree = {};
-            if (typeof obj === 'object' && obj !== null) {
-                for (let key in obj) {
-                    let fullKey = parentPath ? `${parentPath}.${key}` : key;
-                    let value = obj[key];
-                    if (typeof value === 'object' && value !== null) {
-                        tree[fullKey] = objectToTree(value, fullKey);
-                    } else {
-                        tree[fullKey] = value;
-                    }
-                }
-                return tree;
-            } else {
-                return obj;
+        function minifyJson(jsonStr) {
+            if (!validateJson(jsonStr)) {
+                throw new Error('Invalid JSON');
             }
+            return JSON.stringify(JSON.parse(jsonStr), null, 2);
         }
         
-        function getChanges(obj1, obj2) {
-            const tree1 = objectToTree(obj1);
-            const tree2 = objectToTree(obj2);
-            const added = [];
-            const removed = [];
+        function compareJson(json1, json2) {
+            const obj1 = JSON.parse(json1);
+            const obj2 = JSON.parse(json2);
+            let changes = [];
             
-            for (let key in tree2) {
-                if (!(key in tree1)) {
-                    added.push({ path: key, value: tree2[key] });
+            function getChanges(current, original, path = '') {
+                if (typeof current !== typeof original) {
+                    changes.push(path ? `${path}: Type changed from ${typeof original} to ${typeof current}` : 'Type changed');
+                    return;
+                }
+                
+                if (Array.isArray(current)) {
+                    for (let i = 0; i < Math.max(current.length, original.length); i++) {
+                        const newPath = path ? `${path}[${i}]` : `[${i}]`;
+                        if (i >= current.length) {
+                            changes.push(`${newPath}: Deleted`);
+                        } else if (i >= original.length) {
+                            changes.push(`${newPath}: Added`);
+                        } else if (current[i] !== original[i]) {
+                            getChanges(current[i], original[i], newPath);
+                        }
+                    }
                 } else {
-                    if (tree1[key] !== tree2[key]) {
-                        removed.push({ path: key, value: tree1[key] });
+                    const keys = new Set([...Object.keys(current), ...Object.keys(original)]);
+                    for (const key of keys) {
+                        const newPath = path ? `${path}.${key}` : key;
+                        if (!current.hasOwnProperty(key) && original.hasOwnProperty(key)) {
+                            changes.push(`${newPath}: Deleted`);
+                        } else if (current.hasOwnProperty(key) && !original.hasOwnProperty(key)) {
+                            changes.push(`${newPath}: Added`);
+                        } else if (current[key] !== original[key]) {
+                            getChanges(current[key], original[key], newPath);
+                        }
                     }
                 }
             }
-            return { added, removed };
+            
+            getChanges(obj2, obj1);
+            return changes;
         }
         
-        function compareJSON() {
-            const obj1 = parseJSON(json1.value);
-            const obj2 = parseJSON(json2.value);
-            
-            if (!obj1 || !obj2) {
-                alert('Please enter valid JSON in both fields');
-                return;
+        function formatChanges(changes) {
+            if (changes.length === 0) {
+                return 'No changes detected. The JSON objects are identical.';
             }
-            
-            const changes = getChanges(obj1, obj2);
-            addedContent.innerHTML = changes.added.map(c => `[${c.path}]: ${c.value}`).join('\\n');
-            removedContent.innerHTML = changes.removed.map(c => `[${c.path}]: ${c.value}`).join('\\n');
-        }
-        
-        function loadExample() {
-            json1.value = JSON.stringify({ name: 'Alice', age: 30, city: 'New York' }, null, 2);
-            json2.value = JSON.stringify({ name: 'Alice', age: 31, city: 'Boston' }, null, 2);
-        }
-        
-        function clearAll() {
-            json1.value = '';
-            json2.value = '';
-            addedContent.innerHTML = '';
-            removedContent.innerHTML = '';
-        }
-        
-        function syncChanges(direction) {
-            const obj1 = parseJSON(json1.value);
-            const obj2 = parseJSON(json2.value);
-            
-            if (!obj1 || !obj2) {
-                alert('Please enter valid JSON first');
-                return;
-            }
-            
-            const changes = getChanges(obj1, obj2);
-            let syncResult;
-            
-            if (direction === 'forward') {
-                // Apply changes from JSON 2 to JSON 1
-                syncResult = deepCloneAndMerge(obj2, changes.removed || []);
-            } else {
-                // Apply changes from JSON 1 to JSON 2
-                syncResult = deepCloneAndMerge(obj1, changes.added || []);
-            }
-            
-            if (direction === 'forward') {
-                json2.value = JSON.stringify(syncResult, null, 2);
-                syncStatus.textContent = 'Synced changes from JSON 1 → JSON 2';
-            } else {
-                json1.value = JSON.stringify(syncResult, null, 2);
-                syncStatus.textContent = 'Synced changes from JSON 2 → JSON 1';
-            }
-        }
-        
-        function deepCloneAndMerge(base, changes) {
-            const result = JSON.parse(JSON.stringify(base));
+            const grouped = {};
             for (const change of changes) {
-                const keys = change.path.split('.');
-                let target = result;
-                for (let i = 0; i < keys.length - 1; i++) {
-                    target = target[keys[i]] = target[keys[i]] || {};
-                }
-                delete target[keys[keys.length - 1]];
+                const match = change.match(/^(.+):\s+(.+)$/) || { groups: [change] };
+                const before = match.groups[0] || change;
+                const after = match.groups[1] || change;
+                const type = after.toLowerCase();
+                if (!grouped[type]) grouped[type] = [];
+                grouped[type].push(before);
+            }
+            let result = 'Detected the following changes:\n';
+            for (const [type, items] of Object.entries(grouped)) {
+                result += `\n=== ${type.toUpperCase()} (${items.length}) ===\n`;
+                items.forEach(item => result += `  - ${item}\n`);
             }
             return result;
         }
         
-        function diffHighlight() {
-            const obj1 = parseJSON(json1.value);
-            const obj2 = parseJSON(json2.value);
-            
-            if (!obj1 || !obj2) {
-                alert('Please enter valid JSON first');
+        function checkEqual(json1, json2) {
+            const obj1 = JSON.parse(json1);
+            const obj2 = JSON.parse(json2);
+            return JSON.stringify(obj1) === JSON.stringify(obj2);
+        }
+        
+        compareBtn.addEventListener('click', () => {
+            hideError();
+            hideError();
+            if (!json1.value || !json2.value) {
+                errorMessage.textContent = 'Please enter JSON in both boxes.';
+                errorMessage.style.display = 'block';
                 return;
             }
             
-            const tree1 = objectToTree(obj1);
-            const tree2 = objectToTree(obj2);
-            let html = '';
-            
-            for (let key in tree2) {
-                if (key in tree1) {
-                    if (tree1[key] === tree2[key]) {
-                        html += `<span class="line match">[${key}]: ${tree2[key]}</span>\n`;
-                    } else {
-                        html += `<span class="line removed">[${key}]: ${tree1[key]}</span>\n`;
-                    }
-                } else {
-                    html += `<span class="line added">[${key}]: ${tree2[key]}</span>\n`;
-                }
+            if (!validateJson(json1.value)) {
+                errorMessage.textContent = 'Invalid JSON in first box.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            if (!validateJson(json2.value)) {
+                errorMessage.textContent = 'Invalid JSON in second box.';
+                errorMessage.style.display = 'block';
+                return;
             }
             
-            addedContent.innerHTML = html;
-        }
+            if (json1.value === json2.value) {
+                diffResult.textContent = 'JSON values are identical.';
+                return;
+            }
+            
+            showLoading(true);
+            setTimeout(() => {
+                try {
+                    const changes = compareJson(json1.value, json2.value);
+                    diffResult.textContent = formatChanges(changes);
+                } catch (e) {
+                    errorMessage.textContent = 'Error comparing JSON: ' + e.message;
+                    errorMessage.style.display = 'block';
+                }
+                showLoading(false);
+            }, 50);
+        });
         
-        function deepClone(obj) {
-            return JSON.parse(JSON.stringify(obj));
-        }
+        minifyBtn.addEventListener('click', () => {
+            if (!json1.value || !json2.value) {
+                return;
+            }
+            if (!validateJson(json1.value)) {
+                errorMessage.textContent = 'Invalid JSON in first box.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            if (!validateJson(json2.value)) {
+                errorMessage.textContent = 'Invalid JSON in second box.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            showLoading(true);
+            setTimeout(() => {
+                const minified = minifyJson(json1.value);
+                json1.value = minified;
+                showLoading(false);
+            }, 50);
+        });
+        
+        validateBtn.addEventListener('click', () => {
+            if (!json1.value && !json2.value) {
+                errorMessage.textContent = 'Please enter JSON to validate.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            showLoading(true);
+            setTimeout(() => {
+                const valid1 = validateJson(json1.value);
+                const valid2 = validateJson(json2.value);
+                if (valid1 && valid2) {
+                    diffResult.textContent = 'Both JSON values are valid!';
+                } else if (valid1) {
+                    diffResult.textContent = 'First JSON is valid.\n' + (valid2 ? '' : 'Second JSON is invalid.');
+                } else {
+                    diffResult.textContent = 'First JSON is invalid.' + (valid2 ? '\n' : '') + 'Second JSON is valid.';
+                }
+                showLoading(false);
+            }, 50);
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            hideError();
+            json1.value = '';
+            json2.value = '';
+        });
+        
+        json1.addEventListener('input', (e) => {
+            prevJson1 = json1.value;
+        });
+        json2.addEventListener('input', (e) => {
+            prevJson2 = json2.value;
+        });
+        
+        json1.addEventListener('keydown', showShortcuts);
+        json2.addEventListener('keydown', () => {
+            if (event.key === 'Enter' && event.target === json2) {
+                json2.value = '';
+            }
+        });
+        
+        compareBtn.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                compareBtn.click();
+            }
+        });
     </script>
 </body>
 </html>
