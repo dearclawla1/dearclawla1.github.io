@@ -2,31 +2,186 @@
 <html>
 <head>
 <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
 <style>
-body{margin:0;padding:15px;background:#0a0a0a;color:#e4e4e4;font-family:monospace}
-a{color:#88cc88}
-h1{color:#aaa;margin:0 0 15px 0}
-.toolbar{display:flex;gap:8px;margin-bottom:15px}
-input,button{padding:8px 12px;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;font-size:13px}
-button{cursor:pointer}
-textarea{width:100%;min-height:120px;padding:8px;border:1px solid #333;border-radius:4px;background:#111;color:#e4e4e4;font-family:monospace;font-size:13px}
-section{margin-top:15px}
-label{display:block;margin:5px 0 5px 0;color:#888}
+*{box-sizing:border-box}
+body{margin:0;padding:15px;background:#0a0a0a;color:#e4e4e4;font-family:monospace;max-width:600px;margin:0 auto}
+a{color:#88cc88;text-decoration:none}
+a:hover{text-decoration:underline}
+h1{color:#aaa;margin:0 0 15px 0;font-size:1.5rem}
+.toolbar{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap}
+input,button{padding:8px 12px;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;font-size:13px;cursor:pointer;transition:all 0.2s}
+button:hover{background:#252525;border-color:#444}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:0.6;cursor:not-allowed}
+textarea{width:100%;min-height:120px;padding:8px;border:1px solid #333;border-radius:4px;background:#111;color:#e4e4e4;font-family:monospace;font-size:13px;resize:vertical}
+section{margin-top:15px;min-height:50px}
+label{display:block;margin:5px 0 5px 0;color:#888;font-size:0.9rem}
+.loading{opacity:0.7}
+.error{color:#cc6666}
+.success{color:#66cc66}
+#type{min-height:20px;padding:4px;background:#1a1a1a;border-radius:4px;border:1px solid #333}
+.placeholder{color:#666;font-style:italic}
+@media(max-width:480px){
+  body{padding:10px}
+  .toolbar{flex-direction:column;width:100%}
+  .toolbar button{width:100%}
+}
 </style>
 </head>
 <body>
 <a href='index.html'>Home</a>
 <h1>Base64 Encoder/Decoder</h1>
-<div class='toolbar'><button onclick='encode()'>Encode</button><button onclick='decode()'>Decode</button><button onclick='clear()'>Clear</button></div>
-<section><label>Input:</label><textarea id='input'></textarea></section>
-<section><label>Output:</label><textarea id='output'></textarea></section>
+<div class='toolbar'>
+<button onclick='encode()' id='encodeBtn'>Encode</button>
+<button onclick='decode()' id='decodeBtn'>Decode</button>
+<button onclick='clear()' id='clearBtn'>Clear</button>
+<button onclick='copyOutput()' id='copyBtn'>Copy Output</button>
+</div>
+<section><label>Input:</label><textarea id='input' placeholder='Enter text to encode/decode... Press Ctrl+Enter to submit (Encode/Decode)'></textarea></section>
+<section><label>Output:</label><textarea id='output' readonly placeholder='Result will appear here...'></textarea></section>
 <section><label>Type:</label><span id='type'>-</span></section>
 <script>
-function encode(){let i=document.getElementById('input').value;try{let o=btoa(i);document.getElementById('output').value=o}catch(e){alert('Error: Invalid input for Base64 encoding');return}showType()};
-function decode(){let i=document.getElementById('input').value;try{let o=atob(i);document.getElementById('output').value=o}catch(e){alert('Error: Invalid Base64');return}showType()};
-function showType(){let t=document.getElementById('output').value;let c=t.charCodeAt(0);let s='';if(c>=65&&c<=90)s='Uppercase';else if(c>=97&&c<=122)s='Lowercase';else if(c>=48&&c<=57)s='Digit';else if(c===45)s='Hyphen';else if(c===43)s='Plus';else if(c===47)s='Slash';else if(c===61)s='Equals';else s='Binary';document.getElementById('type').textContent=s}
-function clear(){document.getElementById('input').value='';document.getElementById('output').value='';document.getElementById('type').textContent='-'};
-document.getElementById('input').oninput=showType
+let currentMode='';
+const inputEl=document.getElementById('input');
+const outputEl=document.getElementById('output');
+const typeEl=document.getElementById('type');
+const encodeBtn=document.getElementById('encodeBtn');
+const decodeBtn=document.getElementById('decodeBtn');
+
+function showLoading(element){
+  element.classList.add('loading');
+  setTimeout(()=>{element.classList.remove('loading');},800);
+}
+
+function showError(message){
+  typeEl.textContent=message;
+  typeEl.style.color='#cc6666';
+  setTimeout(()=>{if(typeEl.textContent===message){typeEl.style.color=''}});}
+
+function showType(){
+  const input = inputEl.value;
+  let type='-';
+  if(input.trim()===''){
+    inputEl.value='';
+    typeEl.textContent='-'
+    typeEl.style.color='#888';
+    return;
+  }
+  try{
+    const encoded=btoa(input);
+    const decoded=atob(encoded);
+    if(encoded.length===decoded.length){
+      type='Valid Base64';
+    }else{
+      type='Mixed/Invalid';
+    }
+  }catch(e){
+    type='Invalid Base64';
+  }
+  typeEl.textContent=type;
+  typeEl.style.color='#88cc88';
+}
+
+function validateBase64(str){
+  try{
+    atob(str);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function encode(){
+  const input=inputEl.value;
+  if(input.trim()===''){
+    showError('Please enter some text');
+    return;
+  }
+  try{
+    const encoded=btoa(input);
+    outputEl.value=encoded;
+    showLoading(outputEl);
+    showType();
+    typeEl.textContent='Base64 Encoded: '+encoded.length+' characters';
+  }catch(e){
+    showError('Encoding failed: Invalid input for Base64 encoding');
+  }
+  inputEl.focus();
+}
+
+function decode(){
+  const input=inputEl.value;
+  if(input.trim()===''){
+    showError('Please enter some Base64 text');
+    return;
+  }
+  try{
+    const decoded=atob(input);
+    outputEl.value=decoded;
+    showLoading(outputEl);
+    showType();
+    typeEl.textContent='Base64 Decoded: '+decoded.length+' characters';
+  }catch(e){
+    showError('Decoding failed: Invalid Base64 input');
+  }
+  inputEl.focus();
+}
+
+function clear(){
+  inputEl.value='';
+  outputEl.value='';
+  typeEl.textContent='-';
+  typeEl.style.color='#888';
+  inputEl.focus();
+}
+
+function copyOutput(){
+  const output=outputEl.value;
+  if(output.trim()===''){
+    showError('No output to copy');
+    return;
+  }
+  const textArea=document.createElement('textarea');
+  textArea.value=output;
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textArea);
+  typeEl.textContent='Copied to clipboard!';
+  typeEl.style.color='#66cc66';
+  setTimeout(()=>{if(typeEl.textContent==='Copied to clipboard!'){typeEl.textContent='Output: '+output.length+' characters';typeEl.style.color='#88cc88';}},1500);
+}
+
+// Set up Ctrl+Enter to submit
+inputEl.addEventListener('keydown',function(e){
+  if(e.ctrlKey && e.key==='Enter'){
+    e.preventDefault();
+    if(currentMode==='encode'){
+      encode();
+    }else if(currentMode==='decode'){
+      decode();
+    }
+  }
+});
+
+// Mode toggle on button click
+encodeBtn.addEventListener('click',()=>{currentMode='encode';typeEl.textContent='Mode: Encode';});
+decodeBtn.addEventListener('click',()=>{currentMode='decode';typeEl.textContent='Mode: Decode';});
+
+// Auto-detect mode on focus
+inputEl.addEventListener('focus',()=>{
+  if(currentMode===''){
+    currentMode='auto';
+    typeEl.textContent='Mode: Auto';
+  }
+});
+
+// Show type on input change
+inputEl.oninput=showType;
+
+// Initial state
+typeEl.style.color='#888';
 </script>
 </body>
 </html>
