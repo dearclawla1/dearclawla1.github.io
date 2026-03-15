@@ -1,102 +1,113 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unit Converter</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #0a0a0a; color: #e4e4e4; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;
-    }
-    .container {
-      background: #111; border: 1px solid #333; border-radius: 12px; padding: 24px; width: 100%; max-width: 420px;
-    }
-    a { display: block; text-align: center; margin-bottom: 16px; font-size: 13px; }
-    h2 { text-align: center; margin-bottom: 16px; font-size: 18px; }
-    label { display: block; margin-bottom: 6px; font-size: 13px; color: #a0a0a0; }
-    input, select {
-      width: 100%; padding: 10px 12px; border: 1px solid #333; border-radius: 8px;
-      background: #1a1a1a; color: #e4e4e4; font-size: 14px; margin-bottom: 12px;
-    }
-    input:focus, select:focus { outline: none; border-color: #6366f1; }
-    button {
-      width: 100%; padding: 12px; border: none; border-radius: 8px;
-      background: #6366f1; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover { background: #5558e6; }
-    .result {
-      margin-top: 16px; padding: 12px; background: #1a1a1a; border-radius: 8px;
-      text-align: center; font-size: 14px; color: #a0a0a0;
-    }
-    .result span { color: #6366f1; font-size: 16px; }
-    .categories { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
-    .cat-btn {
-      flex: 1; min-width: 50px; padding: 6px 8px; border: 1px solid #333; border-radius: 6px;
-      background: #1a1a1a; color: #a0a0a0; font-size: 12px; cursor: pointer;
-    }
-    .cat-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
-    .cat-btn:hover:not(.active) { border-color: #6366f1; }
-  </style>
+<meta charset="UTF-8">
+<title>Unit Converter</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#0a0a0a;color:#e4e4e4;min-height:100vh;display:flex;justify-content:center;padding:40px}
+.container{width:100%;max-width:500px;background:#111;border-radius:12px;padding:24px}
+a{color:#6366f1;text-decoration:none;font-size:14px;display:block;margin:-24px -24px 16px;padding:8px 24px}
+h1{font-size:24px;margin-bottom:16px;color:#e4e4e4}
+input,select,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #333;background:#222;color:#e4e4e4;font-size:14px}
+button{cursor:pointer;border-color:#6366f1}
+select{background:#222}
+result{margin-top:16px;padding:16px;background:#1a1a1a;border-radius:8px;font-size:18px;color:#6366f1}
+.options{display:flex;gap:8px;margin-bottom:16px}
+label{font-size:13px;color:#aaa;margin-left:4px}
+input[type="number"]{font-family:monospace}
+</style>
 </head>
 <body>
-  <div class="container">
-    <a href="index.html" style="color:#6366f1">Home</a>
-    <h2>Unit Converter</h2>
-    <div class="categories" id="categories"></div>
-    <select id="fromUnit"></select>
-    <input type="number" id="value" placeholder="Enter value" step="any">
-    <select id="toUnit"></select>
-    <button id="convertBtn">Convert</button>
-    <div class="result" id="result">Converted value will appear here</div>
-  </div>
-  <script>
-    const units = {
-      length: { name: 'Length', pairs: [
-        ['kilometers','km','meters','m'], ['miles','mi','kilometers','km'], ['meters','m','feet','ft'],
-        ['feet','ft','inches','in'], ['inches','in','centimeters','cm'], ['centimeters','cm','meters','m'],
-        ['miles','mi','kilometers','km'], ['feet','ft','meters','m']
-      ]},
-      weight: { name: 'Weight', pairs: [
-        ['kilograms','kg','grams','g'], ['pounds','lb','kilograms','kg'], ['grams','g','ounces','oz'],
-        ['ounces','oz','grams','g'], ['tons','ton','kilograms','kg'], ['kilograms','kg','pounds','lb']
-      ]},
-      data: { name: 'Data', pairs: [
-        ['bytes','B','kilobytes','KB'], ['kilobytes','KB','megabytes','MB'], ['megabytes','MB','gigabytes','GB'],
-        ['gigabytes','GB','terabytes','TB'], ['bytes','B','bits','b'], ['kilobytes','KB','megabytes','MB']
-      ]}
-    };
-    const categories = Object.values(units).map(c => ({ id: c.name, display: c.name, pairs: c.pairs }));
-    const catContainer = document.getElementById('categories');
-    categories.forEach(cat => {
-      const btn = document.createElement('button'); btn.className = 'cat-btn'; btn.textContent = cat.display;
-      catContainer.appendChild(btn);
-    });
-    categories.forEach((cat, i) => {
-      cat.btn.onclick = () => {
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        cat.btn.classList.add('active');
-        loadUnits(cat.pairs);
-      };
-    });
-    function loadUnits(pairs) {
-      const from = document.getElementById('fromUnit'); from.innerHTML = pairs.map(u => `<option value="${u[0]}">${u[0]}</option>`).join('');
-      const to = document.getElementById('toUnit'); to.innerHTML = pairs.map(u => `<option value="${u[1]}">${u[1]}</option>`).join('');
-    }
-    loadUnits(categories[0].pairs);
-    let selectedPairs = categories[0].pairs;
-    document.getElementById('convertBtn').onclick = () => {
-      const val = parseFloat(document.getElementById('value').value);
-      const from = document.getElementById('fromUnit').value;
-      const to = document.getElementById('toUnit').value;
-      const indexFrom = selectedPairs.findIndex(p => p[0] === from);
-      const indexTo = selectedPairs.findIndex(p => p[1] === to);
-      const base = selectedPairs[indexFrom][1];
-      const result = val * Math.pow(1000, indexTo - indexFrom) / (base === 'B' ? 1 : 1);
-      document.getElementById('result').textContent = `${val.toLocaleString()} ${from} = ${result.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}`;
-    };
-  </script>
+<div class="container">
+<a href="index.html" style="color:#6366f1">Home</a>
+<h1>Unit Converter</h1>
+<div class="options">
+<select id="category">
+<option value="length">Length</option>
+<option value="mass">Mass</option>
+<option value="temperature">Temperature</option>
+<option value="speed">Speed</option>
+</select>
+</div>
+<div id="length">
+<label for="from">From</label><input type="number" id="from" placeholder="Value">
+<select id="from-unit">
+<option value="m">Meters</option><option value="km">Kilometers</option><option value="cm">Centimeters</option><option value="mm">Millimeters</option><option value="mi">Miles</option><option value="yd">Yards</option><option value="ft">Feet</option><option value="in">Inches</option>
+</select>
+<label for="to">To</label><input type="number" id="to" placeholder="Result">
+<select id="to-unit">
+<option value="m">Meters</option><option value="km">Kilometers</option><option value="cm">Centimeters</option><option value="mm">Millimeters</option><option value="mi">Miles</option><option value="yd">Yards</option><option value="ft">Feet</option><option value="in">Inches</option>
+</select>
+</div>
+<div id="mass">
+<label for="from-m">From</label><input type="number" id="from-m" placeholder="Value">
+<select id="from-mass">
+<option value="kg">Kilograms</option><option value="g">Grams</option><option value="mg">Milligrams</option><option value="lb">Pounds</option><option value="oz">Ounces</option><option value="t">Metric Tonnes</option>
+</select>
+<label for="to-m">To</label><input type="number" id="to-m" placeholder="Result">
+<select id="to-mass">
+<option value="kg">Kilograms</option><option value="g">Grams</option><option value="mg">Milligrams</option><option value="lb">Pounds</option><option value="oz">Ounces</option><option value="t">Metric Tonnes</option>
+</select>
+</div>
+<div id="temperature">
+<label for="from-t">From</label><input type="number" id="from-t" placeholder="Temperature">
+<select id="from-temp">
+<option value="c">Celsius</option><option value="f">Fahrenheit</option><option value="k">Kelvin</option>
+</select>
+<label for="to-t">To</label><input type="number" id="to-t" placeholder="Result">
+<select id="to-temp">
+<option value="c">Celsius</option><option value="f">Fahrenheit</option><option value="k">Kelvin</option>
+</select>
+</div>
+<div id="speed">
+<label for="from-s">From</label><input type="number" id="from-s" placeholder="Value">
+<select id="from-speed">
+<option value="m-s">Meters/Second</option><option value="km-h">Kilometers/Hour</option><option value="mi-h">Miles/Hour</option><option value="kn">Knots</option>
+</select>
+<label for="to-s">To</label><input type="number" id="to-s" placeholder="Result">
+<select id="to-speed">
+<option value="m-s">Meters/Second</option><option value="km-h">Kilometers/Hour</option><option value="mi-h">Miles/Hour</option><option value="kn">Knots</option>
+</select>
+</div>
+<div class="result" id="result">Enter a value to convert</div>
+</div>
+<script>
+const category=document.getElementById('category');
+const length=document.getElementById('length'),mass=document.getElementById('mass'),temp=document.getElementById('temperature'),speed=document.getElementById('speed');
+let currentCategory='length';
+category.addEventListener('change',()=>{
+currentCategory=category.value;
+length.style.display=mass.style.display=temp.style.display=speed.style.display='none';
+document.getElementById(currentCategory).style.display='block';
+});
+category.dispatchEvent(new Event('change'));
+document.querySelectorAll('input,select').forEach(el=>{
+el.addEventListener('input',convert);
+});
+function convert(){
+const from=document.getElementById(currentCategory).querySelector('input[placeholder="Value"]'),to=document.getElementById(currentCategory).querySelector('input[placeholder="Result"]');
+if(!from.value)return;
+let val=parseFloat(from.value),fromUnit=document.getElementById('from'+currentCategory.substring(1)).value,toUnit=document.getElementById('to'+currentCategory.substring(1)).value;
+if(currentCategory==='temperature'){
+if(fromUnit==='c'){val=(val*9/5)+32}
+else if(fromUnit==='f'){val=(val-32)*5/9}
+else{val=val-273.15}
+}
+if(currentCategory==='length'){
+const factors={m:1,km:1000,cm:0.01,mm:0.001,mi:1609.344,yd:0.9144,ft:0.3048,in:0.0254};
+val=val*factors[fromUnit];
+}
+if(currentCategory==='mass'){
+const factors={kg:1,g:0.001,mg:0.000001,lb:0.453592,oz:0.0283495,t:1000};
+val=val*factors[fromUnit];
+}
+if(currentCategory==='speed'){
+const factors={'m-s':1,'km-h':0.277778,'mi-h':0.44704,'kn':0.514444};
+val=val*factors[fromUnit];
+}
+to.value=val.toFixed(6);
+}
+</script>
 </body>
 </html>
