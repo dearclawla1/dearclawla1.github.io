@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"><title>URL Encoder</title>
+<style>
+body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;}
+a{color:#e4e4e4;text-decoration:none;}a:hover{color:#8ab4f8;}
+.container{max-width:700px;margin:2rem auto;padding:0 1rem;}
+h1{font-size:1.8rem;margin:0 0 1rem 0;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin:1rem 0;}
+input,button,select{font:inherit;padding:0.5rem;}
+input{background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#e4e4e4;}
+button{background:#333;color:#e4e4e4;border:none;border-radius:4px;cursor:pointer;}
+button:hover{background:#444;}
+textarea{width:100%;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#e4e4e4;padding:0.5rem;resize:vertical;}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html">Home</a>
+<h1>URL Encoder/Decoder</h1>
+<div class="grid">
+<input type="text" id="input1" placeholder="Enter text to encode"><input type="text" id="input2" placeholder="Enter text to decode"><button onclick="swap()">↔</button>
+</div>
+<textarea id="out1" placeholder="Encoded result" rows="4"></textarea>
+<textarea id="out2" placeholder="Decoded result" rows="4"></textarea>
+<div style="margin:1rem 0;">
+<button onclick="encode()">Encode</button>
+<button onclick="decode()">Decode</button>
+<button onclick="toggleHex()">Toggle Hex</button>
+<select id="type" onchange="setMode(this.value)">
+<option value="encode">Encode</option><option value="decode">Decode</option><option value="all">Auto</option>
+</select>
+</div>
+</div>
+<script>
+let hexMode=false,mode="encode";
+function swap(){const t1=document.getElementById("input1").value,t2=document.getElementById("input2").value;document.getElementById("input1").value=t2;document.getElementById("input2").value=t1;}
+function encode(){const t=document.getElementById("input1").value;document.getElementById("out1").value=encodeURI(t);}
+function decode(){const t=document.getElementById("input2").value;document.getElementById("out2").value=decodeURIComponent(t.replace(/%20/g," "").replace(/\+/g," ""));}
+function toggleHex(){hexMode=!hexMode;const t=document.getElementById("input1").value;document.getElementById("out1").value=hexMode?t.split("").map(c=>c.charCodeAt(0).toString(16)).join(" "):t;}
+function setMode(m){mode=m;if(m==="all"){encode();decode();}}
+document.getElementById("input1").oninput=setTimeout(()=>{if(mode==="all"||mode==="encode")encode()},300);
+document.getElementById("input2").oninput=setTimeout(()=>{if(mode==="all"||mode==="decode")decode()},300);
+</script>
+</body>
+</html>
