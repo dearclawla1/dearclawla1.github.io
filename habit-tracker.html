@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Habit Tracker</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{background:#0a0a0a;color:#e4e4e4;padding:20px}
+a{color:#6366f1;text-decoration:none}
+h1{margin-bottom:20px;text-align:center}
+.container{max-width:400px;margin:0 auto}
+.streak{background:#6366f1;color:#0a0a0a;padding:10px;border-radius:8px;text-align:center;margin-bottom:20px;font-size:16px}
+input[type="text"]{width:100%;padding:12px;border:none;border-radius:6px;margin-bottom:10px;background:#1a1a1a;color:#e4e4e4;border:2px solid #333;font-size:14px}
+input[type="checkbox"]{transform:scale(1.5);vertical-align:middle;margin-right:10px}
+button{width:100%;padding:12px;border:none;border-radius:6px;margin:8px 0;background:#6366f1;color:#fff;font-size:14px;cursor:pointer}
+button:hover{background:#5558f5}
+.streak-count{font-size:48px;font-weight:bold}
+.progress-bar{background:#1a1a1a;height:8px;border-radius:4px;margin:20px 0;overflow:hidden}
+.progress-fill{background:#6366f1;height:100%;width:0%}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1;display:block;margin-bottom:10px">Home</a>
+<div class="container">
+<h1>Habit Tracker</h1>
+<div class="streak"><span id="streak" class="streak-count">0</span> day streak 🔥</div>
+<input type="text" id="habitName" placeholder="What habit are you building?">
+<input type="text" id="habitDate" placeholder="YYYY-MM-DD (optional)">
+<div>
+<input type="checkbox" id="daily" checked> Daily habit
+<label for="daily" style="margin-left:10px">or</label>
+<input type="checkbox" id="weekly" checked> Weekly habit
+</div>
+<button onclick="addHabit()">Add Habit</button>
+<div id="habitsList" style="margin-top:20px"></div>
+<div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+<button onclick="resetStreak()">Reset Streak</button>
+</div>
+<script>
+let streak=0;
+const today=new Date().toISOString().split('T')[0];
+function addHabit(){
+const name=document.getElementById('habitName').value;
+const date=document.getElementById('habitDate').value;
+const daily=document.getElementById('daily').checked;
+const weekly=document.getElementById('weekly').checked;
+if(!name)return alert('Enter habit name!');
+const habits=JSON.parse(localStorage.getItem('habits')||'[]');
+const newHabit={id:Date.now(),name,date,daily,weekly,done:false};
+habits.push(newHabit);
+localStorage.setItem('habits',JSON.stringify(habits));
+renderHabits();
+document.getElementById('habitName').value='';
+document.getElementById('habitDate').value='';
+}
+function renderHabits(){
+const habits=JSON.parse(localStorage.getItem('habits')||'[]');
+const list=document.getElementById('habitsList');
+let html='';
+habits.forEach(h=>{
+const dateDisplay=h.date||today;
+html+=`<div style="background:#1a1a1a;padding:10px;border-radius:6px;margin:5px 0;display:flex;align-items:center;gap:10px"><input type="checkbox" onchange="toggleHabit(${h.id})" checked>${h.name}</div>`;
+});
+list.innerHTML=html;
+updateProgress(habits.length);
+}
+function toggleHabit(id){
+const habits=JSON.parse(localStorage.getItem('habits')||'[]');
+const h=habits.find(x=>x.id===id);
+h.done=!h.done;
+localStorage.setItem('habits',JSON.stringify(habits));
+renderHabits();
+}
+function updateProgress(total){
+if(total===0)return;
+const habits=JSON.parse(localStorage.getItem('habits')||'[]');
+const todayHabits=habits.filter(h=>h.done&&((h.daily===true&&h.date===today)||(h.weekly===true&&isWeekDone(h.date)))).length;
+const progress=(todayHabits/total)*100;
+document.getElementById('progressFill').style.width=progress+'%';
+}
+function isWeekDone(date){
+const d=new Date(date);
+const day=d.getDay();
+return day===1||day===4;
+}
+function resetStreak(){
+streak=0;
+localStorage.setItem('streak',0);
+document.getElementById('streak').innerText=0;
+}
+renderHabits();
+document.getElementById('streak').innerText=streak;
+document.getElementById('streak').innerText=localStorage.getItem('streak')||0;
+</script>
+</body>
+</html>
