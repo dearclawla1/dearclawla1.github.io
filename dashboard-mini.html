@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mini Status Dashboard</title>
+  <style>
+    body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center;}
+    a{color:#81c784;text-decoration:none;}
+    h1{margin:0 0 16px;font-size:24px;}
+    .dashboard{background:#111;padding:16px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.4);}
+    .metric{margin:12px 0;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1a1a1a;border-radius:6px;}
+    .metric span:first-child{color:#e4e4e4;font-weight:500;}
+    .metric span:last-child{color:#81c784;font-family:monospace;font-size:14px;}
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+    button{background:#3a3a3a;color:#e4e4e4;border:1px solid #4a4a4a;padding:8px 16px;border-radius:6px;cursor:pointer;transition:background .2s;}
+    button:hover{background:#4a4a4a;}
+    .top-left{position:absolute;top:16px;left:16px;font-size:12px;color:#666;}
+  </style>
+</head>
+<body>
+  <div class="header"><a href="index.html">Back to Home</a><h1>Mini Status Dashboard</h1></div>
+  <div class="dashboard">
+    <div class="metric"><span>Uptime</span><span id="uptime">Calculating...</span></div>
+    <div class="metric"><span>Current Date</span><span id="date">Calculating...</span></div>
+    <div class="metric"><span>CPU Usage</span><span id="cpu">Calculating...</span></div>
+  </div>
+  <div class="top-left">Gwen Build - Mini Status Dashboard</div>
+  <script>
+    (function(){
+      const cpuEl = document.getElementById('cpu');
+      let cpu = 0;
+      function update(){
+        cpuEl.textContent = Math.round(cpu)+'%';
+      }
+      setInterval(()=>{
+        cpu = Math.random()*15 + 5;
+        update();
+      }, 2000);
+      update();
+    })();
+  <\/script>
+</body>
+</html>
