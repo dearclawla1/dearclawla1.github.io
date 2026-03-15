@@ -1,50 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Regex Tester</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
-a{color:#8b5cf6;}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;padding:20px;margin:0;}
+a{color:#4caf50;}
 .container{max-width:800px;margin:0 auto;}
-h1{font-size:1.5em;margin-bottom:20px;}
-input,button,select{padding:10px;width:100%;margin:10px 0;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;}
-textarea{width:100%;min-height:100px;margin:10px 0;padding:10px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;border-radius:4px;}
-button:hover{background:#333;}
-#output{background:#1a1a1a;padding:15px;border-radius:4px;margin:10px 0;}
-.match{background:#2d5a2d;color:#8f8;}
+h1{margin:0 0 15px;}
+input,select{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:8px;border-radius:4px;width:100%;box-sizing:border-box;}
+button{background:#2196f3;color:#fff;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;margin:5px 0;}
+button:hover{background:#1976f2;}
+textarea{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;border-radius:4px;width:100%;box-sizing:border-box;min-height:100px;resize:vertical;}
+.result{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;min-height:50px;}
+.match{background:#2e7d32;color:#fff;padding:3px 8px;border-radius:3px;display:inline-block;margin:3px;}
 </style>
 </head>
 <body>
 <a href="index.html">Home</a>
 <div class="container">
 <h1>Regex Tester</h1>
-<label>Pattern:</label>
-<input type="text" id="pattern" placeholder="e.g., \d+">
-<label>Test String:</label>
-<textarea id="testString" placeholder="Enter text to test">Hello World 12345</textarea>
-<button onclick="testRegex()">Test Regex</button>
+<input id="regex" placeholder="Enter regex pattern (e.g., \d+)">
+<br><br>
+<textarea id="text" placeholder="Enter text to test against"></textarea>
+<br><br>
+<button onclick="test()">Test</button>
 <button onclick="clearAll()">Clear</button>
-<div id="output"></div>
+<div id="result" class="result">Enter pattern and text, then click Test</div>
 </div>
 <script>
-function testRegex() {
-    const pattern = escapeRegex(document.getElementById('pattern').value);
-    const text = document.getElementById('testString').value;
-    const output = document.getElementById('output');
-    if (!pattern) { output.innerHTML = 'Enter a pattern first!'; return; }
-    try {
-        const regex = new RegExp(pattern);
-        const match = text.match(regex);
-        const matches = text.match(new RegExp(pattern, 'g')) || [];
-        output.innerHTML = 'Pattern: ' + pattern + '<br>Found: ' + (match ? match[0] : 'No match') + '<br>Matches: ' + matches.join(', ') + '<br>' + text.replace(new RegExp(pattern, 'g'), '<span class="match">~~~</span>');
-    } catch (e) { output.innerHTML = 'Invalid regex: ' + e.message; }
+function test() {
+const regex = document.getElementById('regex').value;
+const text = document.getElementById('text').value;
+const result = document.getElementById('result');
+if(!regex || !text) {result.innerHTML = '⚠️ Please enter both regex pattern and text.';return;}
+try {
+const re = new RegExp(regex);
+const matches = text.matchAll(re).map(m => m[0]);
+if(matches.length === 0) {
+result.innerHTML = '<span style="color:#ff9800">✅ No matches found</span>';
+} else {
+result.innerHTML = '<span style="color:#4caf50">✅ Found ' + matches.length + ' match(es)</span><br>';
+matches.forEach(m => result.innerHTML += '<span class="match">' + m + '</span>');
 }
-function escapeRegex(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+} catch(e) {
+result.innerHTML = '<span style="color:#f44336">❌ Invalid regex: ' + e.message + '</span>';
+}
+}
 function clearAll() {
-    document.getElementById('pattern').value = '';
-    document.getElementById('testString').value = 'Hello World 12345';
-    document.getElementById('output').innerHTML = '';
+document.getElementById('regex').value = '';
+document.getElementById('text').value = '';
+document.getElementById('result').innerHTML = 'Enter pattern and text, then click Test';
 }
 </script>
 </body>
