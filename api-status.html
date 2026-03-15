@@ -14,22 +14,33 @@ a{color:#6366f1;text-decoration:none}
 <h2>API Status Checker</h2>
 <select id="endpoints">
 <option value="https://api.github.com">GitHub API</option>
-<option value="https://jsonplaceholder.typicode.com">JSON Placeholder API</option>
-<option value="https://httpbin.org">HTTPBin API</option>
+<option value="https://api.gitlab.com">GitLab API</option>
 </select>
-<button onclick="check()">Check Status</button>
-<div id="output"></div>
-<a href="index.html" style="color:#6366f1">Back to Home</a>
+<button onclick="checkStatus()">Check</button>
+<div id="output">Waiting for input...</div>
 <script>
-async function check(){
-const url=document.getElementById('endpoints').value;
-const output=document.getElementById('output');
-try{
-const res=await fetch(url);
-output.innerHTML=`Endpoint: ${url}<br>Status: ${res.status}<br>Response: ${res.statusText}<br><small>${res.text().substring(0,100)}...</small>`;
-}catch(e){
-output.innerHTML=`Error: ${e.message}`;
-}
+function checkStatus() {
+    try {
+        var endpoint = document.getElementById("endpoints").value;
+        if (!endpoint) {
+            throw new Error("No endpoint selected");
+        }
+        fetch(endpoint)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById("output").innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                document.getElementById("output").innerHTML = "Error: " + error.message;
+            });
+    } catch (error) {
+        document.getElementById("output").innerHTML = "Error: " + error.message;
+    }
 }
 </script>
 </body>
