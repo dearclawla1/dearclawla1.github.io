@@ -13,243 +13,161 @@ h1 { font-size: 1.8rem; color: #6366f1; margin-bottom: 0.5rem; }
 .back-link { display: inline-block; color: #6366f1; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.5rem; }
 .back-link:hover { text-decoration: underline; }
 .panel { background: #1a1a20; border: 1px solid #2d2d35; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; }
-label { display: block; margin-bottom: 0.4rem; color: #ccc; font-size: 0.9rem; }
-input, textarea, select { width: 100%; padding: 0.7rem; border: 1px solid #3d3d45; border-radius: 6px; background: #25252e; color: #e4e4e4; font-size: 1rem; }
-input:focus, textarea:focus, select:focus { outline: none; border-color: #6366f1; }
-input::placeholder, textarea::placeholder { color: #666; }
-textarea { resize: vertical; min-height: 100px; }
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.8rem 1.5rem; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
-.btn-primary { background: #6366f1; color: #fff; }
-.btn-primary:hover { background: #5558e6; }
-.btn-danger { background: #ef4444; color: #fff; }
-.btn-danger:hover { background: #dc2626; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.input-group { margin-bottom: 1.2rem; }
-.input-group:last-child { margin-bottom: 0; }
-.error-message { color: #ef4444; font-size: 0.85rem; margin-top: 0.4rem; min-height: 1.2rem; }
-.loading-spinner { display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.success-message { color: #10b981; font-size: 0.85rem; margin-top: 0.4rem; min-height: 1.2rem; }
+input, textarea { width: 100%; padding: 0.75rem; background: #0f0f12; border: 1px solid #2d2d35; border-radius: 4px; color: #e4e4e4; font-size: 1rem; outline: none; }
+input:focus, textarea:focus { border-color: #6366f1; }
+input[disabled], textarea[disabled] { opacity: 0.6; cursor: not-allowed; }
+button { padding: 0.75rem 1.5rem; background: #6366f1; border: none; border-radius: 4px; color: #fff; font-size: 1rem; cursor: pointer; margin-top: 0.5rem; }
+button:hover { background: #5558d6; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+button.action { background: #10b981; }
+button.action:hover { background: #0d966f; }
+.button-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+button.reset { background: #f59e0b; }
+button.reset:hover { background: #d97706; }
+#output { background: #1a1a20; border: 1px solid #2d2d35; border-radius: 4px; min-height: 100px; white-space: pre-wrap; font-family: monospace; font-size: 0.9rem; padding: 1rem; margin-top: 1rem; }
+#output:empty { display: none; }
+.loading { opacity: 0.6; pointer-events: none; }
+.loading::after { content: ' ⏳ Loading...'; display: block; margin-top: 0.5rem; color: #6366f1; }
+.error { background: #7f1d1d; border-color: #b91c1c; }
+.success { background: #064e3b; border-color: #059669; }
+.panel-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
 </style>
 </head>
 <body>
 <div class="container">
 <header>
-<a href=".." class="back-link">← Back to Dashboard</a>
+<a href="brain.html" class="back-link">← Back to Brain</a>
 <h1>AI Workflow Builder</h1>
 </header>
 
+<div class="panel-group">
 <div class="panel">
-<h2>Create New Workflow</h2>
-<form id="workflowForm" onsubmit="saveWorkflow(event)">
-<div class="input-group">
-<label for="name">Workflow Name</label>
-<input type="text" id="name" name="name" placeholder="e.g., Document Classifier" required>
-<div class="error-message" id="nameError"></div>
+<h2>Input Configuration</h2>
+<div style="margin-top: 0.5rem;">
+<label for="prompt">Prompt:</label>
+<textarea id="prompt" placeholder="Enter your AI prompt or question..." rows="3"></textarea>
+</div>
+<div style="margin-top: 1rem;">
+<button id="generateBtn">Generate Workflow</button>
+<button id="resetBtn" class="reset">Reset</button>
+</div>
+<div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+<label><input type="checkbox" id="streamCheckbox"> Stream output</label>
+<label><input type="checkbox" id="verboseCheckbox" checked> Verbose</label>
+<label><input type="checkbox" id="elevatedCheckbox"> Elevated</label>
+</div>
 </div>
 
-<div class="input-group">
-<label for="description">Description</label>
-<textarea id="description" name="description" placeholder="Describe what this workflow does..." required></textarea>
-<div class="error-message" id="descriptionError"></div>
+<div class="panel">
+<h2>Output</h2>
+<div id="output"></div>
 </div>
 
-<div class="input-group">
-<label for="model">AI Model</label>
-<select id="model" name="model" required>
-<option value="">Select a model</option>
-<option value="llama-3.2">Llama 3.2 (8B)</option>
-<option value="mistral-7b">Mistral 7B</option>
-<option value="gemma-7b">Gemma 7B</option>
-<option value="phi-3">Phi-3 Mini</option>
+<div class="panel">
+<h2>Settings</h2>
+<div style="margin-top: 0.5rem;">
+<div style="margin-bottom: 0.5rem;">
+<label for="modelSelect">Model:</label>
+<select id="modelSelect" style="padding: 0.75rem; width: 100%; background: #0f0f12; border: 1px solid #2d2d35; border-radius: 4px; color: #e4e4e4; font-size: 1rem;">
+<option value="default">Default</option>
 </select>
-<div class="error-message" id="modelError"></div>
 </div>
-
-<div class="input-group">
-<label for="prompt">System Prompt</label>
-<textarea id="prompt" name="prompt" placeholder="You are a helpful assistant..." required></textarea>
-<div class="error-message" id="promptError"></div>
 </div>
-
-<div class="input-group">
-<label for="parameters">Parameters (JSON)</label>
-<textarea id="parameters" name="parameters" placeholder='{"temperature": 0.7, "max_tokens": 512}' required></textarea>
-<div class="error-message" id="parametersError"></div>
+<div style="margin-top: 1rem;">
+<label><input type="checkbox" id="threadCheckbox" checked> Thread-bound</label>
 </div>
-
-<button type="submit" class="btn btn-primary" id="saveBtn">
-<span class="btn-text">Save Workflow</span>
-</button>
-<div id="statusMessage"></div>
-</form>
-</div>
-
-<div class="panel">
-<h2>Workflow Gallery</h2>
-<div id="gallery" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:1rem; margin-top:1rem;">
-<!-- Workflows will be loaded here -->
 </div>
 </div>
 </div>
 
 <script>
-let workflows = [];
+const outputEl = document.getElementById('output');
+const promptEl = document.getElementById('prompt');
+const generateBtn = document.getElementById('generateBtn');
+const resetBtn = document.getElementById('resetBtn');
+const modelSelect = document.getElementById('modelSelect');
+const streamCheckbox = document.getElementById('streamCheckbox');
+const verboseCheckbox = document.getElementById('verboseCheckbox');
+const elevatedCheckbox = document.getElementById('elevatedCheckbox');
+const threadCheckbox = document.getElementById('threadCheckbox');
 
-async function loadWorkflows() {
-const gallery = document.getElementById('gallery');
-if (workflows.length === 0) {
-gallery.innerHTML = '<p style="color:#666;">No workflows yet. Create one above!</p>';
-return;
-}
-gallery.innerHTML = workflows.map(w => `
-<div class="workflow-card" style="background:#25252e;border:1px solid #3d3d45;border-radius:8px;padding:1rem;">
-<div style="font-weight:600;color:#6366f1;margin-bottom:0.5rem;">${escapeHtml(w.name)}</div>
-<div style="color:#999;font-size:0.85rem;margin-bottom:0.5rem;">${escapeHtml(w.description.substring(0, 80))}${w.description.length > 80 ? '...' : ''}</div>
-<div style="font-size:0.8rem;color:#666;">${w.model || 'No model'}</div>
-<button style="margin-top:0.8rem;width:100%;padding:0.5rem;border:none;border-radius:4px;background:#3d3d45;color:#e4e4e4;cursor:pointer;" onclick="editWorkflow('${w.id}')">Edit</button>
-<button style="margin-top:0.4rem;width:100%;padding:0.4rem;border:none;border-radius:4px;background:#ef4444;color:#fff;cursor:pointer;" onclick="deleteWorkflow('${w.id}')">Delete</button>
-</div>
-`).join('');
-}
+let isLoading = false;
 
-function escapeHtml(text) {
-const div = document.createElement('div');
-div.textContent = text;
-return div.innerHTML;
+function updateLoadingState() {
+    if (isLoading) {
+        generateBtn.classList.add('loading');
+        generateBtn.disabled = true;
+    } else {
+        generateBtn.classList.remove('loading');
+        generateBtn.disabled = false;
+    }
 }
 
-async function saveWorkflow(event) {
-event.preventDefault();
-const btn = document.getElementById('saveBtn');
-const btnText = btn.querySelector('.btn-text');
-const statusMsg = document.getElementById('statusMessage');
-const form = event.target;
+async function generateWorkflow() {
+    if (!promptEl.value.trim()) {
+        outputEl.textContent = 'Error: Please enter a prompt first.';
+        outputEl.classList.add('error');
+        return;
+    }
 
-// Reset errors
-[
-{id: 'name', el: document.getElementById('nameError')},
-{id: 'description', el: document.getElementById('descriptionError')},
-{id: 'model', el: document.getElementById('modelError')},
-{id: 'prompt', el: document.getElementById('promptError')},
-{id: 'parameters', el: document.getElementById('parametersError')}
-].forEach(({id, el}) => {
-el.textContent = '';
-el.className = 'error-message';
+    isLoading = true;
+    updateLoadingState();
+    outputEl.textContent = '';
+    outputEl.classList.remove('error', 'success');
+
+    try {
+        const response = await fetch('/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: promptEl.value.trim(),
+                model: modelSelect.value,
+                stream: streamCheckbox.checked,
+                verbose: verboseCheckbox.checked,
+                elevated: elevatedCheckbox.checked,
+                thread: threadCheckbox.checked
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Generation failed');
+        }
+
+        const data = await response.json();
+        outputEl.textContent = data.message || JSON.stringify(data);
+        outputEl.classList.add('success');
+
+    } catch (error) {
+        outputEl.textContent = 'Error: ' + error.message;
+        outputEl.classList.add('error');
+    } finally {
+        isLoading = false;
+        updateLoadingState();
+    }
+}
+
+function resetForm() {
+    promptEl.value = '';
+    outputEl.textContent = '';
+    outputEl.classList.remove('error', 'success');
+}
+
+generateBtn.addEventListener('click', generateWorkflow);
+resetBtn.addEventListener('click', resetForm);
+
+// Allow Enter key to submit (only if focused on prompt)
+promptEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        generateWorkflow();
+    }
 });
 
-let isValid = true;
-
-// Validate name
-const name = form.name.value.trim();
-if (!name) {
-document.getElementById('nameError').textContent = 'Name is required';
-document.getElementById('nameError').className = 'error-message';
-isValid = false;
-}
-
-// Validate description
-const description = form.description.value.trim();
-if (!description) {
-document.getElementById('descriptionError').textContent = 'Description is required';
-document.getElementById('descriptionError').className = 'error-message';
-isValid = false;
-}
-
-// Validate model
-const model = form.model.value;
-if (!model) {
-document.getElementById('modelError').textContent = 'Select a model';
-document.getElementById('modelError').className = 'error-message';
-isValid = false;
-}
-
-// Validate prompt
-const prompt = form.prompt.value.trim();
-if (!prompt) {
-document.getElementById('promptError').textContent = 'System prompt is required';
-document.getElementById('promptError').className = 'error-message';
-isValid = false;
-}
-
-// Validate parameters (try JSON parse)
-try {
-const params = JSON.parse(form.parameters.value);
-if (typeof params.temperature !== 'number' || isNaN(params.temperature)) {
-throw new Error('temperature must be a number');
-}
-if (params.temperature < 0 || params.temperature > 1) {
-throw new Error('temperature must be between 0 and 1');
-}
-} catch (e) {
-document.getElementById('parametersError').textContent = e.message || 'Invalid JSON';
-document.getElementById('parametersError').className = 'error-message';
-isValid = false;
-}
-
-if (!isValid) {
-return;
-}
-
-// Show loading
-btn.disabled = true;
-btnText.innerHTML = '<span class="loading-spinner"></span> Saving...';
-statusMsg.textContent = '';
-
-// Simulate API call (replace with actual fetch)
-await new Promise(r => setTimeout(r, 800));
-
-const workflow = {
-id: Date.now().toString(),
-name,
-description,
-model,
-prompt,
-parameters: form.parameters.value,
-createdAt: new Date().toISOString()
-};
-
-workflows.unshift(workflow);
-loadWorkflows();
-
-// Success state
-btnText.textContent = 'Saved!';
-statusMsg.textContent = 'Workflow created successfully!';
-statusMsg.className = 'success-message';
-statusMsg.style.display = 'block';
-
-// Reset form
-form.reset();
-
-// Disable save button for 3 seconds
-setTimeout(() => {
-btn.disabled = false;
-btnText.textContent = 'Save Workflow';
-statusMsg.style.display = 'none';
-}, 3000);
-}
-
-async function editWorkflow(id) {
-// TODO: Implement edit functionality
-alert('Edit workflow not yet implemented');
-}
-
-async function deleteWorkflow(id) {
-if (!confirm('Delete this workflow?')) return;
-workflows = workflows.filter(w => w.id !== id);
-loadWorkflows();
-}
-
-// Load workflows on init
-loadWorkflows();
-
-// Clear errors on input
-const inputs = document.querySelectorAll('input, textarea');
-inputs.forEach(input => {
-input.addEventListener('input', (e) => {
-const errorMsg = document.getElementById(e.name + 'Error');
-if (errorMsg) errorMsg.textContent = '';
-});
+// Handle Ctrl/Cmd+Enter
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        generateWorkflow();
+    }
 });
 </script>
 </body>
