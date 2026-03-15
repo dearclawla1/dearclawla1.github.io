@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0a0a0a;color:#e4e4e4;font-family:monospace">
+<head><meta charset="utf-8"><title>Google Link Generator</title></head>
+<body>
+<h1 style="color:#6366f1">Google Link Generator</h1>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<input type="text" id="type" placeholder="Type: docs, sheets, or slides" style="padding:8px;border:1px solid #333">
+<input type="text" id="name" placeholder="Name (e.g. My Document)" style="padding:8px;border:1px solid #333">
+<button onclick="generate()" style="padding:8px 16px;background:#6366f1;color:#0a0a0a;border:none;cursor:pointer">Generate</button>
+</div>
+<div id="output" style="margin-top:15px;padding:10px;background:#1a1a1a;border:1px solid #333"></div>
+<div style="margin-top:10px"><a href="index.html" style="color:#6366f1">Back to Home</a></div>
+<script>
+function generate() {
+const type = document.getElementById('type').value.toLowerCase().trim();
+const name = document.getElementById('name').value.trim();
+const output = document.getElementById('output');
+if (!type || !name) {
+output.textContent = 'Error: Please enter both type and name.';
+return;
+}
+let link = '';
+if (type === 'docs') link = 'https://docs.google.com/document/d/1';
+else if (type === 'sheets') link = 'https://docs.google.com/spreadsheets/d/1';
+else if (type === 'slides') link = 'https://docs.google.com/presentation/d/1';
+else {
+output.textContent = 'Error: Type must be docs, sheets, or slides.';
+return;
+}
+const encoded = encodeURIComponent(name);
+link += encoded;
+output.innerHTML = `<strong>Link:</strong> <a href="${link}" target="_blank">${link}</a>`;
+}
+</script>
+</body>
+</html>

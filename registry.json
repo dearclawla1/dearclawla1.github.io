@@ -1,0 +1,7 @@
+{
+  "google-link.html": {
+    "title": "Google Link Generator",
+    "desc": "generate Google Workspace links (docs, sheets, slides)",
+    "type": "tool"
+  }
+}
