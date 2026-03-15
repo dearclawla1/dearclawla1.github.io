@@ -2,67 +2,47 @@
 <html>
 <head>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0}
-.container{max-width:600px;margin:40px auto;padding:20px}
-h1{color:#6366f1;margin-bottom:20px}
-a{color:#6366f1;font-size:12px}
-input{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;width:100%;border-radius:4px;margin-bottom:10px;font-size:14px}
-h2{margin:30px 0 15px;color:#949494;font-size:18px}
-h3{margin:20px 0 10px;color:#a4a4a4;font-size:16px}
-.save-btn{background:#6366f1;color:#fff;border:none;padding:12px 24px;border-radius:4px;cursor:pointer;font-size:14px;margin-bottom:20px}
-.save-btn:hover{background:#5558f5}
-h2 label{margin-left:10px;font-weight:normal;color:#b4b4b4}
-h2 label input{margin:0;background:transparent;border:none;color:#e4e4e4;cursor:pointer}
-.stats{background:#151515;padding:15px;border-radius:4px;margin-top:30px}
-.stats h3{margin:0 0 10px}
-.stats div{display:flex;justify-content:space-between;margin:8px 0;border-bottom:1px solid #2a2a2a;padding-bottom:5px}
-.stats div span{color:#949494}
-.stats div div strong{color:#6366f1}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px;}
+.container{max-width:600px;margin:0 auto;}
+h1{text-align:center;color:#6366f1;margin-bottom:20px;}
+.stats{background:#1a1a1a;padding:15px;border-radius:8px;margin-bottom:20px;text-align:center;}
+.stats span{display:inline-block;margin:0 10px;}
+h3{color:#e4e4e4;margin:15px 0 10px;font-size:14px;text-transform:uppercase;}
+.check-item{background:#1a1a1a;padding:12px;border-radius:6px;margin:8px 0;display:flex;align-items:center;}
+.checkbox{width:20px;height:20px;margin-right:10px;accent-color:#6366f1;}
+label{cursor:pointer;}
+.back-link{text-align:center;display:block;margin:20px 0;}
+.back-link a{color:#6366f1;text-decoration:none;}
 </style>
 </head>
 <body>
 <div class="container">
-<a href="index.html" style="color:#6366f1">Home</a>
+<a href="index.html" class="back-link">< Home</a>
 <h1>Habit Tracker</h1>
+<div class="stats">
+<span>Streak: <b id="streak">0</b> days</span>
+<span>Total Done: <b id="total">0</b></span>
+<span>Completion: <b id="percent">0</b>%</span>
+</div>
+<h3>Your Daily Habits</h3>
 <div id="habits"></div>
-<button class="save-btn" onclick="save()">Save Changes</button>
-<div class="stats" id="stats" style="display:none"></div>
+<div class="stats">
+<button onclick="resetTrainer()" style="background:#6366f1;border:none;padding:8px 16px;border-radius:4px;color:#fff;cursor:pointer;">Reset Tracker</button>
+</div>
 </div>
 <script>
-let habits=[],count=0,total=0;
-function renderHabits() {
-const container=document.getElementById("habits"),div=habits.map(h=>
-`<div style="margin:10px 0;padding:10px;background:#151515;border-radius:4px;border-left:3px solid #6366f1">
-<strong>${h.name}</strong>
-<h2 label>${count}${h.completed?'\u2713':'\u2716'}
-<input type="checkbox" ${h.completed?'':'checked'} ${h.target?`onclick="mark('${h.name}',${h.target})"`:''}
-${h.target?`target="${h.target}"`:''}></h2>
-</div>`
-).join(""),stats=habits.map(h=>
-`<div><span>${h.name}</span><div><span>Completed:</span><strong>${h.completed?count:0}</strong></div></div>`
-).join("");
-container.innerHTML=div;document.getElementById("stats").innerHTML=stats;
-document.getElementById("stats").style.display=habits.length>0?'block':'none';
-}
-function mark(name,el) {
-const target=parseFloat(el.target.split('#')[1]);
-if(habits.find(h=>h.name===name).completed)habits.find(h=>h.name===name).completed=false;
-else{habits.find(h=>h.name===name).completed=true;count++;total++;}
-renderHabits();
-}
-function save() {
-localStorage.setItem("habits",JSON.stringify(habits));
-alert("Habits saved!");
-}
-function load() {
-habits=JSON.parse(localStorage.getItem("habits")||"[]");
-count=0;total=0;
-const done=habits.filter(h=>h.completed);
-done.forEach(h=>{count++;if(h.target){total++;const el=document.querySelector(`[target="${h.target}"]`);
-if(el)el.checked=true;}});
-renderHabits();
-}
-load();
+const habits = ['Drink Water', 'Exercise', 'Read', 'Sleep Early', 'Meditate', 'Plan Day'];
+let done = new Set();
+let streak = 0;
+let lastDate = null;
+document.getElementById('habits').innerHTML = habits.map(h => `
+<div class="check-item">
+<input type="checkbox" class="checkbox" id="${h.toLowerCase().replace(/\s/g,'-')}" onchange="toggle('${h}')" ${done.has(h) ? 'checked' : ''}>
+<label for="${h.toLowerCase().replace(/\s/g,'-')}">${h}</label>
+</div>`).join('');
+function toggle(habit){done.has(habit) ? done.delete(habit) : done.add(habit);updateStats();}
+function updateStats(){let n=habits.length;document.getElementById('streak').textContent=streak;document.getElementById('total').textContent=done.size;document.getElementById('percent').textContent=Math.round(done.size/n*100);}
+function resetTrainer(){done.clear();streak=0;done=new Set();updateStats();}
 </script>
 </body>
 </html>
