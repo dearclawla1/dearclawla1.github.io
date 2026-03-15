@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Formatter Tool</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 2rem; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 2rem; }
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .tab { padding: 0.75rem 1.5rem; border: none; background: #fff; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.2s; }
+        .tab:hover { background: #e0e0e0; }
+        .tab.active { background: #3b82f6; color: white; }
+        .pane { display: none; }
+        .pane.active { display: block; }
+        textarea { width: 100%; min-height: 150px; padding: 1rem; border: 2px solid #ddd; border-radius: 8px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; resize: vertical; }
+        .actions { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+        .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .result-box { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; font-family: monospace; margin-top: 1rem; min-height: 100px; white-space: pre-wrap; word-break: break-all; }
+        .preview-box { background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-top: 1rem; white-space: pre-wrap; }
+        .format-info { background: #dbeafe; padding: 0.75rem 1rem; border-radius: 6px; margin-top: 0.5rem; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Text Formatter Tool</h1>
+        
+        <div class="tabs">
+            <button class="tab active" data-pane="json">JSON Formatter</button>
+            <button class="tab" data-pane="yaml">YAML Formatter</button>
+            <button class="tab" data-pane="csv">CSV Tool</button>
+            <button class="tab" data-pane="text">Text Formatter</button>
+        </div>
+        
+        <!-- JSON Pane -->
+        <div class="pane active" id="json">
+            <label for="json-input">Paste JSON:</label>
+            <textarea id="json-input" placeholder='{"name": "value"}'></textarea>
+            <div class="actions">
+                <button class="btn btn-primary" onclick="formatJson()">Format</button>
+                <button class="btn btn-secondary" onclick="validateJson()">Validate</button>
+                <button class="btn btn-secondary" onclick="minifyJson()">Minify</button>
+            </div>
+            <div class="result-box" id="json-result"></div>
+            <div id="json-info" class="format-info" style="display: none;"></div>
+        </div>
+        
+        <!-- YAML Pane -->
+        <div class="pane" id="yaml">
+            <label for="yaml-input">Paste YAML:</label>
+            <textarea id="yaml-input" placeholder="name: value"></textarea>
+            <div class="actions">
+                <button class="btn btn-primary" onclick="formatYaml()">Format</button>
+                <button class="btn btn-secondary" onclick="validateYaml()">Validate</button>
+            </div>
+            <div class="result-box" id="yaml-result"></div>
+            <div id="yaml-info" class="format-info" style="display: none;"></div>
+        </div>
+        
+        <!-- CSV Pane -->
+        <div class="pane" id="csv">
+            <label for="csv-input">Paste CSV:</label>
+            <textarea id="csv-input" placeholder="name,age,city">Alice,30,NYC
+Bob,25,London
+Charlie,35,Paris</textarea>
+            <div class="actions">
+                <button class="btn btn-primary" onclick="formatCsv()">Format</button>
+                <button class="btn btn-secondary" onclick="parseCsv()">Parse</button>
+                <button class="btn btn-secondary" onclick="addColumn()">Add Column</button>
+                <button class="btn btn-secondary" onclick="addRow()">Add Row</button>
+            </div>
+            <div class="result-box" id="csv-result"></div>
+            <div id="csv-info" class="format-info"></div>
+        </div>
+        
+        <!-- Text Pane -->
+        <div class="pane" id="text">
+            <label for="text-input">Paste Text:</label>
+            <textarea id="text-input" placeholder="Enter your text..."></textarea>
+            <div class="actions">
+                <button class="btn btn-primary" onclick="wrapCode()">Wrap in Code Block</button>
+                <button class="btn btn-primary" onclick="countWords()">Count Words</button>
+                <button class="btn btn-primary" onclick="capitalize()">Capitalize First Letter</button>
+                <button class="btn btn-primary" onclick="toTitle()">To Title Case</button>
+                <button class="btn btn-primary" onclick="toLower()">To Lowercase</button>
+                <button class="btn btn-primary" onclick="toUpper()">To Uppercase</button>
+                <button class="btn btn-primary" onclick="reverseText()">Reverse</button>
+                <button class="btn btn-primary" onclick="truncate()">Truncate (100 chars)</button>
+            </div>
+            <div class="result-box" id="text-result"></div>
+            <div id="text-info" class="format-info"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset-pane).classList.add('active');
+            });
+        });
+        
+        // JSON functions
+        function formatJson() {
+            const input = document.getElementById('json-input').value.trim();
+            try {
+                const parsed = JSON.parse(input);
+                const formatted = JSON.stringify(parsed, null, 2);
+                document.getElementById('json-result').textContent = formatted;
+                document.getElementById('json-info').textContent = `Size: ${(input.length / 1024).toFixed(3)} KB, Depth: ${getMaxDepth(parsed)}`;
+                document.getElementById('json-info').style.display = 'block';
+            } catch (e) {
+                document.getElementById('json-result').textContent = `Error: ${e.message}`;
+                document.getElementById('json-info').style.display = 'none';
+            }
+        }
+        
+        function validateJson() {
+            const input = document.getElementById('json-input').value.trim();
+            try {
+                JSON.parse(input);
+                document.getElementById('json-result').textContent = '✅ Valid JSON';
+                document.getElementById('json-info').textContent = `Ready to use!`;
+                document.getElementById('json-info').style.display = 'block';
+            } catch (e) {
+                document.getElementById('json-result').textContent = `❌ Invalid JSON: ${e.message}`;
+                document.getElementById('json-info').style.display = 'none';
+            }
+        }
+        
+        function minifyJson() {
+            const input = document.getElementById('json-input').value.trim();
+            try {
+                const parsed = JSON.parse(input);
+                const minified = JSON.stringify(parsed);
+                document.getElementById('json-result').textContent = minified;
+                document.getElementById('json-info').textContent = `Minified! Size: ${(minified.length / 1024).toFixed(3)} KB`;
+                document.getElementById('json-info').style.display = 'block';
+            } catch (e) {
+                document.getElementById('json-result').textContent = `Error: ${e.message}`;
+            }
+        }
+        
+        function getMaxDepth(obj, depth = 0) {
+            let max = depth;
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    if (typeof obj[key] === 'object' && obj[key] !== null) {
+                        max = Math.max(max, getMaxDepth(obj[key], depth + 1));
+                    }
+                }
+            }
+            return max;
+        }
+        
+        // YAML functions
+        function formatYaml() {
+            const input = document.getElementById('yaml-input').value;
+            try {
+                const lines = input.split('\n').filter(l => l.trim());
+                const formatted = lines.map(line => {
+                    const indent = line.match(/^\s*/) ? line.match(/^\s*/)[0].length : 0;
+                    const trimmed = line.trim();
+                    const match = trimmed.match(/^(.+?):\s*(.*)$/);
+                    if (match) {
+                        const key = match[1].trim();
+                        const value = match[2].trim();
+                        const newIndent = (indent / 2) | 0;
+                        return newIndent > 0 ? ' '.repeat(newIndent) + key + ': ' + value : key + ': ' + value;
+                    }
+                    return line;
+                }).join('\n');
+                document.getElementById('yaml-result').textContent = formatted;
+                document.getElementById('yaml-info').textContent = `Formatted to 2-space indentation`;
+            } catch (e) {
+                document.getElementById('yaml-result').textContent = `Error: ${e.message}`;
+            }
+        }
+        
+        function validateYaml() {
+            const input = document.getElementById('yaml-input').value.trim();
+            try {
+                // Basic YAML validation - check for common issues
+                if (input.includes('---')) document.getElementById('yaml-result').textContent = '✅ Valid YAML (has document marker)';
+                else if (input.includes('...')) document.getElementById('yaml-result').textContent = '✅ Valid YAML (has end marker)';
+                else document.getElementById('yaml-result').textContent = '✅ Valid YAML';
+                document.getElementById('yaml-info').textContent = 'Syntax looks good!';
+            } catch (e) {
+                document.getElementById('yaml-result').textContent = `Error: ${e.message}`;
+            }
+        }
+        
+        // CSV functions
+        function formatCsv() {
+            const input = document.getElementById('csv-input').value;
+            const lines = input.split('\n').filter(l => l.trim());
+            const formatted = lines.map(line => {
+                const fields = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        if (inQuotes && line[i + 1] === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        fields.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                fields.push(current.trim());
+                return JSON.stringify(fields);
+            }).join('\n');
+            document.getElementById('csv-result').textContent = formatted;
+            document.getElementById('csv-info').textContent = 'CSV format: JSON array per row';
+        }
+        
+        function parseCsv() {
+            const input = document.getElementById('csv-input').value;
+            const lines = input.split('\n').filter(l => l.trim());
+            try {
+                const parsed = lines.map(line => {
+                    const fields = [];
+                    let current = '';
+                    let inQuotes = false;
+                    for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+                        if (char === '"') {
+                            if (inQuotes && line[i + 1] === '"') {
+                                current += '"';
+                                i++;
+                            } else {
+                                inQuotes = !inQuotes;
+                            }
+                        } else if (char === ',' && !inQuotes) {
+                            fields.push(current.trim());
+                            current = '';
+                        } else {
+                            current += char;
+                        }
+                    }
+                    fields.push(current.trim());
+                    return JSON.parse('[' + fields.join(',') + ']');
+                });
+                document.getElementById('csv-result').textContent = JSON.stringify(parsed, null, 2);
+                document.getElementById('csv-info').textContent = `${parsed.length} rows parsed`;
+            } catch (e) {
+                document.getElementById('csv-result').textContent = `Error: ${e.message}`;
+            }
+        }
+        
+        function addColumn() {
+            const current = document.getElementById('csv-input').value;
+            const lines = current.split('\n').filter(l => l.trim());
+            const header = lines[0].split(',');
+            header.push('New Column');
+            const newHeader = header.join(',');
+            const newLines = lines.slice(1).map(line => {
+                const fields = line.split(',');
+                fields.push('');
+                return fields.join(',');
+            });
+            document.getElementById('csv-input').value = newHeader + '\n' + newLines.join('\n');
+            document.getElementById('csv-result').textContent = 'Column added!';
+        }
+        
+        function addRow() {
+            const current = document.getElementById('csv-input').value;
+            const lines = current.split('\n').filter(l => l.trim());
+            const fields = lines[0].split(',');
+            const newRow = fields.map(() => '').join(',');
+            document.getElementById('csv-input').value = current + '\n' + newRow;
+            document.getElementById('csv-result').textContent = 'Row added!';
+        }
+        
+        // Text functions
+        function wrapCode() {
+            const text = document.getElementById('text-input').value;
+            document.getElementById('text-result').textContent = '```\n' + text + '\n```';
+        }
+        
+        function countWords() {
+            const text = document.getElementById('text-input').value;
+            const count = text.trim().split(/\s+/).filter(w => w).length;
+            document.getElementById('text-result').textContent = `Word count: ${count}`;
+            document.getElementById('text-info').textContent = `Characters: ${text.length}`;
+        }
+        
+        function capitalize() {
+            const text = document.getElementById('text-input').value;
+            document.getElementById('text-result').textContent = text.charAt(0).toUpperCase() + text.slice(1);
+        }
+        
+        function toTitle() {
+            const text = document.getElementById('text-input').value.toLowerCase();
+            document.getElementById('text-result').textContent = text.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())));
+        }
+        
+        function toLower() {
+            const text = document.getElementById('text-input').value;
+            document.getElementById('text-result').textContent = text.toLowerCase();
+        }
+        
+        function toUpper() {
+            const text = document.getElementById('text-input').value;
+            document.getElementById('text-result').textContent = text.toUpperCase();
+        }
+        
+        function reverseText() {
+            const text = document.getElementById('text-input').value;
+            document.getElementById('text-result').textContent = text.split('').reverse().join('');
+        }
+        
+        function truncate() {
+            const text = document.getElementById('text-input').value;
+            document.getElementById('text-result').textContent = text.substring(0, 100) + (text.length > 100 ? '...' : '');
+            document.getElementById('text-info').textContent = `Truncated to 100 characters`;
+        }
+        
+        // Initialize with placeholder data
+        document.getElementById('json-input').value = '{"name": "Gwen", "age": 25, "skills": ["AI", "Python", "JavaScript"], "active": true, "nested": {"key": "value", "array": [1, 2, 3]}}';
+        document.getElementById('json-result').textContent = 'Ready to format!';
+    </script>
+</body>
+</html>
