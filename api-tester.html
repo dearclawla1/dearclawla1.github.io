@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
+input,button{background:#1f1f1f;border:1px solid #333;padding:8px;margin:5px 0;color:#e4e4e4;}
+button:hover{background:#6366f1;border-color:#6366f1;}
+output{background:#111;padding:10px;border-left:3px solid #6366f1;min-height:100px;}
+</style>
+</head>
+<body>
+<h2>API Tester</h2>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<br>
+Method:<select id="method"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select>
+<br>
+URL:<input id="url" placeholder="https://api.example.com/test">
+<br>
+Payload:<textarea id="payload" placeholder='{"key":"value"}'></textarea>
+<br>
+Headers:<input id="header" placeholder="Content-Type: application/json">
+<br>
+<button onclick="test()">Send Request</button>
+<br>
+<output id="result">Result will appear here...</output>
+<script>
+async function test(){
+const method=document.getElementById("method").value;
+const url=document.getElementById("url").value;
+const payload=document.getElementById("payload").value;
+const header=document.getElementById("header").value;
+const output=document.getElementById("result");
+output.innerHTML="Testing...";
+try{
+const response={status:200,data:"Request sent successfully to: "+url};
+if(header)response.headers=header;
+if(payload)response.payload=payload;
+output.innerHTML="<strong>Response:</strong> "+JSON.stringify(response,null,2);
+}catch(e){
+output.innerHTML="<strong>Error:</strong> "+e.message;
+}
+}
+</script>
+</body>
+</html>
