@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
 <meta charset='utf-8'>
@@ -10,178 +10,138 @@ a{color:#88cc88;text-decoration:none}
 a:hover{text-decoration:underline}
 h1{color:#aaa;margin:0 0 15px 0;font-size:1.5rem}
 .toolbar{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap}
-input,button{padding:8px 12px;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;font-size:13px;cursor:pointer;transition:all 0.2s}
+input,button{padding:10px 14px;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#e4e4e4;font-size:13px;cursor:pointer;transition:all 0.2s}
 button:hover{background:#252525;border-color:#444}
 button:active{transform:translateY(1px)}
 button:disabled{opacity:0.6;cursor:not-allowed}
-textarea{width:100%;min-height:120px;padding:8px;border:1px solid #333;border-radius:4px;background:#111;color:#e4e4e4;font-family:monospace;font-size:13px;resize:vertical}
-section{margin-top:15px;min-height:50px}
-label{display:block;margin:5px 0 5px 0;color:#888;font-size:0.9rem}
-.loading{opacity:0.7}
-.error{color:#cc6666}
-.success{color:#66cc66}
-#type{min-height:20px;padding:4px;background:#1a1a1a;border-radius:4px;border:1px solid #333}
-.placeholder{color:#666;font-style:italic}
-@media(max-width:480px){
-  body{padding:10px}
-  .toolbar{flex-direction:column;width:100%}
-  .toolbar button{width:100%}
-}
+textarea{width:100%;min-height:120px;padding:12px;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#e4e4e4;font-size:14px;font-family:monospace;resize:vertical}
+textarea:focus{outline:none;border-color:#4a9eff}
+input[type=number]{width:100%;padding:10px 12px;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#e4e4e4;font-size:13px}
+.result-container{margin-top:15px}
+.result-box{width:100%;min-height:100px;padding:12px;background:#1a1a1a;border:1px solid #333;border-radius:6px;font-size:13px;font-family:monospace;word-break:break-all;white-space:pre-wrap}
+.instructions{margin-top:15px;padding:12px;background:#1a1a1a;border-radius:6px;font-size:13px}
+.instructions h3{color:#4a9eff;margin-bottom:8px}
+.instructions ul{margin-left:20px}
+.instructions li{margin-bottom:6px}
+.loading{opacity:0.6}
+.error{color:#ff6b6b}
+.copy-btn{position:absolute;top:8px;right:8px;padding:6px 10px;font-size:12px;background:#3a9eff;border:none;border-radius:4px;color:#fff;cursor:pointer}
+.copy-btn:hover{background:#4aafff}
+@media(max-width:480px){body{max-width:100%;padding:10px}h1{font-size:1.3rem}input,button{padding:9px 12px;font-size:12px}textarea,input[type=number]{min-height:100px;font-size:13px}}
 </style>
 </head>
 <body>
-<a href='index.html'>Home</a>
-<h1>Base64 Encoder/Decoder</h1>
-<div class='toolbar'>
-<button onclick='encode()' id='encodeBtn'>Encode</button>
-<button onclick='decode()' id='decodeBtn'>Decode</button>
-<button onclick='clear()' id='clearBtn'>Clear</button>
-<button onclick='copyOutput()' id='copyBtn'>Copy Output</button>
+<h1>Base64 Tool</h1>
+<div class="toolbar">
+<button id=encode-btn>Encode to Base64</button>
+<button id=decode-btn>Decode from Base64</button>
+<button id=clear-btn class="btn-clear">Clear</button>
+<button id=load-btn class="btn-load">Load Sample</button>
+<button id=copy-result-btn class="copy-result" style="display:none">Copy Result</button>
 </div>
-<section><label>Input:</label><textarea id='input' placeholder='Enter text to encode/decode... Press Ctrl+Enter to submit (Encode/Decode)'></textarea></section>
-<section><label>Output:</label><textarea id='output' readonly placeholder='Result will appear here...'></textarea></section>
-<section><label>Type:</label><span id='type'>-</span></section>
+<textarea id=input-textarea placeholder="Enter text to encode or base64 string to decode..."></textarea>
+<div class="result-container"><div id=result class="result-box"></div></div>
+<div class="instructions">
+<h3>Instructions:</h3>
+<ul>
+<li><strong>Encode:</strong> Converts plain text to Base64</li>
+<li><strong>Decode:</strong> Converts Base64 back to plain text</li>
+<li><strong>Copy:</strong> Click Copy button to copy result to clipboard</li>
+<li><strong>Keyboard Shortcuts:</strong> Enter = submit, Esc = clear input</li>
+</ul>
+</div>
 <script>
-let currentMode='';
-const inputEl=document.getElementById('input');
-const outputEl=document.getElementById('output');
-const typeEl=document.getElementById('type');
-const encodeBtn=document.getElementById('encodeBtn');
-const decodeBtn=document.getElementById('decodeBtn');
+const input = document.getElementById('input-textarea');
+const result = document.getElementById('result');
+const encodeBtn = document.getElementById('encode-btn');
+const decodeBtn = document.getElementById('decode-btn');
+const clearBtn = document.getElementById('clear-btn');
+const loadBtn = document.getElementById('load-btn');
+const copyBtn = document.getElementById('copy-result-btn');
 
-function showLoading(element){
-  element.classList.add('loading');
-  setTimeout(()=>{element.classList.remove('loading');},800);
-}
-
-function showError(message){
-  typeEl.textContent=message;
-  typeEl.style.color='#cc6666';
-  setTimeout(()=>{if(typeEl.textContent===message){typeEl.style.color=''}});}
-
-function showType(){
-  const input = inputEl.value;
-  let type='-';
-  if(input.trim()===''){
-    inputEl.value='';
-    typeEl.textContent='-'
-    typeEl.style.color='#888';
+encodeBtn.addEventListener('click', () => {
+  input.classList.remove('error');
+  const text = input.value.trim();
+  if (!text) {
+    showError('Please enter some text to encode');
     return;
   }
-  try{
-    const encoded=btoa(input);
-    const decoded=atob(encoded);
-    if(encoded.length===decoded.length){
-      type='Valid Base64';
-    }else{
-      type='Mixed/Invalid';
-    }
-  }catch(e){
-    type='Invalid Base64';
-  }
-  typeEl.textContent=type;
-  typeEl.style.color='#88cc88';
-}
-
-function validateBase64(str){
-  try{
-    atob(str);
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
-function encode(){
-  const input=inputEl.value;
-  if(input.trim()===''){
-    showError('Please enter some text');
-    return;
-  }
-  try{
-    const encoded=btoa(input);
-    outputEl.value=encoded;
-    showLoading(outputEl);
-    showType();
-    typeEl.textContent='Base64 Encoded: '+encoded.length+' characters';
-  }catch(e){
-    showError('Encoding failed: Invalid input for Base64 encoding');
-  }
-  inputEl.focus();
-}
-
-function decode(){
-  const input=inputEl.value;
-  if(input.trim()===''){
-    showError('Please enter some Base64 text');
-    return;
-  }
-  try{
-    const decoded=atob(input);
-    outputEl.value=decoded;
-    showLoading(outputEl);
-    showType();
-    typeEl.textContent='Base64 Decoded: '+decoded.length+' characters';
-  }catch(e){
-    showError('Decoding failed: Invalid Base64 input');
-  }
-  inputEl.focus();
-}
-
-function clear(){
-  inputEl.value='';
-  outputEl.value='';
-  typeEl.textContent='-';
-  typeEl.style.color='#888';
-  inputEl.focus();
-}
-
-function copyOutput(){
-  const output=outputEl.value;
-  if(output.trim()===''){
-    showError('No output to copy');
-    return;
-  }
-  const textArea=document.createElement('textarea');
-  textArea.value=output;
-  document.body.appendChild(textArea);
-  textArea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textArea);
-  typeEl.textContent='Copied to clipboard!';
-  typeEl.style.color='#66cc66';
-  setTimeout(()=>{if(typeEl.textContent==='Copied to clipboard!'){typeEl.textContent='Output: '+output.length+' characters';typeEl.style.color='#88cc88';}},1500);
-}
-
-// Set up Ctrl+Enter to submit
-inputEl.addEventListener('keydown',function(e){
-  if(e.ctrlKey && e.key==='Enter'){
-    e.preventDefault();
-    if(currentMode==='encode'){
-      encode();
-    }else if(currentMode==='decode'){
-      decode();
-    }
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(text)));
+    showResult(encoded);
+  } catch (error) {
+    showError('Error: ' + error.message);
   }
 });
 
-// Mode toggle on button click
-encodeBtn.addEventListener('click',()=>{currentMode='encode';typeEl.textContent='Mode: Encode';});
-decodeBtn.addEventListener('click',()=>{currentMode='decode';typeEl.textContent='Mode: Decode';});
-
-// Auto-detect mode on focus
-inputEl.addEventListener('focus',()=>{
-  if(currentMode===''){
-    currentMode='auto';
-    typeEl.textContent='Mode: Auto';
+decodeBtn.addEventListener('click', () => {
+  input.classList.remove('error');
+  const base64 = input.value.trim();
+  if (!base64) {
+    showError('Please enter some base64 to decode');
+    return;
+  }
+  try {
+    const decoded = decodeURIComponent(escape(atob(base64)));
+    showResult(decoded);
+  } catch (error) {
+    showError('Invalid Base64: ' + error.message);
   }
 });
 
-// Show type on input change
-inputEl.oninput=showType;
+clearBtn.addEventListener('click', () => {
+  input.value = '';
+  result.textContent = '';
+  result.classList.remove('error');
+});
 
-// Initial state
-typeEl.style.color='#888';
+loadBtn.addEventListener('click', () => {
+  input.value = 'Hello, World!';
+  encodeBtn.click();
+});
+
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    if (input.value.trim()) {
+      const encoded = btoa(unescape(encodeURIComponent(input.value.trim())));
+      showResult(encoded);
+    }
+  } else if (e.key === 'Escape') {
+    input.value = '';
+    result.textContent = '';
+    result.classList.remove('error');
+  }
+});
+
+copyBtn.addEventListener('click', () => {
+  if (result.textContent) {
+    navigator.clipboard.writeText(result.textContent).then(() => {
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => copyBtn.textContent = 'Copy Result', 2000);
+    }).catch(err => {
+      showError('Failed to copy: ' + err.message);
+    });
+  }
+});
+
+function showResult(text) {
+  result.textContent = text;
+  result.classList.remove('error');
+  copyBtn.style.display = 'block';
+}
+
+function showError(message) {
+  result.textContent = message;
+  result.classList.add('error');
+  copyBtn.style.display = 'none';
+}
+
+// Enable keyboard shortcut
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.activeElement !== input) {
+    input.focus();
+  }
+});
 </script>
 </body>
 </html>
