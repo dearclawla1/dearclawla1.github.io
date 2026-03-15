@@ -1,51 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Regex Tester</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-h1{margin:0 0 15px;font-size:24px}.home{position:absolute;top:10px;right:15px;text-decoration:none;color:#888;font-size:14px}
-.container{max-width:800px;margin:0 auto}
-input,button{margin:5px 0;padding:10px;border-radius:5px;border:1px solid #333;width:100%}
-textarea{width:100%;min-height:100px;border-radius:5px;border:1px solid #333;font-family:monospace;font-size:13px}
-button{background:#2a2a2a;color:#e4e4e4;border:1px solid #4a4a4a;cursor:pointer}.btn-primary{background:#1a5a2a;border-color:#1a7a3a}.btn-secondary{background:#1a3a2a;border-color:#1a5a2a}
-.match{background-color:#2d5a2d;font-weight:bold}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
+a{color:#8ab4f8;text-decoration:none;}
+h1{margin:0 0 10px;font-size:1.5em;}
+input,button{padding:8px 12px;margin:5px 0;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;}
+input:focus{outline:2px solid #8ab4f8;}
+textarea{width:100%;height:80px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;border-radius:4px;font-family:monospace;}
+#result{background:#1a1a1a;padding:10px;border-radius:4px;margin-top:10px;white-space:pre-wrap;}
 </style>
 </head>
 <body>
-<a href="index.html" class="home">Home</a>
-<div class="container">
+<a href="index.html">Home</a>
 <h1>Regex Tester</h1>
-<textarea id="pattern" placeholder="Enter regex pattern..."></textarea>
-<textarea id="text" placeholder="Enter text to search..."></textarea>
-<div style="display:flex;gap:10px;margin:10px 0">
-<button class="btn-primary" onclick="test()">Test</button>
-<button class="btn-secondary" onclick="clearAll()">Clear</button>
-</div>
-<div id="flags" style="margin:10px 0;display:flex;gap:5px">
-<input type="checkbox" id="ignoreCase" value="i" checked onchange="updatePattern()">
-<label for="ignoreCase">IgnoreCase</label>
-<input type="checkbox" id="multiline" value="m" checked onchange="updatePattern()">
-<label for="multiline">Multiline</label>
-<input type="checkbox" id="dotAll" value="s" onchange="updatePattern()">
-<label for="dotAll">DotAll</label>
-</div>
-<div id="results"></div>
-</div>
+<input type="text" id="pattern" placeholder="Enter regex pattern">
+<input type="text" id="testString" placeholder="Enter test string">
+<button onclick="testRegex()">Test Match</button>
+<textarea id="input" placeholder="Enter text to test"></textarea>
+<button onclick="testRegex()">Test Input</button>
+<div id="result"></div>
 <script>
-function updatePattern(){let p=document.getElementById('pattern').value;
-return p+'?'+[document.getElementById('ignoreCase')?.value,document.getElementById('multiline')?.value,document.getElementById('dotAll')?.value].filter(Boolean).join('');}
-function test(){let pattern=document.getElementById('pattern').value,
-text=document.getElementById('text').value,flags=document.getElementById('pattern').value.match(/(?:i|g|m|s)$/);
-if(pattern)pattern=new RegExp(pattern.replace(/\?i$/,'').replace(/\?m$/,'').replace(/\?s$/,''),flags?.join('')||'');
-let div=document.getElementById('results');div.innerHTML='';if(!pattern){div.innerHTML='<div>No pattern provided</div>';return;}
-let matches=text.match(pattern);if(matches){div.innerHTML='<div>Found '+(Array.isArray(matches)?matches.length:1)+'</div>';
-matches.forEach((m,i)=>{let span=document.createElement('span');span.className='match';span.textContent=m;div.innerHTML+=span.outerHTML;});}else{div.innerHTML='<div>No matches found</div>';}}
-function clearAll(){document.getElementById('pattern').value='';document.getElementById('text').value='';
-document.getElementById('ignoreCase').checked=true;document.getElementById('multiline').checked=true;
-document.getElementById('dotAll').checked=false;document.getElementById('results').innerHTML='';}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',test);else test();
+function testRegex() {
+var pattern = document.getElementById('pattern').value;
+var testString = document.getElementById('testString').value || document.getElementById('input').value;
+var result = document.getElementById('result');
+if (!pattern) {
+result.textContent = 'Please enter a pattern';
+return;
+}
+try {
+var regex = new RegExp(pattern);
+var match = regex.exec(testString);
+result.textContent = match ? 'Match found: ' + match[0] : 'No match';
+} catch (e) {
+result.textContent = 'Invalid regex: ' + e.message;
+}
+}
 </script>
 </body>
 </html>
