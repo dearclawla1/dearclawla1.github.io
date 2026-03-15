@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Favicon Extractor</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px;font-family:system-ui,Segoe UI;background:#0a0a0a;color:#e4e4e4}
+.container{max-width:800px;margin:0 auto}
+h1{margin-bottom:20px}
+input,select,button{padding:10px;margin:5px 0;border:none;border-radius:4px;font-size:14px}
+input{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;width:100%}
+button{background:#6366f1;color:#fff;cursor:pointer;margin-right:5px}
+button:hover{background:#5558e6}
+#result{margin-top:20px;background:#1a1a1a;padding:15px;border-radius:4px}
+img{max-width:100%;margin-top:10px}
+a{display:block;margin-top:10px;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Favicon Extractor</h1>
+<input type="url" id="url" placeholder="Enter URL (e.g., https://example.com)">
+<select id="size"><option value="16">16x16</option><option value="32">32x32</option><option value="64">64x64</option><option value="128">128x128</option></select>
+<button onclick="extractFavicon()">Extract</button>
+<div id="result"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+</div>
+<script>
+async function extractFavicon() {
+const url = document.getElementById('url').value;
+const size = document.getElementById('size').value;
+const result = document.getElementById('result');
+if(!url) { result.innerHTML = '<span style="color:#ff6b6b">Please enter a URL</span>'; return; }
+try {
+const response = await fetch(url);
+const html = await response.text();
+const parser = new DOMParser();
+const doc = parser.parseFromString(html, 'text/html');
+const link = doc.querySelector('link[rel="icon"]') || doc.querySelector('link[rel="shortcut icon"]');
+if(link && link.href) {
+const img = new Image();
+img.onload = () => { result.innerHTML = `<img src="${link.href}" width="${size}" height="${size}">`; };
+img.onerror = () => { result.innerHTML = '<span style="color:#ff6b6b">Could not load favicon</span>'; };
+img.src = link.href;
+} else { result.innerHTML = '<span style="color:#ff6b6b">No favicon found</span>'; }
+} catch(e) { result.innerHTML = '<span style="color:#ff6b6b">Error: ' + e.message + '</span>'; }
+}
+</script>
+</body>
+</html>
