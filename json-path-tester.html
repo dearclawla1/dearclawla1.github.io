@@ -1,44 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>JSON Path Tester</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
-input,button,select{margin:5px 0;cursor:pointer;}
-#output{background:#1a1a1a;border:1px solid #333;padding:10px;min-height:100px;}
-a{color:#6366f1;text-decoration:none;}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;padding:20px}
+input,button,select{background:#1a1a1a;color:#e4e4e4;border:1px solid #6366f1;padding:8px;margin:5px 0;border-radius:4px}
+textarea{background:#1a1a1a;color:#e4e4e4;border:1px solid #6366f1;width:100%;height:150px;padding:8px;font-family:monospace}
+button{background:#6366f1;color:#0a0a0a;font-weight:bold;cursor:pointer}
+button:hover{background:#4f46e5}
+#output{background:#1a1a1a;padding:10px;border:1px solid #6366f1;min-height:50px;white-space:pre-wrap}
+a{color:#6366f1;text-decoration:none}
 </style>
 </head>
 <body>
-<h1>JSON Path Tester</h1>
-<textarea id="jsonInput" rows="5" cols="40">{"user":{"name":"John","age":30},"items":[1,2,3]}</textarea>
-<input type="text" id="pathInput" placeholder="Path (e.g., user.name)" value="user.name">
-<button onclick="testPath()">Test Path</button>
-<button onclick="reset()">Reset</button>
-<div id="output"></div>
-<a href="index.html" style="color:#6366f1">Back to Home</a>
+<a href="index.html" style="color:#6366f1">Back to Home</a><br><br>
+<h2>JSON Path Tester</h2>
+<textarea id="jsonInput"></textarea><br>
+<input type="text" id="pathInput" placeholder="Enter JSON path (e.g., $.store.banks[0].accounts[0].balance)">
+<button onclick="evaluatePath()">Test Path</button>
+<div id="output">Output will appear here...</div>
 <script>
-function testPath(){
-const json=document.getElementById('jsonInput').value;
-const path=document.getElementById('pathInput').value;
+function evaluatePath(){
+const json=document.getElementById('jsonInput').value.trim();
+const path=document.getElementById('pathInput').value.trim();
+const output=document.getElementById('output');
 try{
+if(!json)throw new Error("No JSON provided");
 const obj=JSON.parse(json);
-const parts=path.split('.');
-let result=obj;
-for(const p of parts){
-result=result[p];
-if(result===undefined)throw new Error('Path not found');
+if(!path)throw new Error("No path provided");
+const result=getPath(obj,path);
+if(result===undefined)output.textContent="Result: undefined (path not found)";
+else if(Array.isArray(result)){
+let str="Result (Array): [";
+result.forEach((r,i)=>str+=r+",".slice(0,-1));
+output.textContent="Result (Array): "+str.substring(0,str.length-1);
+}else{
+output.textContent="Result: "+JSON.stringify(result);
 }
-document.getElementById('output').innerText='Result: '+(typeof result==='object'?'{...}':JSON.stringify(result));
 }catch(e){
-document.getElementById('output').innerText='Error: '+e.message;
+output.textContent="Error: "+e.message;
 }
 }
-function reset(){
-document.getElementById('jsonInput').value='{"user":{"name":"John","age":30},"items":[1,2,3]}';
-document.getElementById('pathInput').value='user.name';
-document.getElementById('output').innerText='';
+function getPath(obj,path){
+let result=obj;
+const segments=path.split('.').filter(s=>s);
+for(let i=0;i<segments.length;i++){
+const seg=segments[i];
+if(!result)break;
+if(seg.startsWith('$')||seg.startsWith('['))throw new Error("Invalid path: "+path);
+if(seg.includes('[')){
+const parts=seg.match(/^(.+)\[(\d+)\]$/);
+if(!parts)throw new Error("Invalid path: "+path);
+result=result[parts[1]][parts[2]];
+}else{
+result=result[seg];
+}
+}
+return result;
 }
 </script>
 </body>
