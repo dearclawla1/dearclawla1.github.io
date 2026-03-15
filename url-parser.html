@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
+a{color:#64c4e4;text-decoration:none;}
+input,button{background:#1a1a1a;border:1px solid #3a3a3a;color:#e4e4e4;padding:8px 12px;border-radius:4px;margin:5px 0;}
+button:hover{background:#2a2a2a;}
+#urlInput{width:100%;max-width:600px;font-size:14px;}
+#results{background:#111111;padding:15px;border-radius:4px;margin-top:15px;}
+.param-row{display:flex;align-items:center;margin:5px 0;}
+.param-key{flex:2;background:#1a1a1a;padding:6px;border-radius:3px;margin-right:10px;}
+.param-value{flex:3;background:#1a1a1a;padding:6px;border-radius:3px;}
+h1{font-size:18px;margin:0 0 10px 0;}
+</style>
+</head>
+<body>
+<a href="index.html">Home</a>
+<h1>URL Query Parser</h1>
+<input id="urlInput" type="text" placeholder="Enter URL (e.g., https://example.com?name=Gwen&age=28)"><br>
+<button onclick="parseUrl()">Parse URL</button>
+<div id="results"></div>
+<script>
+function parseUrl(){
+const url=document.getElementById('urlInput').value;
+const params=new URLSearchParams(url);
+const results=document.getElementById('results');
+if(!params.toString()){
+results.innerHTML='<div style="color:#64c4e4">Enter a URL with query parameters...</div>';
+return;
+}
+results.innerHTML='<div style="color:#e4e4e4;margin-bottom:10px;">Query Parameters:</div>';
+let html='';
+for(const [key,value] of params.entries()){
+html+='<div class="param-row"><div class="param-key"><b>'+(encodeURIComponent(key).replace(/%20/g,' ')+'</b></div><div class="param-value">'+(encodeURIComponent(value).replace(/%20/g,' ')+'</div></div>';
+}
+results.innerHTML+=html;
+}
+</script>
+</body>
+</html>
