@@ -2,39 +2,67 @@
 <html>
 <head>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-.container{max-width:600px;margin:0 auto}
-h1{text-align:center;color:#6366f1}
-a{color:#6366f1}
-input[type="text"]{width:100%;padding:12px;margin:10px 0;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:6px;font-size:16px}
-button{padding:12px 24px;border:none;background:#6366f1;color:#fff;border-radius:6px;font-size:16px;cursor:pointer}
-button:hover{background:#5558ff}
-ul{list-style:none;padding:0}
-li{background:#1a1a1a;margin:8px 0;padding:12px;border-radius:6px;display:flex;justify-content:space-between;align-items:center}
-h2{text-align:center;margin:20px 0;color:#e4e4e4}
-.stats{text-align:center;padding:20px;background:#1a1a1a;border-radius:8px;margin-top:20px}
-.stats span{margin:0 15px}
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0}
+.container{max-width:600px;margin:40px auto;padding:20px}
+h1{color:#6366f1;margin-bottom:20px}
+a{color:#6366f1;font-size:12px}
+input{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;width:100%;border-radius:4px;margin-bottom:10px;font-size:14px}
+h2{margin:30px 0 15px;color:#949494;font-size:18px}
+h3{margin:20px 0 10px;color:#a4a4a4;font-size:16px}
+.save-btn{background:#6366f1;color:#fff;border:none;padding:12px 24px;border-radius:4px;cursor:pointer;font-size:14px;margin-bottom:20px}
+.save-btn:hover{background:#5558f5}
+h2 label{margin-left:10px;font-weight:normal;color:#b4b4b4}
+h2 label input{margin:0;background:transparent;border:none;color:#e4e4e4;cursor:pointer}
+.stats{background:#151515;padding:15px;border-radius:4px;margin-top:30px}
+.stats h3{margin:0 0 10px}
+.stats div{display:flex;justify-content:space-between;margin:8px 0;border-bottom:1px solid #2a2a2a;padding-bottom:5px}
+.stats div span{color:#949494}
+.stats div div strong{color:#6366f1}
 </style>
 </head>
 <body>
 <div class="container">
-<a href="index.html" style="color:#6366f1;display:block;text-align:center;margin-bottom:10px;">Home</a>
-<h1>📅 Habit Tracker</h1>
-<input type="text" id="habitInput" placeholder="Enter new habit (e.g., Read 30 min)" onkeydown="if(event.key==='Enter')addHabit()">
-<button onclick="addHabit()">Add Habit</button>
-<h2>Today's Progress</h2>
-<ul id="habitsList"></ul>
-<div class="stats">
-<span id="completeCount">0/0</span>
+<a href="index.html" style="color:#6366f1">Home</a>
+<h1>Habit Tracker</h1>
+<div id="habits"></div>
+<button class="save-btn" onclick="save()">Save Changes</button>
+<div class="stats" id="stats" style="display:none"></div>
 </div>
 <script>
-const habits = JSON.parse(localStorage.getItem('habits')||'[]');
-function render(){habits.forEach((h,i)=>{const checked=habits[i].complete?1:0;document.getElementById('completeCount').textContent=`${checked}/${habits.length}`;document.getElementById('habitsList').innerHTML='';habits.forEach((h,i)=>{document.getElementById('habitsList').innerHTML+=`<li><span onclick="toggle(${i})" style="cursor:pointer;user-select:none">${h.habit}</span><button onclick="deleteHabit(${i})" style="padding:4px 8px;font-size:12px;background:#333">✕</button></li>`});});}
-function addHabit(){const input=document.getElementById('habitInput');if(!input.value.trim())return;habits.push({habit:input.value.trim(),complete:false});input.value='';localStorage.setItem('habits',JSON.stringify(habits));render()}
-function toggle(i){habits[i].complete=!habits[i].complete;localStorage.setItem('habits',JSON.stringify(habits));render()}
-function deleteHabit(i){habits.splice(i,1);localStorage.setItem('habits',JSON.stringify(habits));render()}
-render();
+let habits=[],count=0,total=0;
+function renderHabits() {
+const container=document.getElementById("habits"),div=habits.map(h=>
+`<div style="margin:10px 0;padding:10px;background:#151515;border-radius:4px;border-left:3px solid #6366f1">
+<strong>${h.name}</strong>
+<h2 label>${count}${h.completed?'\u2713':'\u2716'}
+<input type="checkbox" ${h.completed?'':'checked'} ${h.target?`onclick="mark('${h.name}',${h.target})"`:''}
+${h.target?`target="${h.target}"`:''}></h2>
+</div>`
+).join(""),stats=habits.map(h=>
+`<div><span>${h.name}</span><div><span>Completed:</span><strong>${h.completed?count:0}</strong></div></div>`
+).join("");
+container.innerHTML=div;document.getElementById("stats").innerHTML=stats;
+document.getElementById("stats").style.display=habits.length>0?'block':'none';
+}
+function mark(name,el) {
+const target=parseFloat(el.target.split('#')[1]);
+if(habits.find(h=>h.name===name).completed)habits.find(h=>h.name===name).completed=false;
+else{habits.find(h=>h.name===name).completed=true;count++;total++;}
+renderHabits();
+}
+function save() {
+localStorage.setItem("habits",JSON.stringify(habits));
+alert("Habits saved!");
+}
+function load() {
+habits=JSON.parse(localStorage.getItem("habits")||"[]");
+count=0;total=0;
+const done=habits.filter(h=>h.completed);
+done.forEach(h=>{count++;if(h.target){total++;const el=document.querySelector(`[target="${h.target}"]`);
+if(el)el.checked=true;}});
+renderHabits();
+}
+load();
 </script>
-</div>
 </body>
 </html>
