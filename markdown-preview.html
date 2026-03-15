@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0a0a0a;color:#e4e4e4;font-family:system-ui">
+<head>
+<meta charset="UTF-8"><title>Markdown Previewer</title>
+<style>
+body{margin:0;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;min-height:100vh}
+input,textarea{width:100%;padding:10px;font-size:14px;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#e4e4e4}
+button{padding:10px 20px;font-size:14px;background:#6366f1;border:none;border-radius:4px;color:#fff;cursor:pointer}
+button:hover{background:#4f46e5}
+a{color:#6366f1}
+</style>
+</head>
+<body>
+<input type="text" id="title" placeholder="Markdown Previewer" style="grid-column:1/-1">
+<textarea id="input" placeholder="Enter markdown here..."></textarea>
+<button onclick="update()">Preview</button>
+<div id="output" style="background:#1a1a1a;padding:20px;border-radius:4px;overflow:auto"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function escapeHtml(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function update(){var md=document.getElementById('input').value||'# Welcome to Markdown Previewer\n\nType some markdown on the left to see it rendered on the right.'
+var div=document.getElementById('output');div.innerHTML='<h1>'+escapeHtml(md.split('\n')[0])+'</h1><p>'+md.replace('# ','').replace('\n\n','#').replace('\n','<br>')+'</p>'}
+update()
+</script>
+</body>
+</html>
