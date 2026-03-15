@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Size Calculator</title>
+<style>
+:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem}
+a{color:var(--primary);text-decoration:none}
+a:hover{text-decoration:underline}
+.container{width:100%;max-width:400px;background:#1a1a1a;padding:2rem;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+h1{text-align:center;margin-bottom:1.5rem;font-size:1.5rem;color:#fff}
+.home-link{display:block;text-align:center;margin-bottom:1.5rem;color:#6366f1;font-size:0.9rem}
+.form-group{margin-bottom:1rem}
+label{display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#ccc}
+input,select,button{width:100%;padding:0.8rem;border:none;border-radius:8px;font-size:1rem}
+input{background:#2a2a2a;color:#e4e4e4;border:1px solid #3a3a3a}
+input:focus{outline:none;border-color:var(--primary)}
+select{background:#2a2a2a;color:#e4e4e4;border:1px solid #3a3a3a}
+select:focus{outline:none;border-color:var(--primary)}
+button{background:var(--primary);color:#fff;cursor:pointer;font-weight:600;transition:opacity 0.2s}
+button:hover{opacity:0.9}
+.result-box{background:#1a1a1a;border-radius:8;padding:1rem;margin-top:1rem;border:1px solid #3a3a3a}
+.result-box h3{color:#ccc;margin-bottom:0.5rem;font-size:1rem}
+.result-box p{color:#e4e4e4;font-size:1rem;margin:0.5rem 0}
+.result-box span{font-weight:600}
+.units{display:flex;gap:0.5rem;margin-top:1rem}
+.units button{flex:1;background:#2a2a2a;color:#ccc;font-weight:400}
+.units button.active{background:var(--primary);color:#fff}
+</style>
+</head>
+<body>
+<a href="index.html" class="home-link">Home</a>
+<div class="container">
+<h1>File Size Calculator</h1>
+<div class="form-group">
+<label>Enter Size</label>
+<input type="number" id="size" placeholder="e.g., 2048" min="0" step="any">
+</div>
+<div class="form-group">
+<label>From Unit</label>
+<select id="fromUnit">
+<option value="B">Bytes (B)</option>
+<option value="KB">Kilobytes (KB)</option>
+<option value="MB">Megabytes (MB)</option>
+<option value="GB">Gigabytes (GB)</option>
+</select>
+</div>
+<div class="form-group">
+<label>To Unit</label>
+<select id="toUnit">
+<option value="KB" selected>Kilobytes (KB)</option>
+<option value="B">Bytes (B)</option>
+<option value="MB">Megabytes (MB)</option>
+<option value="GB">Gigabytes (GB)</option>
+</select>
+</select>
+</div>
+<div class="result-box">
+<h3>Result:</h3>
+<p>Converted size: <span id="result">—</span></p>
+<p id="equivalent">Equivalent in all units: —</p>
+</div>
+<div class="units">
+<button onclick="convertUnits('B')">Bytes (B)</button>
+<button onclick="convertUnits('KB')">KB</button>
+<button onclick="convertUnits('MB')">MB</button>
+<button onclick="convertUnits('GB')">GB</button>
+</div>
+</div>
+<script>
+function convertUnits() {
+const from = document.getElementById('fromUnit').value;
+const to = document.getElementById('toUnit').value;
+const size = parseFloat(document.getElementById('size').value) || 0;
+const toFactor = {B:1,KB:1024,MB:1048576,GB:1073741824}[to];
+const converted = size * (1/toFactor) * Math.pow(1024, {B:0,KB:1,MB:2,GB:3}[from]);
+document.getElementById('result').textContent = formatted(converted, to);
+const eq = {B:formatted(converted, 'B'),KB:formatted(converted, 'KB'),
+MB:formatted(converted, 'MB'),GB:formatted(converted, 'GB')};
+document.getElementById('equivalent').textContent = 'B: ' + eq.B + ', KB: ' + eq.KB + ', MB: ' + eq.MB + ', GB: ' + eq.GB;
+}
+function formatted(num, unit) {
+if (unit === 'B') return num.toFixed(0) + ' B';
+const exp = {B:0,KB:1,MB:2,GB:3}[unit];
+const base = Math.pow(1024, exp);
+const val = num / base;
+if (val < 1000000) return val.toLocaleString(undefined, {minimumFractionDigits:0,maximumFractionDigits:2}) + ' ' + unit;
+return val.toLocaleString(undefined, {minimumFractionDigits:0,maximumFractionDigits:2}) + ' ' + unit;
+}
+document.getElementById('size').addEventListener('input', convertUnits);
+convertUnits();
+</script>
+</body>
+</html>
