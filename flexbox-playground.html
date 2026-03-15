@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flexbox Playground</title>
+<style>
+body{margin:0;min-height:100vh;background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;padding:20px;gap:15px}
+.container{display:flex;gap:15px;flex:1;width:90vw;overflow:hidden;background:#111;border:1px solid #333;border-radius:8px;padding:10px}
+.controls{flex:0;width:250px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.property{padding:8px;background:#1a1a1a;border:1px solid #333;border-radius:4px}
+.property h3{margin:0 0 5px;font-size:14px;color:#6366f1}
+.property input,select{width:100%;padding:5px;background:#0a0a0a;border:1px solid #333;border-radius:3px;color:#e4e4e4}
+.preview{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px}
+.box{display:flex;flex-direction:column;gap:5px;min-height:120px;border:2px solid #6366f1;background:#1a1a1a;border-radius:6px;overflow:hidden}
+.box-content{padding:10px;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<div class="container">
+<div class="controls">
+<h2 style="margin:0;color:#6366f1">Flexbox Playground</h2>
+<div class="property"><h3>Direction</h3><select id="flexDirection"><option value="row">row</option><option value="column">column</option><option value="row-reverse">row-reverse</option><option value="column-reverse">column-reverse</option></select></div>
+<div class="property"><h3>Wrap</h3><select id="flexWrap"><option value="nowrap">nowrap</option><option value="wrap">wrap</option><option value="wrap-reverse">wrap-reverse</option></select></div>
+<div class="property"><h3>Align Items</h3><select id="alignItems"><option value="stretch">stretch</option><option value="flex-start">flex-start</option><option value="center">center</option><option value="flex-end">flex-end</option><option value="space-between">space-between</option><option value="space-around">space-around</option><option value="space-evenly">space-evenly</option></select></div>
+<div class="property"><h3>Justify Content</h3><select id="justifyContent"><option value="flex-start">flex-start</option><option value="center">center</option><option value="flex-end">flex-end</option><option value="space-between">space-between</option><option value="space-around">space-around</option><option value="space-evenly">space-evenly</option></select></div>
+<div class="property"><h3>Flex Grow</h3><input type="number" id="flexGrow" min="0" value="0" step="1" placeholder="0"></div>
+<div class="property"><h3>Flex Shrink</h3><input type="number" id="flexShrink" min="0" value="1" step="1" placeholder="1"></div>
+<div class="property"><h3>Flex Basis</h3><input type="number" id="flexBasis" min="0" value="100" step="5" placeholder="100"></div>
+<button id="addBox" style="padding:8px;background:#6366f1;border:none;color:#fff;border-radius:4px;cursor:pointer">+ Add Box</button>
+</div>
+<div class="preview">
+<div class="box" id="box1"><div class="box-content">Box 1</div></div>
+<div class="box" id="box2"><div class="box-content">Box 2</div></div>
+<div class="box" id="box3"><div class="box-content">Box 3</div></div>
+<div class="box" id="box4"><div class="box-content">Box 4</div></div>
+</div>
+</div>
+<script>
+const boxes=document.querySelectorAll('.box'),props={direction:'flexDirection',wrap:'flexWrap',alignItems:'alignItems',justifyContent:'justifyContent'},inputs={grow:'flexGrow',shrink:'flexShrink',basis:'flexBasis'}
+function apply() {
+const style=document.createElement('style');style.textContent=`.${props.direction.value} {flex-direction:${document.getElementById(props.direction.value).value};flex-wrap:${document.getElementById(props.wrap.value).value};align-items:${document.getElementById(props.alignItems.value).value};justify-content:${document.getElementById(props.justifyContent.value).value};flex-grow:${document.getElementById(props.grow.value).value};flex-shrink:${document.getElementById(props.shrink.value).value};flex-basis:${document.getElementById(props.basis.value).value};}`;
+const container=document.querySelector('.preview');container.innerHTML='';container.appendChild(style);
+boxes.forEach(b=>b.style.cssText=`display:flex;flex-direction:${document.getElementById(props.direction.value).value};flex-wrap:${document.getElementById(props.wrap.value).value};align-items:${document.getElementById(props.alignItems.value).value};justify-content:${document.getElementById(props.justifyContent.value).value};flex-grow:${document.getElementById(props.grow.value).value};flex-shrink:${document.getElementById(props.shrink.value).value};flex-basis:${document.getElementById(props.basis.value).value};`);
+}
+const controls=document.querySelectorAll('select,input');controls.forEach(c=>c.addEventListener('input',apply));
+document.getElementById('addBox').addEventListener('click',()=>{const n=boxes.length+1;const b=document.createElement('div');b.className='box';b.id=`box${n}`;b.innerHTML=`<div class="box-content">Box ${n}</div>`;document.querySelector('.preview').appendChild(b);apply();});
+apply();
+</script>
+</body>
+</html>
