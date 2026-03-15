@@ -13,35 +13,36 @@ a{color:#6366f1;text-decoration:none}
 <body>
 <h2>API Status Checker</h2>
 <select id="endpoints">
-<option value="https://api.github.com">GitHub API</option>
-<option value="https://api.gitlab.com">GitLab API</option>
+  <option value="https://api.github.com">GitHub API</option>
+  <option value="https://api.githubstatus.com">GitHub Status API</option>
+  <option value="https://api.github.com/contents/:path">GitHub Contents API</option>
 </select>
-<button onclick="checkStatus()">Check</button>
-<div id="output">Waiting for input...</div>
-<script>
-function checkStatus() {
-    try {
-        var endpoint = document.getElementById("endpoints").value;
-        if (!endpoint) {
-            throw new Error("No endpoint selected");
-        }
-        fetch(endpoint)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                document.getElementById("output").innerHTML = JSON.stringify(data, null, 2);
-            })
-            .catch(error => {
-                document.getElementById("output").innerHTML = "Error: " + error.message;
-            });
-    } catch (error) {
-        document.getElementById("output").innerHTML = "Error: " + error.message;
-    }
-}
-</script>
+<br>
+<button id="check">Check Status</button>
+<br>
+<div id="output">Loading...</div>
 </body>
+<script>
+document.getElementById('check').addEventListener('click', async () => {
+  const endpoint = document.getElementById('endpoints').value;
+  const output = document.getElementById('output');
+  
+  // Error handling for empty or invalid endpoint
+  if (!endpoint || endpoint === ':path') {
+    output.innerHTML = '<span style="color:#fbbf24">⚠ Warning: Please select a valid endpoint</span>';
+    return;
+  }
+  
+  try {
+    const response = await fetch(endpoint);
+    if (response.ok) {
+      output.innerHTML = '<span style="color:#4ade80">✓ Success</span>';
+    } else {
+      output.innerHTML = '<span style="color:#f87171">✗ Error: ' + response.status + '</span>';
+    }
+  } catch (error) {
+    output.innerHTML = '<span style="color:#f87171">✗ Network Error: ' + error.message + '</span>';
+  }
+});
+</script>
 </html>
