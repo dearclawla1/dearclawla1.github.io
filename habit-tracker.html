@@ -1,42 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Habit Tracker</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+body{margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0a;color:#e4e4e4}
 a{color:#6366f1}
-h1{margin:0 0 20px;color:#6366f1}
-input[type=text]{background:#0a0a0a;color:#e4e4e4;border:2px solid #6366f1;padding:10px;font-size:16px;border-radius:8px;width:100%;max-width:300px}
-button{background:#6366f1;color:#fff;border:none;padding:12px 20px;font-size:16px;border-radius:8px;cursor:pointer;margin-top:10px}
-button:hover{background:#5558ff}
-h2{color:#e4e4e4;margin:20px 0 10px;font-size:18px}
-.streak{color:#6366f1;font-weight:bold}
-#status{background:#0a0a0a;border:1px solid #6366f1;padding:10px;border-radius:8px;margin-top:15px;font-size:14px}
+h1{margin-bottom:20px;text-align:center}
+.container{max-width:600px;margin:0 auto}
+form{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+input,select,button{padding:12px 16px;font-size:14px;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#e4e4e4}
+input[type="text"],input[type="number"]{border-color:#333}
+input[type="checkbox"]{transform:scale(1.3);vertical-align:middle}
+button{cursor:pointer;font-weight:600;border:none;transition:all .2s}
+button:hover{background:#2a2a2a}
+button.primary{background:#6366f1;color:#fff}
+button.primary:hover{background:#5558e6}
+h3{color:#a3a3a3;margin-top:24px;word-break:break-all}
+.streak{background:#2d3748;padding:8px 12px;border-radius:6px;display:inline-block;margin:4px;font-size:12px}
 </style>
-<a href="index.html" style="color:#6366f1">Home</a>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1;display:block;text-align:center;margin-bottom:12px">Home</a>
 <h1>Habit Tracker</h1>
-<input type=text id=name placeholder="Enter a new habit...">
-<button onclick="addHabit()">+ Add Habit</button>
-<div id="habits"></div>
-<h2>Quick Stats</h2>
-<div id="status"></div>
+<div class="container" id="app">
+<form id="habitForm" style="display:none">
+<div>
+<input type="text" id="newHabit" placeholder="Enter habit name (e.g., Drink Water)" required>
+</div>
+<div style="display:flex;gap:10px">
+<div><input type="number" id="targetFreq" placeholder="Times/day" value="1" min="1" style="width:120px"></div>
+<div><input type="number" id="streakTarget" placeholder="Goal streak" value="30" min="1" style="width:120px"></div>
+</div>
+<button type="submit" class="primary">Add Habit</button>
+</form>
+<form id="completeForm" style="display:none">
+<div><h3 id="selectedHabitName">Select a habit to complete</h3></div>
+<div>
+<select id="habitSelect">
+<option value="">-- Select Habit --</option>
+</select>
+</div>
+<div>
+<select id="completionSelect">
+<option value="daily">Daily Completion</option>
+<option value="weekly">Weekly Completion</option>
+</select>
+</div>
+<button type="submit" class="primary">Mark Complete</button>
+</form>
+<form id="listForm">
+<h3>Your Habits</h3>
+<select id="habitList">
+<option value="">-- Select Habit --</option>
+</select>
+</select>
+<button onclick="document.getElementById('completeForm').style.display='block'" class="primary">Mark Complete</button>
+<button onclick="document.getElementById('habitForm').style.display='block'" class="primary">Add New Habit</button>
+</form>
+<div id="habitListContainer" style="display:none;margin-top:12px">
+<div id="habitList"></div>
+</div>
+</div>
 <script>
-let habits=[]
-function addHabit(){
-let name=document.getElementById("name").value.trim()
-if(!name)return
-habits.push({name:name,completions:0})
-render()
-}
-function render(){
-let container=document.getElementById("habits")
-let html=''
-let totalCompletions=0
-let activeHabits=habits.length
-habits.forEach((h)=>{
-html+=`<h2>${h.name} <span class="streak">${h.completions} streak</span></h2>`
-})
-container.innerHTML=html
-document.getElementById("status").innerHTML=`Active habits: ${activeHabits}`
-}
-render()
+const db=[
+{"id":1,"name":"Drink Water","freq":1,"streak":7,"goal":30,"completedDates":["2026-03-15"]}
+];
+let selectedId=null;
+const dbStore={db};
+function save(){localStorage.setItem('habitData',JSON.stringify(dbStore.db))}
+function load(){try{const d=JSON.parse(localStorage.getItem('habitData')||'[]');dbStore.db=d}catch(e){}}
+function render(){const list=document.getElementById('habitList');const select=document.getElementById('habitSelect');list.innerHTML='<option value="">-- Select Habit --</option>';select.innerHTML='<option value="">-- Select Habit --</option>';dbStore.db.forEach(h=>{const option=`<option value="${h.id}">${h.name} (${h.streak}/${h.goal} streak)</option>`;list.innerHTML+=option;select.innerHTML+=option});renderCompleted();}
+function renderCompleted(){const container=document.getElementById('habitListContainer');const list=document.getElementById('habitList');if(dbStore.db.length===0){container.style.display='none';return}container.style.display='block';list.innerHTML='';dbStore.db.forEach(h=>{const date=localStorage.getItem(`habit_${h.id}_completed`)||'None';const streakEl=document.createElement('div');streakEl.className='streak';streakEl.innerHTML=`🔥 ${h.streak}/${h.goal}`;list.appendChild(streakEl)});}
+function addHabit(e){e.preventDefault();const name=document.getElementById('newHabit').value.trim();const freq=parseInt(document.getElementById('targetFreq').value);const goal=parseInt(document.getElementById('streakTarget').value);if(!name||!freq||!goal){alert('Please fill all fields');return}dbStore.db.push({id:Date.now(),name,freq,streak:0,goal});document.getElementById('newHabit').value='';document.getElementById('targetFreq').value='1';document.getElementById('streakTarget').value='30';save();render();document.getElementById('habitForm').style.display='none'}
+function completeHabit(e){e.preventDefault();const id=parseInt(document.getElementById('habitSelect').value);const type=document.getElementById('completionSelect').value;if(!id){alert('Select a habit');return}const today=new Date().toISOString().split('T')[0];const completed=localStorage.getItem(`habit_${id}_completed`);if(completed===today){alert('Already completed today!');return}const dates=JSON.parse(localStorage.getItem(`habit_${id}_dates`)||'[]');if(dates.includes(today)){dates.pop()}dates.push(today);localStorage.setItem(`habit_${id}_completed`,today);localStorage.setItem(`habit_${id}_dates`,JSON.stringify(dates));const streak=parseInt(localStorage.getItem(`habit_${id}_streak`)||'0');localStorage.setItem(`habit_${id}_streak`,(streak+1).toString());load();render();document.getElementById('completeForm').style.display='none'}
+function deleteHabit(){const id=parseInt(document.getElementById('habitList').value);if(!id||!confirm('Delete this habit?'))return;dbStore.db=dbStore.db.filter(h=>h.id!==id);localStorage.removeItem(`habit_${id}_completed`);localStorage.removeItem(`habit_${id}_dates`);localStorage.removeItem(`habit_${id}_streak`);load();render();document.getElementById('habitForm').style.display='block'}
+document.getElementById('habitForm').addEventListener('submit',addHabit);
+document.getElementById('completeForm').addEventListener('submit',completeHabit);
+load();render();
 </script>
+</body>
 </html>
