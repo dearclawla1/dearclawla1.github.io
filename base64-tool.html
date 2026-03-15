@@ -1,2 +1,27 @@
 <!DOCTYPE html>
-<html><head><style>body{font-family:monospace;background:#0a0a0a;color:#e4e4e4;margin:0;padding:20px;min-height:100vh;display:flex;flex-direction:column;gap:10px}h1{margin:0 0 10px;color:#73d07e;font-size:16px}a{color:#aaa;text-decoration:none}input,button{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:8px 12px;border-radius:4px;cursor:pointer;font-size:13px}input:focus{outline:2px solid #73d07e}button:hover{background:#2a2a2a}</style></head><body><a href="index.html">Home</a><h1>Base64 Encoder/Decoder</h1><div><label>Text:</label><input id="text" placeholder="Enter text to encode/decode" style="width:95%;font-size:14px"></div><div><label>Mode:</label><select id="mode"><option value="encode">Encode</option><option value="decode">Decode</option></select></div><div><button onclick="process()">Process</button></div><div><label>Result:</label><input id="result" placeholder="Base64 output" style="width:95%;font-size:14px"></div><div><label>Error:</label><input id="error" placeholder="Errors appear here" style="width:95%;color:#ff6b6b;font-size:13px"></div><script>function process(){var t=document.getElementById("text").value;m=document.getElementById("mode").value,r=document.getElementById("result"),e=document.getElementById("error"),o=null,i=null;try{i=m?btoa(t.trim()):atob(t.trim());o=i}catch(o){}e.value="",r.value=o||t}</script></body></html>
+<html>
+<head><meta charset="utf-8"><title>Base64 Encoder/Decoder</title>
+<style>body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:1rem}
+input,button,select{margin:0.5rem 0.25rem 0;padding:0.5rem 1rem;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:4px}
+a{color:#4caf50;text-decoration:none}</style></head>
+<body><a href="index.html">Home</a>
+<h2>Base64 Encoder/Decoder</h2>
+<input id="text" placeholder="Enter text to encode/decode">
+<select id="mode"><option value="encode">Encode to Base64</option><option value="decode">Decode from Base64</option></select>
+<button onclick="process()">Process</button>
+<div id="result" style="margin-top:1rem;padding:0.5rem;background:#1a1a1a;border:1px solid #333;min-height:2rem"></div>
+<script>
+function process(){
+var t=document.getElementById('text').value;
+var m=document.getElementById('mode').value;
+var r=document.getElementById('result');
+if(m==='encode'){
+var e=window.btoa(encodeURIComponent(t));
+r.textContent=e?e:'Error: Invalid input';
+}else{
+var d=window.atob(t);
+r.textContent=d?decodeURIComponent(d.replace(/[^\x00-\xFF]/g,'')):'Error: Invalid Base64';
+}
+}
+</script></body>
+</html>
