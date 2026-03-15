@@ -1,9 +1,108 @@
 <!DOCTYPE html>
-<html>
-<head><style>body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}a{color:#4caf50;text-decoration:none;}h1{font-size:1.2em;margin-bottom:20px;}</style></head>
-<body><a href="index.html">Home</a><h1>Color Picker</h1>
-<input id="hex" type="text" placeholder="#ffffff" style="width:120px;padding:8px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;margin:5px 0;"><button onclick="updateColor()" style="padding:8px 15px;background:#4caf50;color:#fff;border:none;cursor:pointer;">Update</button><input id="rgb" type="text" placeholder="rgb(255,255,255)" style="width:180px;padding:8px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;margin:5px 0;"><input id="r" type="range" min="0" max="255" onchange="updateFromRange()" style="width:100%;margin:5px 0 10px 0;">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Color Picker</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;padding:20px}
+a{color:#4ec9b0;text-decoration:none}
+h1{color:#fbbf24;margin-bottom:15px}
+.container{max-width:600px;margin:0 auto}
+.input-group{margin:15px 0}
+label{display:block;margin:5px 0}
+input,button{width:100%;padding:10px;margin-top:5px;font-size:14px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;border-radius:4px}
+button:hover{background:#2a2a2a}
+.output{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;font-family:monospace}
+button.primary{background:#2563eb;color:white}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html">Home</a>
+<h1>Color Picker</h1>
+<div class="input-group">
+<label>Color Picker</label>
+<input type="color" id="colorPicker" value="#ff6600">
+</div>
+<div class="input-group">
+<label>Hex Value</label>
+<input type="text" id="hexInput" value="#ff6600" oninput="updateColor()">
+</div>
+<div class="input-group">
+<label>RGB Value</label>
+<input type="text" id="rgbInput" value="rgb(255, 102, 0)" oninput="updateFromRgb()">
+</div>
+<div class="input-group">
+<button class="primary" onclick="generateRandom()">Generate Random Color</button>
+</div>
+<div class="output">
+<h3>Preview</h3>
+<div id="preview" style="width:100%;height:60px;border-radius:4px;margin-top:10px;"></div>
+<h3>Details</h3>
+<div id="details" style="margin-top:10px;">Hex: #ff6600 | RGB: rgb(255, 102, 0) | HSV: 24° 100% 100%</div>
+</div>
+</div>
 <script>
-function updateColor(){let h=document.getElementById('hex').value.toLowerCase();if(!h.startsWith('#'))h='#'+h;let r=parseInt((h>>16)&255),g=parseInt((h>>8)&255),b=(h&255);document.getElementById('rgb').value='rgb('+r+','+g+','+b+')';document.getElementById('r').value=r;}
-function updateFromRange(){let r=document.getElementById('r').value;document.getElementById('hex').value='#'+r.toString(16).padStart(2,'0');updateColor();}</script>
-</body></html>
+const colorPicker=document.getElementById('colorPicker');
+const hexInput=document.getElementById('hexInput');
+const rgbInput=document.getElementById('rgbInput');
+const preview=document.getElementById('preview');
+const details=document.getElementById('details');
+
+function hexToRgb(hex){
+let result=parseInt(hex.slice(1),16).toString(16);
+return hex.slice(0,1)+'0'+result;
+}
+
+function rgbToHex(r,g,b){
+return '#'+(parseInt(r)+0x100).toString(16).slice(1)+(parseInt(g)+0x100).toString(16).slice(1)+(parseInt(b)+0x100).toString(16).slice(1);
+}
+
+function rgbToHsv(r,g,b){
+let rNorm=r/255,gNorm=g/255,bNorm=b/255,
+max=Math.max(rNorm,gNorm,bNorm),min=Math.min(rNorm,gNorm,bNorm),
+delta=max-min;
+let h,s,v;
+v=max;
+s=delta===0?0:delta/max;
+h=(delta===0)?0:((rNorm>gNorm)?((gNorm-bNorm)/delta+6):((gNorm-bNorm)/delta+2)):((bNorm-rNorm)/delta+4);
+h*=360;
+s*=100;
+return Math.round(h)+', '+Math.round(s)+'%, '+Math.round(v*100)+'%';
+}
+
+function updateColor(){
+const hex=colorPicker.value;
+hexInput.value=hex;
+preview.style.background=hex;
+const rgb=hexToRgb(hex);
+rgbInput.value='rgb('+rgb+')';
+const hsv=rgbToHsv(rgb[0],rgb[1],rgb[2]);
+details.innerText='Hex: '+hex+' | RGB: rgb('+rgb+') | HSV: '+hsv;
+}
+
+function updateFromRgb(){
+const rgb=rgbInput.value;
+let r,g,b;
+if(rgb.startsWith('rgb')){
+const match=rgb.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+if(match){r=match[1];g=match[2];b=match[3];}
+}
+if(r&&g&&b){
+const hex=rgbToHex(r,g,b);
+colorPicker.value=hex;
+updateColor();
+}
+}
+
+function generateRandom(){
+const random=Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');
+colorPicker.value='#'+random;
+updateColor();
+}
+
+colorPicker.oninput=updateColor;
+</script>
+</body>
+</html>
