@@ -1,38 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8"><title>JSON Formatter</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
-a{color:#81c298;text-decoration:none;}
-input,button{margin:5px 0;padding:8px;cursor:pointer;}
-textarea{width:100%;height:200px;font-family:monospace;resize:vertical;}
-#status{color:#81c298;margin:10px 0;padding:10px;background:#141414;border-radius:4px;}
+body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:monospace}
+a{color:#7ec855}
+input,button{padding:8px;margin:4px;border-radius:4px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4}
+button{cursor:pointer}
+#output{width:90%;height:50vh;overflow:auto;padding:8px;background:#141414;color:#98d90a;font-family:monospace}
+#inputArea{width:90%;height:30vh;margin-bottom:8px}
 </style>
 </head>
 <body>
-<a href="index.html">Home</a><h1>JSON Formatter</h1>
-<input type="radio" name="mode" value="format" checked> Format
-<input type="radio" name="mode" value="minify"> Minify
-<button onclick="process()">Process</button>
-<textarea id="input"></textarea>
-<div id="status">Ready - paste JSON above</div>
-<textarea id="output" readonly></textarea>
+<a href="index.html">Home</a>
+<h2>JSON Formatter - Prettify & Highlight</h2>
+<textarea id="inputArea" placeholder='Paste JSON here (e.g., {"name":"test","value":123})'></textarea>
+<button onclick="format()">Prettify</button>
+<button onclick="minify()">Minify</button>
+<button onclick="clear()">Clear</button>
+<pre id="output"><span style="color:#666">// Prettify or minify JSON with syntax highlighting</span></pre>
 <script>
-function process(){
-var inp=document.getElementById('input').value;
-var mode=document.querySelector('input[name="mode"]:checked').value;
+function format(){
 try{
-var parsed=JSON.parse(inp);
-if(mode==='format')document.getElementById('output').value=JSON.stringify(parsed,null,2);
-else document.getElementById('output').value=JSON.stringify(parsed);
-document.getElementById('status').innerText='Valid JSON!';
-document.getElementById('status').style.color='#81c298';
-}catch(e){
-document.getElementById('output').value='Error: '+e.message;
-document.getElementById('status').innerText='Invalid JSON';
-document.getElementById('status').style.color='#e4e4e4';
+let json=document.getElementById("inputArea").value;
+let parsed=JSON.parse(json);
+document.getElementById("output").innerHTML=JSON.stringify(parsed,null,2).replace(/("(\\u[a-zA-Z0-9]{4}|\\[^n]|\\[bdfjnrtv]|"?)|(:)|(\s*)|([,-])([^:])/gm,function(m,a,b,c,d,e,f){
+return (a&&a==="")?"":(b&&b==="")?":"":(c&&c==="")?"":"":(d&&d==="")?","+":"":(e&&e==="")?"":"":(f&&f==="")?"":"\u001b[90m"+f+"\u001b[39m"+e+"\u001b[90m"+f+"\u001b[39m"+d+"\u001b[32m"+c+"\u001b[39m"+b+"\u001b[90m"+a+"\u001b[39m";
+});
+}catch(e){document.getElementById("output").innerHTML="Error: "+e.message}</try>
 }
+function minify(){
+try{
+let json=document.getElementById("inputArea").value;
+let parsed=JSON.parse(json);
+document.getElementById("output").innerHTML=JSON.stringify(parsed).replace(/\s/g,"").replace(/:([\s,])/g,"$1").replace(/,([\s{])/g,"$1");
+}catch(e){document.getElementById("output").innerHTML="Error: "+e.message}</try>
+}
+function clear(){
+document.getElementById("inputArea").value="";
+document.getElementById("output").innerHTML="// JSON formatted here";
 }
 </script>
 </body>
