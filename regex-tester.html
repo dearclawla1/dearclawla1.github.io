@@ -1,25 +1,69 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Regex Tester</title><style>body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;}a{color:#81c784;text-decoration:none;}input,select,button{margin:8px;padding:8px 16px;}#output{background:#1a1a1a;padding:16px;border-radius:8px;margin:16px 0;}code{background:#242424;padding:4px 8px;border-radius:4px;color:#ffcc00;}</style></head>
+<html lang="en" theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>Regex Tester</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui;background:#0a0a0a;color:#e4e4e4;padding:20px}
+.container{max-width:800px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+h1{font-size:1.5rem;color:#e4e4e4}
+a{color:#64b5f6;text-decoration:none}
+input,select,textarea{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;border-radius:5px;width:100%;font-size:1rem}
+label{display:block;margin:10px 0 5px;font-weight:500}
+button{background:#2563eb;color:#fff;border:none;padding:12px 20px;border-radius:5px;cursor:pointer;font-size:1rem;font-weight:500}
+button:hover{background:#1d4ed8}
+#result{margin-top:15px;padding:15px;background:#1a1a1a;border-radius:5px;font-family:monospace;white-space:pre-wrap}
+.error{color:#ef4444}.match{color:#22c55e}
+</style>
+</head>
 <body>
-<a href="index.html">Home</a><h1>Regex Tester</h1>
-<input id="pattern" type="text" placeholder="Enter regex pattern" size="50"><button onclick="test()">Test</button><button onclick="clear()">Clear</button>
-<div id="output"></div>
+<div class="container">
+<header><h1>Regex Tester</h1><a href="index.html">Home</a></header>
+<label>Enter Regex Pattern:</label>
+<input type="text" id="pattern" placeholder="e.g., \d+">
+<label>Enter Test String:</label>
+<textarea id="test" rows="4" placeholder="e.g., abc123def456ghi">abc123def456ghi</textarea>
+<button onclick="test()">Validate Pattern</button>
+<button onclick="generateTests()">Generate Sample Tests</button>
+<div id="result">Click Validate Pattern to test your regex...</div>
+</div>
 <script>
 function test(){
-const p=document.getElementById('pattern').value;
-const out=document.getElementById('output');
-if(!p){out.textContent='Enter a regex pattern.';return}
+const pattern = document.getElementById('pattern').value;
+const testStr = document.getElementById('test').value;
+const result = document.getElementById('result');
+if(!pattern){result.innerHTML = '<span class="error">Please enter a pattern.</span>';return}
 try{
-const flags=document.getElementById('flags')?document.getElementById('flags').value:'';
-const re=new RegExp(p,flags);
-out.textContent='Pattern compiled successfully. Test string: '+document.getElementById('testString').value;
-const s=document.getElementById('testString').value;
-const matches=s.matchAll(re.g);
-Array.from(matches).forEach(m=>{out.innerHTML+='<div>Match: '+escapeHtml(m[0])+'</div>'});
-}catch(e){out.textContent='Error: '+escapeHtml(e.message)}
+const regex = new RegExp(pattern);
+const match = testStr.match(regex);
+if(match){
+result.innerHTML = `<span class="match">Pattern matched! Full match: ${match[0]}
+${match.length > 1 ? 'Groups: ' + match.map((m,i)=>'['+i+']='+m).join(', ') : ''}</span>`;
+}else{
+result.innerHTML = '<span class="error">No match found.</span>';
 }
-function clear(){document.getElementById('output').innerHTML='';document.getElementById('pattern').value='';}
-function escapeHtml(s){return s.replace(/&/,'&amp;').replace(/</,'&lt;').replace(/>/,'&gt;').replace(/"/,'&quot;')}</script>
+}catch(e){
+result.innerHTML = '<span class="error">Error: ' + e.message + '</span>';
+}
+}
+function generateTests(){
+const result = document.getElementById('result');
+const tests = ['Hello World', 'abc123', 'test@example.com', '100% Discount', '2023-01-15'];
+tests.forEach((t, i) => {
+setTimeout(() => {
+document.getElementById('test').value = t;
+test();
+}, i * 200);
+});
+}
+document.getElementById('pattern').addEventListener('keydown',e =>{
+if(e.key==='Enter'){test();}
+});
+document.getElementById('test').addEventListener('keydown',e =>{
+if(e.key==='Enter'){test();}
+});
+</script>
 </body>
 </html>
