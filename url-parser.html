@@ -17,25 +17,31 @@ h1{font-size:18px;margin:0 0 10px 0;}
 <body>
 <a href="index.html">Home</a>
 <h1>URL Query Parser</h1>
-<input id="urlInput" type="text" placeholder="Enter URL (e.g., https://example.com?name=Gwen&age=28)"><br>
-<button onclick="parseUrl()">Parse URL</button>
+<input id="urlInput" type="text" placeholder="Enter a URL with query params (e.g., https://example.com?a=1&b=2)">
+<button id="parseBtn">Parse URL</button>
 <div id="results"></div>
 <script>
-function parseUrl(){
-const url=document.getElementById('urlInput').value;
-const params=new URLSearchParams(url);
-const results=document.getElementById('results');
-if(!params.toString()){
-results.innerHTML='<div style="color:#64c4e4">Enter a URL with query parameters...</div>';
-return;
-}
-results.innerHTML='<div style="color:#e4e4e4;margin-bottom:10px;">Query Parameters:</div>';
-let html='';
-for(const [key,value] of params.entries()){
-html+='<div class="param-row"><div class="param-key"><b>'+(encodeURIComponent(key).replace(/%20/g,' ')+'</b></div><div class="param-value">'+(encodeURIComponent(value).replace(/%20/g,' ')+'</div></div>';
-}
-results.innerHTML+=html;
-}
+document.getElementById("parseBtn").addEventListener("click", function() {
+  try {
+    const urlStr = document.getElementById("urlInput").value;
+    if (!urlStr) {
+      document.getElementById("results").innerHTML = "Error: Please enter a URL";
+      return;
+    }
+    const url = new URL(urlStr);
+    const params = url.searchParams;
+    let html = "<h2>Query Parameters:</h2><ul>";
+    for (let [key, value] of params.entries()) {
+      html += `<li><span class="param-key">${key}</span> = <span class="param-value">${value}</span></li>`;
+    }
+    html += "</ul>";
+    html += `<p>Base URL: <a href="${url.origin}">${url.origin}</a></p>`;
+    html += `<p>Path: <a href="${url.pathname}">${url.pathname}</a></p>`;
+    document.getElementById("results").innerHTML = html;
+  } catch (err) {
+    document.getElementById("results").innerHTML = "Error: " + err.message;
+  }
+});
 </script>
 </body>
 </html>
