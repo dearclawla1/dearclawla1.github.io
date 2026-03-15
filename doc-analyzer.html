@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
+input,button{padding:10px;margin:5px 0;border-radius:5px;border:none;}
+input{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;}
+button{background:#6366f1;color:#0a0a0a;font-weight:bold;}
+#output{background:#1a1a1a;border:1px solid #333;padding:15px;border-radius:5px;margin-top:15px;min-height:100px;}
+a{color:#6366f1;text-decoration:none;}
+</style>
+</head>
+<body>
+<h1>Document Analyzer</h1>
+<textarea id="input" placeholder="Paste text here..." rows="6" style="width:100%;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;"></textarea>
+<button onclick="analyze()">Analyze</button>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<div id="output"></div>
+<script>
+function analyze(){
+const text=document.getElementById('input').value;
+if(!text){return;}
+const words=text.trim().split(/\s+/).filter(w=>w.length>0);
+const wordCount=words.length;
+const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>0);
+const sentenceCount=sentences.length;
+const avgWordLength=text.replace(/[^a-zA-Z]/g,'').length/text.replace(/[^a-zA-Z]/g,'').split(/\s+/).filter(w=>w.length>0).length;
+const complexity=sentenceCount>0?Math.round((wordCount/sentenceCount)*avgWordLength):0;
+document.getElementById('output').innerHTML=`
+<h3>Word Count: ${wordCount}</h3>
+<h3>Sentence Count: ${sentenceCount}</h3>
+<h3>Average Word Length: ${avgWordLength}</h3>
+<h3>Readability Complexity: ${complexity}</h3>
+<h3>Characters: ${text.length}</h3>
+<h3>Lines: ${text.split('\n').filter(l=>l.trim().length>0).length}</h3>`;
+}
+</script>
+</body>
+</html>
