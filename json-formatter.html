@@ -1,70 +1,21 @@
 <!DOCTYPE html>
 <html>
-<head>
-<style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
-h1{color:#0f0;margin-bottom:10px}
-a{color:#0f0;text-decoration:none}
-.container{max-width:900px;margin:0 auto}
-textarea{width:100%;min-height:200px;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;font-family:monospace;font-size:13px}
-button{background:#0f0;color:#0a0a0a;border:none;padding:10px 20px;cursor:pointer;margin:5px}
-button:hover{background:#0c0}
-.result{background:#1a1a1a;padding:15px;border:1px solid #333;margin-top:10px}
-.error{color:#f55}
-.success{color:#0f0}
-.controls{margin-bottom:15px}
-label{display:block;margin:5px 0}
-</style>
-</head>
+<head><meta charset="utf-8"><title>JSON Formatter</title><style>body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}h1{margin:0 0 10px}a{color:#888;font-size:12px}textarea{width:100%;height:150px;margin:10px 0;font-size:13px}button{background:#222;color:#e4e4e4;border:1px solid #333;padding:8px 16px;cursor:pointer;margin:5px}button:hover{background:#333}#result{background:#111;padding:10px;margin:10px 0;min-height:50px;white-space:pre-wrap;max-height:300px;overflow:auto}</style></head>
 <body>
-<a href="index.html">Home</a>
-<h1>JSON Formatter</h1>
-<div class="controls">
-<label>Input JSON:</label>
-<textarea id="input"></textarea>
+<a href="index.html">Home</a><h1>JSON Formatter</h1>
+<textarea id="input" placeholder="Paste JSON here..."></textarea>
+<div style="margin:10px 0">
+<button onclick="format()">Format JSON</button>
+<button onclick="minify()">Minify JSON</button>
+<button onclick="validate()">Validate JSON</button>
+<button onclick="beautify()">Beautify</button>
 </div>
-<div class="controls">
-<button onclick="formatJSON()">Beautify</button>
-<button onclick="validateJSON()">Validate</button>
-<button onclick="minify()">Minify</button>
-<button onclick="clearAll()">Clear</button>
-</div>
-<div class="result" id="output"></div>
+<div id="result"></div>
 <script>
-function formatJSON(){
-try{
-const input=document.getElementById('input').value;
-const obj=JSON.parse(input);
-document.getElementById('input').value=JSON.stringify(obj,null,2);
-document.getElementById('output').innerHTML='<span class="success">✓ Formatted successfully</span>';
-}catch(e){
-document.getElementById('output').innerHTML='<span class="error">✗ Invalid JSON: ' + e.message + '</span>';
-}
-}
-function validateJSON(){
-try{
-const input=document.getElementById('input').value;
-JSON.parse(input);
-document.getElementById('output').innerHTML='<span class="success">✓ Valid JSON</span>';
-document.getElementById('output').innerHTML+='<pre id="parsed" style="margin-top:5px">' + JSON.stringify(JSON.parse(input),null,2) + '</pre>';
-}catch(e){
-document.getElementById('output').innerHTML='<span class="error">✗ Invalid JSON: ' + e.message + '</span>';
-}
-}
-function minify(){
-const input=document.getElementById('input').value;
-try{
-const obj=JSON.parse(input);
-document.getElementById('input').value=JSON.stringify(obj);
-document.getElementById('output').innerHTML='<span class="success">✓ Minified</span>';
-}catch(e){
-document.getElementById('output').innerHTML='<span class="error">✗ Invalid JSON: ' + e.message + '</span>';
-}
-}
-function clearAll(){
-document.getElementById('input').value='';
-document.getElementById('output').innerHTML='';
-}
+function format(){var r=document.getElementById('result'),i=document.getElementById('input').value;try{r.textContent=JSON.stringify(JSON.parse(i),null,2)}catch(e){r.textContent='Invalid JSON: '+e.message}}
+function minify(){var r=document.getElementById('result'),i=document.getElementById('input').value;try{r.textContent=JSON.stringify(JSON.parse(i))}catch(e){r.textContent='Invalid JSON: '+e.message}}
+function validate(){var r=document.getElementById('result'),i=document.getElementById('input').value;try{JSON.parse(i);r.textContent='✓ Valid JSON'}catch(e){r.textContent='✗ Invalid JSON: '+e.message}}
+function beautify(){var r=document.getElementById('result'),i=document.getElementById('input').value;try{var j=JSON.parse(i);var b=JSON.stringify(j,null,4).split('\n').map(l=>l.padStart(4)).join('');r.textContent=b}catch(e){r.textContent='Invalid JSON: '+e.message}}
 </script>
 </body>
 </html>
