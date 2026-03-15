@@ -1,54 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>JSON Formatter/Validator</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #1e1e1e; color: #e0e0e0; font-family: monospace; padding: 20px; }
-h1 { margin-bottom: 15px; color: #76c7c0; }
-.container { max-width: 800px; margin: 0 auto; }
-textarea { width: 100%; height: 200px; background: #2d2d2d; color: #e0e0e0; border: 1px solid #404040; padding: 10px; font-family: monospace; font-size: 14px; border-radius: 4px; resize: vertical; }
-button { background: #76c7c0; border: none; padding: 10px 20px; margin: 10px 5px 0 0; border-radius: 4px; cursor: pointer; font-family: monospace; font-size: 14px; }
-button:hover { background: #5fb0a0; }
-#result { background: #1e1e1e; padding: 15px; border-radius: 4px; margin-top: 15px; white-space: pre-wrap; min-height: 40px; }
-#status { margin-left: auto; color: #76c7c0; }
-a { color: #76c7c0; text-decoration: none; }
-</style>
-</head>
+<html>
+<head><style>
+body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:monospace}
+.container{max-width:900px;margin:20px auto;padding:20px}
+a{color:#8c8c8c;text-decoration:none}
+input,button,select{display:block;width:100%;margin:10px 0;padding:10px}
+textarea{width:100%;height:200px;margin:10px 0;font-family:monospace}
+button{background:#3a3a3a;border:1px solid #5a5a5a;cursor:pointer}
+button:hover{background:#4a4a4a}
+.results{background:#141414;padding:10px;margin:10px 0}
+.results h3{margin:10px 0;color:#c4c4c4}
+.tab-controls{display:flex;gap:10px;margin:10px 0}
+</style></head>
 <body>
 <div class="container">
 <a href="index.html">Home</a>
-<h1>JSON Formatter/Validator</h1>
-<textarea id="input" placeholder="Paste your JSON here..."></textarea>
-<div style="margin-top: 10px;">
-<button onclick="formatJSON()">Format JSON</button>
-<button onclick="validateJSON()">Validate JSON</button>
+<h2>JSON Formatter & Validator</h2>
+<div class="tab-controls">
+<select id="tab">
+<option value="format">Format</option>
+<option value="validate">Validate</option>
+<option value="minify">Minify</option>
+<option value="beautify">Beautify</option>
+</select>
 </div>
-<div style="margin-top: 15px;"><span id="status"></span></div>
-<div id="result" style="margin-top: 15px;"></div>
+<textarea id="jsonInput" placeholder='Paste JSON here, e.g., {"name":"test"}'></textarea>
+<button onclick="formatJson()">Format (Pretty)</button>
+<button onclick="validateJson()">Validate JSON</button>
+<button onclick="minifyJson()">Minify</button>
+<button onclick="convertToCSV()">Convert to CSV</button>
+<button onclick="convertToArray()">Convert to Array</button>
+<div id="results" class="results" style="display:none"></div>
+</div>
 <script>
-function formatJSON() {
-try {
-const json = document.getElementById('input').value;
-const result = document.getElementById('result');
-const formatted = JSON.stringify(JSON.parse(json), null, 2);
-result.textContent = formatted;
-result.style.color = '#76c7c0';
-} catch (e) {
-result.textContent = "Invalid JSON: " + e.message;
-result.style.color = '#ff6b6b';
-}
-}
-function validateJSON() {
-try {
-JSON.parse(document.getElementById('input').value);
-document.getElementById('result').textContent = "✓ Valid JSON";
-} catch (e) {
-document.getElementById('result').textContent = "✗ Invalid JSON: " + e.message;
-}
-}
+function showResults(html){document.getElementById('results').style.display='block';document.getElementById('results').innerHTML=html}
+function formatJson(){let t=document.getElementById('jsonInput').value;try{let j=JSON.parse(t);showResults('<h3>Formatted:</h3><textarea readonly>'+JSON.stringify(j,null,2)+'</textarea>'})}catch(e){showResults('<h3 style="color:#f44">Invalid JSON: '+e.message+'</h3>')} }
+function validateJson(){let t=document.getElementById('jsonInput').value;try{JSON.parse(t);showResults('<h3 style="color:#0f0">Valid JSON!</h3><p>Structure parsed successfully.</p>') }catch(e){showResults('<h3 style="color:#f44">Invalid JSON: '+e.message+'</h3><p>Parsing failed at: '+e.message+'</p>')} }
+function minifyJson(){let t=document.getElementById('jsonInput').value;try{let j=JSON.parse(t);showResults('<h3>Minified:</h3><textarea readonly>'+JSON.stringify(j)+ '</textarea>'})}catch(e){showResults('<h3 style="color:#f44">Invalid JSON: '+e.message+'</h3>')} }
+function convertToCSV(){let t=document.getElementById('jsonInput').value;try{let j=JSON.parse(t),keys=Object.keys(j[0]),csv=keys.join(',')+'\\n';j.forEach(row=>{csv+=row.values.map(v=>{return typeof v==='number'?v:'\"'+(v||'')+'\"'}).join(',')+'\\n';});showResults('<h3>CSV:</h3><textarea readonly>'+csv+'</textarea>'})}catch(e){showResults('<h3 style="color:#f44">Invalid JSON: '+e.message+'</h3>')} }
+function convertToArray(){let t=document.getElementById('jsonInput').value;try{let j=JSON.parse(t),arr=[];Object.keys(j).forEach(key=>{arr.push({[key]:j[key]});});showResults('<h3>Array Format:</h3><textarea readonly>'+JSON.stringify(arr,null,2)+ '</textarea>'})}catch(e){showResults('<h3 style="color:#f44">Invalid JSON: '+e.message+'</h3>')} }
 </script>
-</div>
 </body>
 </html>
