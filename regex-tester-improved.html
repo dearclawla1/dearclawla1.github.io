@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Test Regular Expressions with real-time highlighting and match counting">
+  <title>Regex Tester - Test Regular Expressions with Highlighting</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #0a0a0a;
+      color: #e4e4e4;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .input-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #e4e4e4;
+      font-family: 'Consolas', monospace;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 150px;
+      transition: border-color 0.3s;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #0a0a0a;
+    }
+    button {
+      padding: 12px 24px;
+      background: #0a0a0a;
+      color: #e4e4e4;
+      border: 2px solid #e4e4e4;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #e4e4e4;
+      color: #0a0a0a;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .output-group {
+      margin-top: 15px;
+    }
+    .output-box {
+      padding: 15px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      border: 2px solid #333;
+      min-height: 100px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .controls button {
+      flex: 1;
+      min-width: 120px;
+    }
+    .clear-btn {
+      background: #333;
+      border-color: #555;
+    }
+    .clear-btn:hover {
+      background: #444;
+      border-color: #666;
+    }
+    .error {
+      color: #ff6b6b;
+      border-color: #ff6b6b;
+    }
+    .match-highlight {
+      background: rgba(255, 180, 0, 0.3);
+      border-radius: 2px;
+    }
+    .info-box {
+      padding: 10px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #888;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 10px;
+      color: #0a0a0a;
+    }
+    .loading.active {
+      display: block;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        padding: 0;
+      }
+      .controls {
+        flex-direction: column;
+      }
+      textarea {
+        min-height: 120px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ Regex Tester</h1>
+    
+    <div class="input-group">
+      <label for="regex-input">Regular Expression:</label>
+      <textarea id="regex-input" placeholder="Enter your regular expression here... (e.g., \d{3}-\d{2}-\d{4})" rows="3"></textarea>
+    </div>
+    
+    <div class="input-group">
+      <label for="text-input">Text to Search:</label>
+      <textarea id="text-input" placeholder="Enter the text you want to search for matches..." rows="5"></textarea>
+    </div>
+    
+    <div class="loading" id="loading">Processing...</div>
+    
+    <div class="controls">
+      <button onclick="testRegex()">🧪 Test</button>
+      <button onclick="clearAll()" class="clear-btn">🗑 Clear All</button>
+    </div>
+    
+    <div class="info-box" id="info-box">
+      Tips: Use \d for digits, \w for word characters, . for any character<br>
+      Enter key submits the test
+    </div>
+    
+    <div class="output-group">
+      <label>Matches:</label>
+      <div class="output-box" id="matches-output"></div>
+    </div>
+    
+    <div class="output-group">
+      <label>Match Count:</label>
+      <div class="output-box" id="count-output">0</div>
+    </div>
+    
+    <div class="output-group">
+      <label>First Match:</label>
+      <div class="output-box" id="first-match-output"></div>
+    </div>
+    
+    <div class="output-group">
+      <label>Error:</label>
+      <div class="output-box" id="error-output"></div>
+    </div>
+  </div>
+  
+  <script>
+    let regexPattern = null;
+    let lastMatches = [];
+    
+    function testRegex() {
+      const regexInput = document.getElementById('regex-input').value;
+      const textInput = document.getElementById('text-input').value;
+      
+      // Show loading
+      document.getElementById('loading').classList.add('active');
+      document.getElementById('error-output').textContent = '';
+      
+      // Clear matches temporarily
+      document.getElementById('matches-output').innerHTML = '';
+      document.getElementById('count-output').textContent = '0';
+      document.getElementById('first-match-output').textContent = '';
+      
+      try {
+        const flags = 'g';
+        const regex = new RegExp(regexInput, flags);
+        
+        regexPattern = regex;
+        const matches = textInput.match(regex);
+        
+        if (matches) {
+          lastMatches = matches;
+          
+          // Highlight matches in original text
+          let highlightedText = textInput;
+          try {
+            const escapedRegex = regexInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regexForHighlighting = new RegExp(escapedRegex, 'gi');
+            highlightedText = textInput.replace(regexForHighlighting, '<span class="match-highlight">$&</span>');
+          } catch (e) {}
+          
+          document.getElementById('matches-output').innerHTML = highlightedText || 'No matches';
+          document.getElementById('count-output').textContent = lastMatches.length;
+          document.getElementById('first-match-output').textContent = lastMatches[0] || 'N/A';
+        } else {
+          document.getElementById('matches-output').textContent = 'No matches found';
+          document.getElementById('count-output').textContent = '0';
+          document.getElementById('first-match-output').textContent = 'N/A';
+        }
+      } catch (error) {
+        document.getElementById('matches-output').textContent = '';
+        document.getElementById('count-output').textContent = '0';
+        document.getElementById('first-match-output').textContent = '';
+        document.getElementById('error-output').textContent = 'Error: ' + error.message;
+        document.getElementById('error-output').classList.add('error');
+        regexPattern = null;
+        lastMatches = [];
+      } finally {
+        document.getElementById('loading').classList.remove('active');
+      }
+    }
+    
+    function clearAll() {
+      document.getElementById('regex-input').value = '';
+      document.getElementById('text-input').value = '';
+      document.getElementById('matches-output').textContent = '';
+      document.getElementById('count-output').textContent = '0';
+      document.getElementById('first-match-output').textContent = 'N/A';
+      document.getElementById('error-output').textContent = '';
+      document.getElementById('error-output').classList.remove('error');
+      regexPattern = null;
+      lastMatches = [];
+    }
+    
+    // Add keyboard shortcut: Enter key submits
+    document.addEventListener('keydown', function(event) {
+      const input = event.target;
+      
+      // Check if Enter is pressed and we're in an input field
+      if (event.key === 'Enter' && input.tagName === 'TEXTAREA') {
+        event.preventDefault();
+        testRegex();
+      }
+    });
+    
+    // Initialize with placeholder values cleared
+    window.onload = function() {
+      document.getElementById('regex-input').value = '';
+      document.getElementById('text-input').value = '';
+    };
+  </script>
+</body>
+</html>
