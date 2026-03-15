@@ -2,41 +2,74 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Base64 Encoder/Decoder</title>
 <style>
-body{font-family:system-ui;padding:20px;background:#1e1e1e;color:#e0e0e0}
-h1{color:#00ff9d;margin-bottom:20px}.controls{margin:15px 0}
-input,button{padding:10px;font-size:14px}
-textarea{width:100%;height:100px;background:#2a2a2a;color:#e0e0e0;border:1px solid #444}
-.result{background:#2a2a2a;padding:15px;border-radius:8px;margin-top:15px}
-a{color:#00ff9d;text-decoration:none}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;padding:20px}
+a{color:#4ec9b0;text-decoration:none}
+.container{max-width:800px;margin:0 auto}
+h1{color:#f0f0f0;margin-bottom:20px;text-align:center}
+input,textarea,button{width:100%;padding:12px;margin:10px 0;border-radius:5px;border:1px solid #333}
+input,textarea{background:#1a1a1a;color:#e4e4e4;font-family:monospace}
+input:focus,textarea:focus{outline:2px solid #4ec9b0}
+button{background:#3a3a3a;color:#e4e4e4;cursor:pointer;font-weight:bold}
+button:hover{background:#4a4a4a}
+button.primary{background:#4ec9b0;color:#0a0a0a}
+button.primary:hover{background:#3eb099}
+#result{background:#1a1a1a;padding:15px;border-radius:5px;min-height:60px;margin-top:10px;word-break:break-all}
+label{display:block;margin:10px 0 5px;color:#aaa}
+.toggle{display:flex;gap:10px;align-items:center;margin:10px 0}
 </style>
 </head>
 <body>
+<div class="container">
+<a href="index.html">Home</a>
 <h1>Base64 Encoder/Decoder</h1>
-<div class="controls">
-<a href="index.html">Home</a> | 
-<button onclick="encode()">Encode to Base64</button> | 
-<button onclick="decode()">Decode from Base64</button>
+<input type="text" id="input" placeholder="Enter text or Base64 string...">
+<div class="toggle">
+<input type="checkbox" id="encodeToggle">
+<label for="encodeToggle" style="margin:0">Encode Text → Base64</label>
 </div>
-<textarea id="input" placeholder="Enter your text to encode or Base64 string to decode..."></textarea>
-<div class="result">
-<pre id="output"></pre>
+<div class="toggle">
+<input type="checkbox" id="decodeToggle">
+<label for="decodeToggle" style="margin:0">Decode Base64 → Text</label>
+</div>
+<button class="primary" onclick="process()">Process</button>
+<textarea id="result" readonly></textarea>
+<button onclick="copy()">Copy Result</button>
 </div>
 <script>
-function encode(){
-const text=document.getElementById('input').value.trim();
-if(!text){document.getElementById('output').textContent='Enter text to encode...';return}
-const encoded=btoa(unescape(encodeURIComponent(text))).replace(/-/g,'+').replace(/_/g,'/');
-document.getElementById('output').textContent='Base64: ' + encoded;
+function process(){
+const txt=document.getElementById('input').value;
+const encode=document.getElementById('encodeToggle').checked;
+const decode=document.getElementById('decodeToggle').checked;
+let result='';
+if(encode){
+try{result=btoa(txt);result+=\nError: Invalid characters for Base64 encoding};catch(e){}
+}else if(decode){
+try{result=atob(txt);result+=\nError: Invalid Base64 string};catch(e){}
+}else{
+result=Select encoding mode: Check Encode or Decode
 }
-function decode(){
-const b64=document.getElementById('input').value.trim();
-if(!b64){document.getElementById('output').textContent='Enter Base64 to decode...';return}
-try{
-const decoded=decodeURIComponent(escape(atob(b64.replace(/-/g,'+').replace(/_/g,'/'))));
-document.getElementById('output').textContent='Decoded: ' + decoded;
-}catch(e){document.getElementById('output').textContent='Invalid Base64!';}
+document.getElementById('result').value=result;
 }
+function copy(){
+const txt=document.getElementById('result').value;
+navigator.clipboard.writeText(txt).then(()=>alert('Copied!'))
+}
+function autoProcess(){
+const txt=document.getElementById('input').value;
+if(txt.length>0){
+const e=document.getElementById('encodeToggle').checked;
+const d=document.getElementById('decodeToggle').checked;
+if(e)process();
+else if(d)process();
+else autoProcess();
+}
+}
+document.getElementById('input').oninput=setTimeout(autoProcess,100);
+process();
 </script>
 </body>
 </html>
