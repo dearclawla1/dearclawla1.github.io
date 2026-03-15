@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grade Calculator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; font-family: system-ui, -apple-system, sans-serif; background: #0a0a0a; color: #e4e4e4; }
+    h1 { text-align: center; color: #6366f1; margin-bottom: 20px; }
+    .back-link { text-align: center; margin-bottom: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .assignment { background: #1a1a1a; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; }
+    .assignment input, .assignment select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #444; border-radius: 4px; background: #0a0a0a; color: #e4e4e4; }
+    .weight-input { width: 80px; }
+    button { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-add { background: #6366f1; color: white; }
+    .btn-remove { background: #ef4444; color: white; }
+    .btn-calc { background: #10b981; color: white; }
+    .btn-clear { background: #6b7280; color: white; }
+    #result { background: #1a1a1a; padding: 20px; margin-top: 15px; border-radius: 8px; text-align: center; border: 1px solid #333; }
+    #result h2 { color: #10b981; margin: 0; }
+    .final-percent { font-size: 48px; color: #6366f1; }
+    .letter { font-size: 24px; color: #ef4444; }
+    .grade-range { font-size: 14px; color: #888; margin-top: 10px; }
+    .input-note { font-size: 12px; color: #666; text-align: center; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+  <a href="index.html" style="color:#6366f1">Home</a>
+  <h1>📊 Grade Calculator</h1>
+  <div class="input-note">Enter weights (must total 100%) and scores to calculate final grade</div>
+  <div class="container">
+    <div id="assignments">
+      <div class="assignment">
+        <input type="text" id="name1" placeholder="Assignment Name" value="Quiz 1">
+        <input type="number" id="score1" placeholder="Score" value="85">
+        <select id="weight1">
+          <option value="20">20%</option>
+          <option value="15">15%</option>
+          <option value="10">10%</option>
+          <option value="25">25%</option>
+          <option value="30">30%</option>
+          <option value="35">35%</option>
+          <option value="40">40%</option>
+          <option value="50">50%</option>
+        </select>
+        <button class="btn-remove" onclick="removeAssignment(1)">Remove</button>
+      </div>
+    </div>
+    <button class="btn-add" onclick="addAssignment()">+ Add Assignment</button>
+    <button class="btn-calc" onclick="calculate()">Calculate Final Grade</button>
+    <button class="btn-clear" onclick="clearAll()">Clear All</button>
+    <div id="result">
+      <h2>Final Grade</h2>
+      <div id="gradeDisplay" class="final-percent">--</div>
+      <div id="letterGrade" class="letter">--</div>
+      <div class="grade-range">A: 90-100% | B: 80-89% | C: 70-79% | D: 60-69% | F: <60%</div>
+    </div>
+  </div>
+  <script>
+    let assignmentCount = 1;
+    
+    function addAssignment() {
+      assignmentCount++;
+      const div = document.createElement('div');
+      div.className = 'assignment';
+      div.innerHTML = `
+        <input type="text" id="name${assignmentCount}" placeholder="Assignment Name" value="Assignment ${assignmentCount}">
+        <input type="number" id="score${assignmentCount}" placeholder="Score" value="75">
+        <select id="weight${assignmentCount}">
+          <option value="10">10%</option>
+          <option value="15">15%</option>
+          <option value="20">20%</option>
+          <option value="25">25%</option>
+          <option value="30">30%</option>
+          <option value="35">35%</option>
+          <option value="40">40%</option>
+          <option value="50">50%</option>
+        </select>
+        <button class="btn-remove" onclick="removeAssignment(${assignmentCount})">Remove</button>
+      `;
+      document.getElementById('assignments').appendChild(div);
+    }
+    
+    function removeAssignment(id) {
+      const el = document.getElementById(`name${id}`);
+      if (el) {
+        el.parentElement.remove();
+      }
+    }
+    
+    function getAssignments() {
+      const names = document.querySelectorAll('#assignments input[type="text"]');
+      const scores = document.querySelectorAll('#assignments input[type="number"]');
+      const weights = document.querySelectorAll('#assignments select');
+      const result = [];
+      names.forEach((name, i) => {
+        const score = parseFloat(scores[i].value) || 0;
+        const weight = parseFloat(weights[i].value) || 0;
+        result.push({ name: name.value.trim(), score, weight });
+      });
+      return result;
+    }
+    
+    function calculate() {
+      const assignments = getAssignments();
+      const totalWeight = assignments.reduce((sum, a) => sum + a.weight, 0);
+      
+      if (totalWeight === 0) {
+        document.getElementById('gradeDisplay').textContent = '0%';
+        document.getElementById('letterGrade').textContent = 'F';
+        return;
+      }
+      
+      let weightedSum = 0;
+      assignments.forEach(a => {
+        const contribution = a.score * (a.weight / totalWeight);
+        weightedSum += contribution;
+      });
+      
+      const finalGrade = weightedSum.toFixed(1);
+      const grade = parseFloat(finalGrade);
+      
+      document.getElementById('gradeDisplay').textContent = finalGrade + '%';
+      
+      let letter = 'F';
+      if (grade >= 90) letter = 'A';
+      else if (grade >= 80) letter = 'B';
+      else if (grade >= 70) letter = 'C';
+      else if (grade >= 60) letter = 'D';
+      
+      document.getElementById('letterGrade').textContent = letter;
+    }
+    
+    function clearAll() {
+      document.getElementById('name1').value = 'Quiz 1';
+      document.getElementById('score1').value = '85';
+      document.getElementById('name2').value = 'Quiz 2';
+      document.getElementById('score2').value = '75';
+      document.getElementById('assignments').innerHTML = `
+      <div class="assignment">
+        <input type="text" id="name1" placeholder="Assignment Name" value="Quiz 1">
+        <input type="number" id="score1" placeholder="Score" value="85">
+        <select id="weight1">
+          <option value="20">20%</option>
+          <option value="15">15%</option>
+          <option value="10">10%</option>
+          <option value="25">25%</option>
+          <option value="30">30%</option>
+          <option value="35">35%</option>
+          <option value="40">40%</option>
+          <option value="50">50%</option>
+        </select>
+        <button class="btn-remove" onclick="removeAssignment(1)">Remove</button>
+      </div>
+      `;
+      assignmentCount = 1;
+      calculate();
+    }
+    
+    calculate();
+  </script>
+</body>
+</html>
