@@ -1,21 +1,64 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>JSON Formatter</title><style>body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}h1{margin:0 0 10px}a{color:#888;font-size:12px}textarea{width:100%;height:150px;margin:10px 0;font-size:13px}button{background:#222;color:#e4e4e4;border:1px solid #333;padding:8px 16px;cursor:pointer;margin:5px}button:hover{background:#333}#result{background:#111;padding:10px;margin:10px 0;min-height:50px;white-space:pre-wrap;max-height:300px;overflow:auto}</style></head>
+<head>
+<title>JSON Formatter/Validator</title>
+<style>
+*{margin:0;padding:0;font-family:system-ui,sans-serif}
+body{background:#0a0a0a;color:#e4e4e4;padding:20px}
+a{color:#8b5cf6;text-decoration:none}
+a:hover{text-decoration:underline}
+.container{max-width:700px;margin:0 auto}
+h1{margin-bottom:15px}
+.controls{display:flex;gap:10px;margin-bottom:15px}
+input,select{padding:10px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:5px;font-size:14px}
+button{padding:12px 20px;border:none;background:#8b5cf6;color:#fff;border-radius:5px;cursor:pointer;font-weight:600}
+button:hover{background:#7c3aed}
+textarea{width:100%;min-height:250px;padding:14px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;border-radius:5px;font-family:'Fira Code',monospace;font-size:13px;resize:vertical}
+#error{color:#ef4444;margin-top:10px;padding:10px;background:#2a1a1a;border-radius:5px;display:none}
+.success{color:#10b981}
+</style>
+</head>
 <body>
-<a href="index.html">Home</a><h1>JSON Formatter</h1>
-<textarea id="input" placeholder="Paste JSON here..."></textarea>
-<div style="margin:10px 0">
-<button onclick="format()">Format JSON</button>
-<button onclick="minify()">Minify JSON</button>
-<button onclick="validate()">Validate JSON</button>
-<button onclick="beautify()">Beautify</button>
+<a href="index.html">Home</a>
+<div class="container">
+<h1>JSON Formatter/Validator</h1>
+<div class="controls">
+<select id="action">
+<option value="format">Format (Pretty)</option>
+<option value="minify">Minify</option>
+<option value="validate">Validate</option>
+</select>
+<button id="btn">Process JSON</button>
+<button id="clearBtn" style="background:#ef4444">Clear</button>
 </div>
-<div id="result"></div>
+<textarea id="input" placeholder="Paste your JSON here..."></textarea>
+<textarea id="output" readonly placeholder="Result will appear here..."></textarea>
+<div id="error"></div>
+</div>
 <script>
-function format(){var r=document.getElementById('result'),i=document.getElementById('input').value;try{r.textContent=JSON.stringify(JSON.parse(i),null,2)}catch(e){r.textContent='Invalid JSON: '+e.message}}
-function minify(){var r=document.getElementById('result'),i=document.getElementById('input').value;try{r.textContent=JSON.stringify(JSON.parse(i))}catch(e){r.textContent='Invalid JSON: '+e.message}}
-function validate(){var r=document.getElementById('result'),i=document.getElementById('input').value;try{JSON.parse(i);r.textContent='✓ Valid JSON'}catch(e){r.textContent='✗ Invalid JSON: '+e.message}}
-function beautify(){var r=document.getElementById('result'),i=document.getElementById('input').value;try{var j=JSON.parse(i);var b=JSON.stringify(j,null,4).split('\n').map(l=>l.padStart(4)).join('');r.textContent=b}catch(e){r.textContent='Invalid JSON: '+e.message}}
+document.getElementById('btn').addEventListener('click',process);
+document.getElementById('clearBtn').addEventListener('click',()=>document.getElementById('input').value='');
+function process(){
+const input=document.getElementById('input').value;
+const action=document.getElementById('action').value;
+const output=document.getElementById('output');
+const error=document.getElementById('error');
+error.style.display='none';
+try{
+const parsed=JSON.parse(input);
+if(action==='format'){
+output.value=JSON.stringify(parsed,null,4);
+}else if(action==='minify'){
+output.value=JSON.stringify(parsed);
+}else{
+output.innerHTML='<span class="success">✓ Valid JSON</span><pre style="margin-top:10px;font-size:12px;">' + JSON.stringify(parsed,null,2) + '</pre>';
+}
+}catch(e){
+output.value='';
+error.innerText='✗ Invalid JSON: ' + e.message;
+error.style.display='block';
+}
+}
 </script>
 </body>
 </html>
