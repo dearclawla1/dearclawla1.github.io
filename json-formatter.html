@@ -1,86 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8"><title>JSON Formatter</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:10px;}
-a{color:#4ec9b0;text-decoration:none;}
-a:hover{text-decoration:underline;}
-h1{margin:10px 0;font-size:24px;}
-.form-group{margin:10px 0;}
-label{display:block;margin-bottom:5px;}
-input,textarea,button{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:8px;border-radius:4px;}
-input:focus,textarea:focus{outline:none;border-color:#4ec9b0;}
-button{cursor:pointer;margin-right:5px;}
-.errors{color:#ff6b6b;font-size:14px;margin-bottom:10px;}
-.valid{color:#4ec9b0;font-weight:bold;}
-</style></head>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
+a{color:#ff6b6b;}
+h1{font-size:24px;}
+.container{max-width:800px;margin:0 auto;}
+textarea,input{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;width:100%;box-sizing:border-box;}
+button{background:#ff6b6b;color:#fff;border:none;padding:10px 20px;cursor:pointer;margin:10px 5px 0 0;font-weight:bold;}
+button:disabled{background:#444;cursor:not-allowed;}
+.result{background:#1a1a1a;padding:15px;margin-top:10px;border:1px solid #333;}
+.error{color:#ff6b6b;}
+</style>
+</head>
 <body>
+<div class="container">
 <a href="index.html">Home</a>
 <h1>JSON Formatter</h1>
-<div class="errors" id="output"></div>
-<div class="form-group">
-<label>Enter JSON:</label>
-<textarea id="input" rows="10" cols="50" placeholder='{"name":"example","value":123}'></textarea>
-</div>
-<div class="form-group">
-<button onclick="format()">Pretty Print</button>
-<button onclick="validate()">Validate</button>
-<button onclick="minify()">Minify</button>
-</div>
-<div class="form-group">
-<label>Format:</label>
-<select id="formatType" onchange="updateOutput()">
-<option value="2">2 spaces</option>
-<option value="4">4 spaces</option>
-<option value="tab">Tab</option>
-</select>
-</div>
-<div class="form-group">
-<label>Output:</label>
-<textarea id="output" rows="10" cols="50" readonly></textarea>
+<p>Paste JSON below and use the tools to format, validate, and pretty-print your data.</p>
+<input type="text" id="jsonInput" placeholder="Paste or type JSON here...">
+<button onclick="formatJson()">Format</button>
+<button onclick="validateJson()">Validate</button>
+<button onclick="minifyJson()">Minify</button>
+<div class="result" id="result"></div>
+<div class="result" id="errorBox"></div>
 </div>
 <script>
-document.getElementById('input').addEventListener('input', updateOutput);
-function updateOutput(){
-  try{
-    const input = document.getElementById('input').value;
-    document.getElementById('output').value = input;
-  }catch(e){}
-}
-function format(){
-  try{
-    const obj = JSON.parse(document.getElementById('input').value);
-    const spaces = document.getElementById('formatType').value;
-    const pretty = JSON.stringify(obj, null, spaces);
-    document.getElementById('output').value = pretty;
-    document.getElementById('output').style.color = '#4ec9b0';
-  }catch(e){
-    document.getElementById('output').value = 'Error: Invalid JSON\n' + e.message;
-    document.getElementById('output').style.color = '#ff6b6b';
-  }
-}
-function validate(){
-  try{
-    const obj = JSON.parse(document.getElementById('input').value);
-    document.getElementById('output').value = '✓ Valid JSON: ' + JSON.stringify(obj);
-    document.getElementById('output').style.color = '#4ec9b0';
-  }catch(e){
-    document.getElementById('output').value = '✗ Invalid JSON: ' + e.message;
-    document.getElementById('output').style.color = '#ff6b6b';
-  }
-}
-function minify(){
-  try{
-    const obj = JSON.parse(document.getElementById('input').value);
-    document.getElementById('output').value = JSON.stringify(obj);
-    document.getElementById('output').style.color = '#4ec9b0';
-  }catch(e){
-    document.getElementById('output').value = 'Error: Invalid JSON\n' + e.message;
-    document.getElementById('output').style.color = '#ff6b6b';
-  }
-}
-updateOutput();
+const errorBox=document.getElementById('errorBox');
+const result=document.getElementById('result');
+const input=document.getElementById('jsonInput');
+let formattedJSON=null;
+function setError(msg){errorBox.textContent=msg;result.textContent=''};function setOutput(msg){errorBox.textContent='';result.textContent=msg;}
+function formatJson(){try{const json=JSON.parse(input.value);input.value=JSON.stringify(json,null,2);setOutput('Formatted!');}catch(e){setError('Invalid JSON. Paste valid JSON and try formatting.');}}
+function validateJson(){try{JSON.parse(input.value);setOutput('JSON is valid!');}catch(e){setError('JSON is invalid: '+e.message);}}
+function minifyJson(){try{const json=JSON.parse(input.value);input.value=JSON.stringify(json);setOutput('Minified!');}catch(e){setError('Invalid JSON. Cannot minify.');}}
 </script>
 </body>
 </html>
