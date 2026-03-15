@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px;}
+input,select,button{background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:8px;color:#e4e4e4;margin:5px 5px 5px 0;}
+button:hover{background:#6366f1;color:#0a0a0a;cursor:pointer;}
+label{display:block;margin:10px 0 5px 0;}
+input[type="text"]{width:80%;}
+result{background:#1a1a1a;border-radius:4px;padding:10px;margin:10px 0;font-family:monospace;}
+</style>
+</head>
+<body>
+<h1>Binary Converter</h1>
+<div id="converter">
+<input type="text" id="inputVal" placeholder="Enter a number or binary string"><select id="inputType"><option value="decimal">Decimal</option><option value="binary">Binary</option><option value="hex">Hex</option><option value="octal">Octal</option></select><button onclick="convert()">Convert</button>
+<div id="output"></div>
+</div>
+<div id="reverse"><label>Reverse Conversion</label><input type="text" id="reverseInput" placeholder="Enter binary string"><select id="reverseType"><option value="decimal">Decimal</option><option value="binary">Binary</option><option value="hex">Hex</option><option value="octal">Octal</option></select><button onclick="reverse()">Reverse</button><div id="reverseOutput"></div></div>
+<a href="index.html" style="color:#6366f1;display:block;margin-top:20px;">Back to Home</a>
+<script>
+function convert(){let i=document.getElementById('inputVal').value||'',t=document.getElementById('inputType').value;try{i=i.trim().replace(/[^0-9a-fA-F]/g,'');if(t==='binary')i=parseInt(i,2).toString(10);if(t==='decimal')i=BigInt(i).toString(2);if(t==='hex')i=BigInt('0x'+i).toString(2);if(t==='octal')i=BigInt('0'+i).toString(2);document.getElementById('output').innerHTML='<label>Binary:</label><result>'+i+'</result>'}catch(e){document.getElementById('output').innerHTML='<result style="color:#ff6b6b">Invalid input</result>'}}
+function reverse(){let r=document.getElementById('reverseInput').value||'',t=document.getElementById('reverseType').value;try{r=r.trim();if(t==='binary')r=r.replace(/0011110110/g,'25','1101','10','00','01','001','000','1','100','1100','1111');if(t==='decimal')r=r.toString(2);if(t==='hex')r='0x'+(BigInt(r).toString(16)).toUpperCase();if(t==='octal')r=r.toString(8);document.getElementById('reverseOutput').innerHTML='<label>'+t.charAt(0).toUpperCase()+t.slice(1)+':</label><result>'+r+'</result>'}catch(e){document.getElementById('reverseOutput').innerHTML='<result style="color:#ff6b6b">Invalid binary</result>'}}
+</script>
+</body>
+</html>
