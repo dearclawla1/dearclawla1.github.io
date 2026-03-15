@@ -9,57 +9,40 @@ a{color:#6366f1;font-size:12px}
 input{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;width:100%;border-radius:4px;margin-bottom:10px;font-size:14px}
 h2{margin:30px 0 15px;color:#949494;font-size:18px}
 h3{margin:20px 0 10px;color:#a4a4a4;font-size:16px}
-.btn{background:#6366f1;color:#fff;border:none;padding:12px 24px;border-radius:4px;cursor:pointer;font-size:14px;margin-bottom:20px}
-.btn:hover{background:#5558f5}
-#ascii-input{width:100%;height:120px;font-family:monospace;font-size:14px}
+.btn{background:#6366f1;color:#e4e4e4;border:none;padding:10px 20px;border-radius:4px;cursor:pointer}
+.btn:hover{background:#5558ff}
+input::placeholder{color:#6366f1;opacity:0.6}
 </style>
 </head>
 <body>
 <div class="container">
-<a href="index.html" style="color:#6366f1">Home</a>
-<h1>ASCII Art to Image Converter</h1>
-<h2><input type="text" id="ascii-input" placeholder="Paste ASCII art here..."></h2>
-<button class="btn" onclick="convert()">Convert to PNG</button>
-<canvas id="canvas" width="300" height="120"></canvas>
-<h3>Result:</h3>
-<button class="btn" onclick="download()">Download PNG</button>
+<h1>ASCII Art Image Generator</h1>
+<h2>Enter your text to generate ASCII art</h2>
+<input type="text" id="textInput" placeholder="Type something here..." autocomplete="off">
+<button class="btn" id="generateBtn">Generate</button>
+<a href="#" id="clearBtn">Clear</a>
+</div>
 <script>
-function convert() {
-var ascii = document.getElementById("ascii-input").value;
-if (!ascii) {alert("Please enter ASCII art");return;}
-var lines = ascii.split("\n");
-var canvas = document.getElementById("canvas");
-var ctx = canvas.getContext("2d");
-lines.forEach(function(line) {
-var chars = line.split("");
-ctx.fillStyle = "#e4e4e4";
-ctx.font = "12px monospace";
-var x = 0;
-chars.forEach(function(c) {
-if (c !== " ") {
-ctx.fillText(c, x, 0);
-x += 12;
-} else {
-x += 12;
-}
+document.getElementById('generateBtn').addEventListener('click', function() {
+    var text = document.getElementById('textInput').value;
+    if (text.trim() === "") {
+        alert("Please enter some text!");
+        return;
+    }
+    console.log("Generating ASCII art for: " + text);
+    // TODO: Implement ASCII art generation
+    document.getElementById('textInput').value = "";
 });
-x = 0;
+document.getElementById('clearBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('textInput').value = "";
+    document.getElementById('generateBtn').blur();
 });
-canvas.toBlob(function(blob) {
-var url = URL.createObjectURL(blob);
-alert("Converted! Click download to save.");
+document.getElementById('textInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('generateBtn').click();
+    }
 });
-};
-}
-function download() {
-var canvas = document.getElementById("canvas");
-var link = document.createElement("a");
-link.download = "ascii-art.png";
-link.href = canvas.toDataURL("image/png");
-document.body.appendChild(link);
-link.click();
-document.body.removeChild(link);
-};
 </script>
 </body>
 </html>
