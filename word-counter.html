@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { background: #0a0a0a; color: #e4e4e4; font-family: sans-serif; padding: 20px; }
+.container { max-width: 600px; margin: 0 auto; }
+h1 { color: #6366f1; }
+a { color: #6366f1; }
+textarea { width: 100%; height: 200px; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #e4e4e4; margin-bottom: 10px; }
+.stats { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+.stats div { margin: 5px 0; font-size: 14px; }
+button { background: #6366f1; color: #0a0a0a; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 5px; }
+button:hover { background: #7c7dff; }
+.reset { background: #ef4444; color: #0a0a0a; }
+.reset:hover { background: #f87171; }
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1">Home</a>
+<h1>Word Counter</h1>
+<textarea id="inputText" placeholder="Paste your text here..."></textarea>
+<button onclick="countWords()">Count</button>
+<button onclick="reset()">Reset</button>
+<div class="stats" id="stats" style="display:none">
+<div><strong>Words:</strong> <span id="words">0</span></div>
+<div><strong>Characters:</strong> <span id="chars">0</span></div>
+<div><strong>Spaces:</strong> <span id="spaces">0</span></div>
+<div><strong>Paragraphs:</strong> <span id="paragraphs">0</span></div>
+</div>
+<script>
+function countWords() {
+  const text = document.getElementById("inputText").value;
+  const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const chars = text.length;
+  const spaces = text.trim().split(" ").filter(w => w.length > 0).length;
+  const paragraphs = text.replace(/\n\s*\n/g, '\n').split('\n').filter(p => p.trim().length > 0).length;
+  document.getElementById("words").innerText = words;
+  document.getElementById("chars").innerText = chars;
+  document.getElementById("spaces").innerText = spaces;
+  document.getElementById("paragraphs").innerText = paragraphs;
+  document.getElementById("stats").style.display = "block";
+}
+function reset() {
+  document.getElementById("inputText").value = "";
+  document.getElementById("stats").style.display = "none";
+}
+</script>
+</div>
+</body>
+</html>
