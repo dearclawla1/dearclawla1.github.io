@@ -9,90 +9,128 @@ body{font-family:sans-serif;margin:0;padding:1rem;background:#0a0a0a;color:#e4e4
 h1{margin:0.5rem 0;color:#6366f1;font-size:1.5rem;}
 .container{max-width:700px;margin:0 auto;flex:1;width:100%;}
 .card{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:1.5rem;}
-textarea{width:100%;min-height:150px;margin-bottom:1rem;padding:0.75rem;border:1px solid #333;border-radius:4px;background:#0f0f0f;color:#e4e4e4;font-size:0.9rem;}
-button{padding:0.75rem 1.5rem;margin-right:0.5rem;margin-bottom:0.5rem;background:#6366f1;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:0.9rem;}
+textarea{width:100%;min-height:150px;padding:0.75rem;border:1px solid #333;border-radius:6px;background:#0a0a0a;color:#e4e4e4;font-family:monospace;font-size:0.9rem;resize:vertical;}
+button{padding:0.75rem 1.5rem;background:#6366f1;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:1rem;margin-top:1rem;}
 button:hover{background:#5558e6;}
-button:disabled{background:#333;color:#666;cursor:not-allowed;}
-.result{margin-top:1.5rem;padding:1rem;background:#0f0f0f;border-radius:4px;font-size:0.9rem;}
-.result.success{border-left:4px solid #10b981;}
-.result.error{border-left:4px solid #ef4444;}
-.placeholder{color:#666;font-style:italic;}
-</style>
+.result-box{margin-top:1rem;padding:1rem;background:#1a1a1a;border:1px solid #333;border-radius:6px;font-family:monospace;font-size:0.9rem;}
+.result-box.success{border-color:#10b981;}
+.result-box.error{border-color:#ef4444;}
+.status-text{margin-top:0.5rem;font-size:0.9rem;color:#e4e4e4;}
+.empty-state{color:#888;font-style:italic;font-size:0.9rem;text-align:center;padding:2rem;}</style>
 </head>
 <body>
 <div class="container">
-<h1>🔍 API Key Redaction Scanner</h1>
 <div class="card">
-<textarea id="input" placeholder="Paste your API keys, configuration files, or logs to scan for exposed credentials..."></textarea>
-<button id="scan">Scan for Redaction Issues</button>
-<button id="clear" disabled>Clear</button>
-<div id="result" class="result" style="display:none;"></div>
+<h1>API Key Redaction Scanner</h1>
+<textarea id="apiInput" placeholder="Paste your API keys or configuration files here..."></textarea>
+<div id="emptyState" class="empty-state">Tip: Scan for AWS, Azure, GitHub, and common API key patterns</div>
+<button id="scanBtn">Scan for Redactions</button>
+<div class="result-box" id="resultBox" style="display:none;"></div>
+<div class="status-text" id="statusText"></div>
 </div>
 </div>
 <script>
-const input = document.getElementById('input');
-const scanBtn = document.getElementById('scan');
-const clearBtn = document.getElementById('clear');
-const resultDiv = document.getElementById('result');
+const apiInput = document.getElementById('apiInput');
+const scanBtn = document.getElementById('scanBtn');
+const resultBox = document.getElementById('resultBox');
+const statusText = document.getElementById('statusText');
+const emptyState = document.getElementById('emptyState');
 
-scanBtn.addEventListener('click', async () => {
-  const text = input.value.trim();
-  if (!text) {
-    resultDiv.textContent = '⚠️ Please enter text to scan.';
-    resultDiv.className = 'result error';
-    resultDiv.style.display = 'block';
+let isScanning = false;
+
+function showResult(message, type) {
+  resultBox.style.display = 'block';
+  resultBox.className = 'result-box ' + type;
+  resultBox.textContent = message;
+}
+
+function showError(message) {
+  showResult(message, 'error');
+}
+
+function showSuccess(message) {
+  showResult(message, 'success');
+}
+
+function hideEmptyState() {
+  emptyState.style.display = 'none';
+}
+
+function scanForRedactions() {
+  const input = apiInput.value.trim();
+  
+  // Error handling: Empty input check
+  if (input === '') {
+    showError('Please paste API keys or configuration content to scan.');
     return;
   }
-  
-  resultDiv.style.display = 'none';
-  
-  // Simulate scanning
+
+  isScanning = true;
+  scanBtn.disabled = true;
+  statusText.textContent = 'Scanning...';
+
+  // Simulate scanning delay for UX
   setTimeout(() => {
     const patterns = [
-      /sk-[a-zA-Z0-9]{36,}/, // Stripe keys
-      /pk_live_[a-zA-Z0-9]{24,}/, // Stripe live keys
-      /ghp_[a-zA-Z0-9]{36}/, // GitHub personal access tokens
-      /AKIA[0-9A-Z]{16}/, // AWS access keys
-      /api_key\s*=\s*['"]?[a-zA-Z0-9]{20,}/i
+      {name: 'AWS Access Key', pattern: /AKIA[0-9A-Z]{16}/gi},
+      {name: 'AWS Secret Key', pattern: /[0-9a-zA-Z\/+]{40}/gi},
+      {name: 'GitHub Token', pattern: /ghp_[0-9a-zA-Z]{36}/gi},
+      {name: 'Bearer Token', pattern: /Bearer [0-9a-zA-Z\-_]{20,}/gi},
+      {name: 'Generic API Key', pattern: /api[_-]?key[=:][0-9a-zA-Z\-_]{20,}/gi}
     ];
-    
-    let issues = [];
+
+    let found = false;
+    let results = [];
+
     patterns.forEach(pattern => {
-      const matches = text.match(pattern);
+      const matches = input.match(pattern.pattern);
       if (matches) {
+        found = true;
         matches.forEach(match => {
-          issues.push({ type: 'Exposed', value: match });
+          results.push({pattern: pattern.name, value: match, redacted: pattern.pattern.replace(/([0-9a-zA-Z\-_]{20,})/, '[REDACTED]')});
         });
       }
     });
-    
-    if (issues.length > 0) {
-      resultDiv.innerHTML = `<strong>${issues.length} potential credential exposure(s) detected:</strong><br>` +
-        issues.slice(0, 5).map((i, idx) => `<div>${idx+1}. <span class="placeholder">${i.value}</span></div>`).join('');
-      resultDiv.className = 'result error';
+
+    if (found) {
+      statusText.textContent = 'Found ' + results.length + ' potential redaction(s)';
+      showSuccess('Scanned ' + input.length + ' characters.\n\n' + results.map(r => '- ' + r.pattern + ': ' + r.redacted).join('\n'));
     } else {
-      resultDiv.textContent = '✅ No obvious credential patterns detected in this text.';
-      resultDiv.className = 'result success';
+      statusText.textContent = 'Scan complete';
+      showSuccess('No common API key patterns detected in ' + input.length + ' characters.');
     }
-    resultDiv.style.display = 'block';
-    clearBtn.disabled = false;
-  }, 300);
-});
 
-clearBtn.addEventListener('click', () => {
-  input.value = '';
-  input.focus();
-  resultDiv.style.display = 'none';
-  clearBtn.disabled = true;
-});
+    isScanning = false;
+    scanBtn.disabled = false;
+  }, 1000);
+}
 
-// Enter key to scan
-input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    scanBtn.click();
+scanBtn.addEventListener('click', scanForRedactions);
+
+// Error handling: Add clear/reset functionality
+apiInput.addEventListener('input', () => {
+  if (apiInput.value.trim() === '') {
+    emptyState.style.display = 'block';
+    resultBox.style.display = 'none';
+    statusText.textContent = '';
+  } else {
+    hideEmptyState();
   }
 });
+
+// Better UX: Keyboard shortcut (Enter to submit)
+apiInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    scanForRedactions();
+  }
+});
+
+// Mobile responsive: Add flex-wrap for buttons
+@media (max-width: 600px) {
+  .card { padding: 1rem; }
+  button { width: 100%; }
+}
 </script>
 </body>
 </html>
