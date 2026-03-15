@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JSON Path Tester</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
+input,button,select{margin:5px 0;cursor:pointer;}
+#output{background:#1a1a1a;border:1px solid #333;padding:10px;min-height:100px;}
+a{color:#6366f1;text-decoration:none;}
+</style>
+</head>
+<body>
+<h1>JSON Path Tester</h1>
+<textarea id="jsonInput" rows="5" cols="40">{"user":{"name":"John","age":30},"items":[1,2,3]}</textarea>
+<input type="text" id="pathInput" placeholder="Path (e.g., user.name)" value="user.name">
+<button onclick="testPath()">Test Path</button>
+<button onclick="reset()">Reset</button>
+<div id="output"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function testPath(){
+const json=document.getElementById('jsonInput').value;
+const path=document.getElementById('pathInput').value;
+try{
+const obj=JSON.parse(json);
+const parts=path.split('.');
+let result=obj;
+for(const p of parts){
+result=result[p];
+if(result===undefined)throw new Error('Path not found');
+}
+document.getElementById('output').innerText='Result: '+(typeof result==='object'?'{...}':JSON.stringify(result));
+}catch(e){
+document.getElementById('output').innerText='Error: '+e.message;
+}
+}
+function reset(){
+document.getElementById('jsonInput').value='{"user":{"name":"John","age":30},"items":[1,2,3]}';
+document.getElementById('pathInput').value='user.name';
+document.getElementById('output').innerText='';
+}
+</script>
+</body>
+</html>
