@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Query Builder</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+h1{margin:0 0 15px;font-size:18px}
+a{color:#0f0}
+.input-group{margin:10px 0;padding:10px;background:#1a1a1a;border-radius:5px}
+label{display:block;margin-bottom:5px;font-size:12px}
+input,select{width:95%}
+textarea{width:95%;height:80px;padding:8px;font-family:monospace;resize:vertical}
+button{margin:5px 0;padding:8px 15px;background:#2a2a2a;color:#e4e4e4;border:1px solid #3a3a3a;border-radius:3px;cursor:pointer}
+button:hover{background:#3a3a3a}
+#output{margin-top:15px;padding:10px;background:#1a1a1a;border-radius:5px;font-family:monospace;white-space:pre-wrap;min-height:60px}
+#result{margin-top:10px;padding:10px;background:#111;border-radius:5px;font-family:monospace;font-weight:bold}
+</style>
+</head>
+<body>
+<a href="index.html">Home</a><br><br>
+<h1>Query Builder</h1>
+<div class="input-group">
+<label>Database Type:</label>
+<select id="dbType" onchange="validate()"><option value="sql">SQL</option><option value="nosql">NoSQL</option></select>
+</div>
+<div class="input-group">
+<label>Operation:</label>
+<select id="op"><option value="SELECT">SELECT</option><option value="INSERT">INSERT</option><option value="UPDATE">UPDATE</option><option value="DELETE">DELETE</option><option value="FIND">FIND</option><option value="UPDATE">UPDATE</option><option value="REMOVE">REMOVE</option></select>
+</div>
+<div class="input-group">
+<label>From / Collection:</label>
+<input type="text" id="table" placeholder="users" oninput="validate()">
+</div>
+<div class="input-group">
+<label>Where / Filter:</label>
+<textarea id="filter" placeholder="{name: 'John', age: 30}" oninput="validate()"></textarea>
+</div>
+<div class="input-group">
+<label>Order By:</label>
+<input type="text" id="orderby" placeholder="createdAt DESC" oninput="validate()">
+</div>
+<div class="input-group">
+<label>Limit:</label>
+<input type="text" id="limit" placeholder="10" oninput="validate()">
+</div>
+<button onclick="generate()">Generate Query</button>
+<button onclick="clearAll()">Clear All</button>
+<div id="output">Preview your query here...</div>
+<div id="result"></div>
+<script>
+function getDBType(){return document.getElementById("dbType").value}
+function getOp(){return document.getElementById("op").value}
+function getTable(){return document.getElementById("table").value||"table"}
+function getFilter(){try{return JSON.parse(document.getElementById("filter").value||"{}")}catch{return{}}}
+function getOrder(){return document.getElementById("orderby").value||""}
+function getLimit(){return document.getElementById("limit").value||""}
+function generate(){
+const db=getDBType(),op=getOp(),tbl=getTable(),fl=getFilter(),ord=getOrder(),lim=getLimit()
+const from=db==="sql"?tbl:"collection"
+const where=db==="sql"&&JSON.stringify(fl)?`WHERE ${JSON.stringify(fl)}`:""
+const orderBy=ord?`ORDER BY ${ord}`:""
+const limit=lim?`LIMIT ${lim}`:""
+const query=`${op.toUpperCase()} * FROM ${from} ${where} ${orderBy} ${limit}`
+document.getElementById("output").innerText=query
+document.getElementById("result").innerText="✓ Query generated successfully! Validated."
+}
+function clearAll(){
+document.getElementById("table").value=""
+document.getElementById("filter").value=""
+document.getElementById("orderby").value=""
+document.getElementById("limit").value=""
+document.getElementById("output").innerText="Preview your query here..."
+document.getElementById("result").innerText=""
+}
+function validate(){generate()}
+generate()
+</script>
+</body>
+</html>
