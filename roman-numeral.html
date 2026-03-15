@@ -2,51 +2,33 @@
 <html>
 <head>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-.container{max-width:400px;margin:0 auto}
-.back{color:#6366f1;font-size:12px;display:block;margin:10px 0;text-decoration:none}
-.btn{background:#6366f1;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px}
-.input{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;border-radius:6px;width:300px;margin:10px 0;font-size:14px}
-.result{background:#1a1a1a;padding:15px;border-radius:6px;margin-top:10px;font-size:14px;text-align:center}
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
+.container{max-width:600px;margin:0 auto;}
+input,button{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:none;font-size:16px;}
+input{background:#1a1a1a;color:#e4e4e4;}
+button{background:#6366f1;color:#fff;}
+.result{background:#1a1a1a;padding:20px;border-radius:8px;margin-top:10px;}
+.result h3{margin:0 0 10px;opacity:0.8;}
+.result p{opacity:0.9;margin:5px 0;}
+.back{color:#6366f1;text-decoration:none;font-size:14px;}
 </style>
 </head>
 <body>
-<a href="index.html" class="back">Home</a>
 <div class="container">
-<h1 style="text-align:center">Roman Numeral Converter</h1>
-<div class="result" id="result">Result will appear here</div>
-<input type="text" id="roman" class="input" placeholder="Enter Roman numeral (e.g., X, LXXV)">
-<input type="text" id="arabic" class="input" placeholder="Or enter Arabic number (e.g., 25, 75)">
-<button onclick="toRoman()" class="btn">To Roman Numeral</button>
-<button onclick="toArabic()" class="btn">To Arabic Number</button>
+<h1>Roman Numeral Converter</h1>
+<p>Convert numbers to Roman numerals and vice versa</p>
+<input type="text" id="arabic" placeholder="Arabic Number (e.g., 1987)">
+<button onclick="toRoman()">To Roman Numeral</button>
+<input type="text" id="roman" placeholder="Roman Numeral (e.g., MCMXXXVII)">
+<button onclick="toArabic()">To Arabic Number</button>
+<div class="result" id="result"></div>
+<a href="index.html" class="back">Home</a>
 </div>
 <script>
-function toRoman(){
-let r=document.getElementById('roman').value||'1';
-let a=document.getElementById('arabic').value||'';
-let res='';
-let n=parseInt(r);
-let M=1000,C=100,X=10,V=5,I=1;
-if(n>=1000){res+=M*n-999;n%=100}
-if(n>=100){res+=C*(n>=99?1:(n>=4?1:0));if(n>=50&&n<100){res+=V*(n>=5?1:0);n%=5}else{n-=99}}
-if(n>=10){res+=X*(n>=9?1:(n>=4?1:0));if(n>=5&&n<10){res+=V*(n>=5?1:0);n%=5}else{n-=9}}
-if(n>=1){res+=I*n}
-document.getElementById('arabic').value=res;
-document.getElementById('result').innerText='Arabic: '+res}
-function toArabic(){
-let a=document.getElementById('arabic').value||'1';
-let r=document.getElementById('roman').value||'';
-let num=parseInt(a);
-let rom='';
-let M=1000,C=100,X=10,V=5,I=1;
-if(num>=1000){rom+=M;num-=1000}else if(num>=900){rom+='CM';num-=900}else if(num>=500){rom+='D';num-=500}else if(num>=400){rom+='CD';num-=400}
-for(let i=0;i<100&&num>0;i++){
-if(num>=100){rom+=C*(num>=99?1:(num>=4?1:0));if(num>=50&&num<100){rom+=V*(num>=5?1:0);i--}else{num-=99}}
-else if(num>=10){rom+=X*(num>=9?1:(num>=4?1:0));if(num>=5&&num<10){rom+=V*(num>=5?1:0);i--}else{num-=9}}
-else{rom+=I*num;break}
-}
-document.getElementById('roman').value=rom;
-document.getElementById('result').innerText='Roman: '+rom}
+function romanToInt(s){const m={M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};let i=0,n=0;while(i<s.length){let v=0;for(let k in m)if(s.slice(i,k.length+1+i)===k){v=m[k];break}n+=v;i+=k.length+1}return n}
+function intToRoman(n){const c=[1000,900,500,400,100,90,50,40,10,9,5,4,1],v=['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];let r='';while(n>0){for(let i=0;i<c.length;i++)if(n>=c[i]){r+=v[i];n-=c[i];break}}return r}
+function toRoman(){const a=document.getElementById('arabic').value.trim();if(!a) return document.getElementById('result');try{const r=intToRoman(parseInt(a));document.getElementById('result').innerHTML='<h3>Result</h3><p>' + a + ' in Roman: ' + r + '</p>'}catch(e){document.getElementById('result').innerHTML='<h3>Error</h3><p>' + e.message + '</p>'}}
+function toArabic(){const r=document.getElementById('roman').value.trim();if(!r) return document.getElementById('result');try{const n=romanToInt(r);document.getElementById('result').innerHTML='<h3>Result</h3><p>' + r + ' in Arabic: ' + n + '</p>'}catch(e){document.getElementById('result').innerHTML='<h3>Error</h3><p>' + e.message + '</p>'}}
 </script>
 </body>
 </html>
