@@ -1,49 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Roman Numeral Converter</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-a{color:#6366f1;text-decoration:none}
-a:hover{text-decoration:underline}
-.container{max-width:600px;margin:0 auto}
-h1{margin-top:0}
-input{width:100%;padding:12px;font-size:16px;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#e4e4e4}
-button{width:100%;padding:12px;font-size:16px;background:#6366f1;border:none;border-radius:6px;color:#fff;margin:10px 0 cursor:pointer}
-button:hover{background:#5558ff}
-.result{background:#1a1a1a;padding:15px;border-radius:6px;border:1px solid #333;font-size:18px}
-input[type="number"]{text-align:center}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0a0a0a;color:#e4e4e4;padding:20px;min-height:100vh}
+.container{max-width:500px;margin:0 auto}
+h1{text-align:center;margin-bottom:20px;font-size:1.5rem}
+a{display:block;text-align:center;padding:10px;margin-bottom:15px;background:#1a1a1a;border-radius:6px;text-decoration:none;color:#6366f1}
+.form-group{margin-bottom:15px}
+label{display:block;margin-bottom:5px;font-weight:600;color:#a4a4a4}
+input,select{width:100%;padding:12px;border:1px solid #333;border-radius:6px;background:#1a1a1a;color:#e4e4e4;font-size:1rem}
+input:focus,select:focus{outline:2px solid #6366f1;border-color:#6366f1}
+button{width:100%;padding:14px;background:#6366f1;color:#fff;border:none;border-radius:6px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:10px}
+button:hover{background:#5558e6}
+#result{margin-top:20px;padding:15px;background:#1a1a1a;border-radius:6px;display:none}
+#result.show{display:block}
+.error{color:#ef4444;font-weight:600}
 </style>
 </head>
 <body>
-<a href="index.html" style="color:#6366f1">Home</a>
 <div class="container">
-<h1>Roman Numeral Converter</h1>
-<input type="number" id="inputNum" placeholder="Enter Arabic number">
-<button onclick="convert()">Convert to Roman</button>
-<input type="text" id="inputRoman" placeholder="Enter Roman numeral">
-<button onclick="convertReverse()">Convert to Arabic</button>
-<div class="result" id="result"></div>
+<h1> Roman Numeral Converter </h1>
+<a href="index.html" style="color:#6366f1">Home</a>
+<div class="form-group">
+<label>Enter Arabic Number</label>
+<input type="number" id="arabic" placeholder="123" min="1" max="3999">
+</div>
+<div class="form-group">
+<label>Convert To</label>
+<select id="direction">
+<option value="arabic2roman">Arabic to Roman</option>
+<option value="roman2arabic">Roman to Arabic</option>
+</select>
+</div>
+<button onclick="convert()">Convert</button>
+<div id="result">
+<label>Result:</label>
+<div id="output"></div>
+<div id="error" class="error"></div>
+</div>
 </div>
 <script>
-function toRoman(num){
-if(num<=0||num>3999)return"Invalid range (1-3999)";
-let m=[1000,900,500,400,100,90,50,40,10,9,5,4,1],n=["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
-let res="",i=0;
-while(num>0){
-while(num>=m[i]){res+=n[i];num-=m[i]}i++}
-return res
+function convert(){
+const arabic = parseInt(document.getElementById('arabic').value);
+const direction = document.getElementById('direction').value;
+const output = document.getElementById('output');
+const error = document.getElementById('error');
+const resultBox = document.getElementById('result');
+resultBox.classList.remove('show');
+error.textContent = '';
+if(isNaN(arabic) || arabic < 1 || arabic > 3999){
+error.textContent = 'Please enter a valid number between 1 and 3999';
+resultBox.classList.add('show');
+return;
 }
-function toArabic(str){
-let valid=/^M?C?D?C?XL?X?IX?V?IV?I?$/;
-if(!valid.test(str))return"Invalid Roman numeral";
-let val={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};
-let sum=0,prev=0;
-for(let i=str.length-1;i>=0;i--){sum+=val[str[i]];if(sum>prev*9)sum-=prev*10;prev=val[str[i]]}
-return sum
+if(direction === 'arabic2roman'){
+let roman = '';
+const values = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+const maps = {'M':1000,'CM':900,'D':500,'CD':400,'C':100,'XC':90,'L':50,'XL':40,'X':10,'IX':9,'V':5,'IV':4,'I':1};
+for(let i=0;i<values.length;i++){
+while(arabic >= values[i]){
+roman += maps[Object.keys(maps).find(key => maps[key] === values[i])];
+arabic -= values[i];
 }
-function convert(){let r=document.getElementById("result");r.innerText="Roman: "+toRoman(parseInt(document.getElementById("inputNum").value||"0"))}
-function convertReverse(){let r=document.getElementById("result");r.innerText="Arabic: "+toArabic(document.getElementById("inputRoman").value||"")}</script>
+}
+output.textContent = roman;
+}else{
+const roman = document.getElementById('arabic').value.toUpperCase();
+if(!/^(M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$)/.test(roman)){
+error.textContent = 'Invalid Roman numeral';
+resultBox.classList.add('show');
+return;
+}
+const values = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+const maps = {'M':1000,'CM':900,'D':500,'CD':400,'C':100,'XC':90,'L':50,'XL':40,'X':10,'IX':9,'V':5,'IV':4,'I':1};
+let arabic = 0;
+for(let i=0;i<roman.length;i++){
+arabic += maps[roman[i]];
+if(i>0 && maps[roman[i]] < maps[roman[i-1]]){
+arabic -= 2*maps[roman[i]];
+}
+}
+output.textContent = arabic;
+}
+resultBox.classList.add('show');
+}
+</script>
 </body>
 </html>
