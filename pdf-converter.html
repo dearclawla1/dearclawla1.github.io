@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
+a{color:#7ee787;text-decoration:none;}
+.container{max-width:800px;margin:0 auto;}
+h1{margin-top:0;}
+textarea{width:100%;height:200px;background:#1a1a1a;border:1px solid #333;padding:10px;color:#e4e4e4;}
+button{background:#7ee787;color:#0a0a0a;border:none;padding:10px 20px;cursor:pointer;margin:5px 0;}
+select{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;}
+input{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;}
+.hidden{display:none;}
+.result{background:#1a1a1a;padding:15px;margin-top:10px;border:1px solid #333;}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html">Home</a>
+<h1>PDF Converter</h1>
+<input type="file" id="fileInput" accept=".pdf">
+<select id="formatSelect">
+<option value="txt">Plain Text</option>
+<option value="html">HTML</option>
+<option value="markdown">Markdown</option>
+</select>
+<button onclick="convert()">Convert</button>
+<textarea id="output" class="hidden"></textarea>
+<div id="result" class="result hidden">
+<pre id="resultText"></pre>
+<button onclick="copyResult()" id="copyBtn">Copy</button>
+</div>
+</div>
+<script>
+function convert() {
+const fileInput = document.getElementById('fileInput');
+const output = document.getElementById('output');
+const result = document.getElementById('result');
+const resultText = document.getElementById('resultText');
+const copyBtn = document.getElementById('copyBtn');
+const format = document.getElementById('formatSelect').value;
+
+if (!fileInput.files.length) {
+alert('Please select a PDF file first.');
+return;
+}
+
+// Simulated conversion (real implementation would use pdf.js or similar)
+output.value = 'Processing ' + fileInput.files[0].name + '...';
+result.classList.add('hidden');
+output.classList.remove('hidden');
+
+setTimeout(() => {
+output.classList.add('hidden');
+result.classList.remove('hidden');
+copyBtn.classList.remove('hidden');
+
+let content = 'Sample PDF content for ' + fileInput.files[0].name + '\n\n';
+content += 'This is a simulated PDF to text converter.\n';
+content += 'In a real implementation, this would extract actual text.\n';
+content += 'Format selected: ' + format + '\n';
+content += '====================\n\n';
+
+if (format === 'html') {
+content += '<h2>' + fileInput.files[0].name + '</h2>\n';
+content += '<p>Document preview...</p>\n';
+} else if (format === 'markdown') {
+content += '# ' + fileInput.files[0].name + '\n\n';
+content += '## Document Content\n\n';
+content += 'This is a markdown preview of the PDF.\n\n';
+} else {
+content += fileInput.files[0].name + '\n\n';
+content += 'Document extracted as plain text.\n';
+}
+
+resultText.textContent = content;
+}, 1500);
+}
+
+function copyResult() {
+const resultText = document.getElementById('resultText').textContent;
+navigator.clipboard.writeText(resultText);
+alert('Copied to clipboard!');
+}
+</script>
+</body>
+</html>
