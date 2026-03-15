@@ -14,103 +14,196 @@ textarea{min-height:200px;resize:vertical}
 input::placeholder{color:#888}
 button{width:100%;padding:12px;margin:8px 0;border:none;background:#333;color:#e4e4e4;border-radius:4px;cursor:pointer;font-size:14px}
 button:hover{background:#444}
-#formatBtn{background:#4CAF50}
-#formatBtn:hover{background:#45a049}
-#clearBtn{background:#f44336}
-#clearBtn:hover{background:#e53935}
-#loading{display:none;text-align:center;padding:20px}
-#loading.active{display:block}
-#result{background:#1a1a1a;padding:15px;border-radius:4px;min-height:100px;white-space:pre-wrap;font-family:monospace;font-size:13px}
-#error{background:#f44336;padding:10px;border-radius:4px;color:#fff;margin:10px 0;display:none}
+#formatBtn{background:#4C7AF3}
+#formatBtn:hover{background:#5A8CFD}
+#formatBtn:active{background:#3A6ACB}
+#outputArea{min-height:150px;font-size:12px;line-height:1.6;background:#111}
+#statusArea{padding:10px;margin:10px 0;background:#1a1a1a;border-radius:4px;font-size:13px;color:#aaa;display:none}
+#clearBtn{background:#e44c4c}
+#clearBtn:hover{background:#f45c5c}
+.loading{text-align:center;padding:20px;color:#888}
+.error{color:#e44c4c}
+.success{color:#4caf50}
 @media(max-width:600px){
-.container{max-width:100%;padding:0 10px}
-textarea{min-height:150px}
-}</style>
+.container{max-width:100%;padding:10px}
+button{font-size:13px;padding:10px}
+textarea{min-height:180px}
+}
+</style>
 </head>
 <body>
 <div class="container">
 <h1>JSON Formatter</h1>
-<p>Paste your JSON below to format, validate, or minify.</p>
-<textarea id="jsonInput" placeholder="Paste your JSON here... e.g., {&quot;name&quot;: &quot;test&quot;}&quot;: 123}"></textarea>
-<div id="loading"><span>Loading...</span></div>
-<div id="error"></div>
-<button id="formatBtn">Format JSON</button>
-<button id="minifyBtn">Minify JSON</button>
-<button id="validateBtn">Validate JSON</button>
-<button id="clearBtn">Clear</button>
-<div id="result"></div>
+<p>Paste your JSON below to format, validate, and minify.</p>
+<div id="statusArea"></div>
+<div id="placeholderText" style="color:#666;font-style:italic;margin-bottom:10px;">
+  Paste your JSON here...
+  <br>
+  <small>Supports: format, validate, minify</small>
+</div>
+<textarea id="inputArea" placeholder="Paste your JSON here...&#10;Features: format pretty print, validate syntax, minify compact" rows="12"></textarea>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button id="formatBtn" onclick="formatJSON()">Format JSON</button>
+<button id="minifyBtn" onclick="minifyJSON()">Minify JSON</button>
+<button id="validateBtn" onclick="validateJSON()">Validate JSON</button>
+<button id="clearBtn" onclick="clearAll()">Clear All</button>
+</div>
+<div style="margin-top:15px;color:#666;font-size:13px;text-align:center">
+  <small>⌨️ Press <strong>Enter</strong> in input area to format • <strong>Ctrl+Enter</strong> to minify • <strong>Shift+Enter</strong> to validate</small>
+</div>
+<textarea id="outputArea" placeholder="Formatted JSON will appear here...&#10;Output is read-only to prevent accidental edits" readonly rows="10"></textarea>
+<div style="margin-top:10px;font-size:13px;color:#666;text-align:center">
+  <small>💡 Tip: Select all text (Ctrl+A) then press Enter to format the entire output</small>
+</div>
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', function(){
-const input = document.getElementById('jsonInput');
-const result = document.getElementById('result');
-const error = document.getElementById('error');
-const loading = document.getElementById('loading');
-const formatBtn = document.getElementById('formatBtn');
-const minifyBtn = document.getElementById('minifyBtn');
-const validateBtn = document.getElementById('validateBtn');
-const clearBtn = document.getElementById('clearBtn');
+(function(){
+// Element references
+const inputArea = document.getElementById('inputArea');
+const outputArea = document.getElementById('outputArea');
+const statusArea = document.getElementById('statusArea');
+const placeholderText = document.getElementById('placeholderText');
 
-// Try-catch error handling
-function processJSON(jsonString, operation) {
-try {
-loading.classList.add('active');
-result.textContent = '';
-error.style.display = 'none';
-setTimeout(() => {
-const data = JSON.parse(jsonString);
-switch(operation) {
-case 'format':
-const formatted = JSON.stringify(data, null, 2);
-result.textContent = formatted;
-break;
-case 'minify':
-result.textContent = JSON.stringify(data);
-break;
-case 'validate':
-if (jsonString.trim() === '') {
-error.textContent = 'Error: Empty input';
-error.style.display = 'block';
-} else if (data === null) {
-error.textContent = 'Error: Invalid JSON';
-error.style.display = 'block';
-} else {
-result.textContent = '✓ Valid JSON: ' + JSON.stringify(data, null, 2);
-}
-break;
-}
-loading.classList.remove('active');
-}, 50);
-} catch (e) {
-error.textContent = 'Error: ' + e.message;
-error.style.display = 'block';
-loading.classList.remove('active');
-}
+// Show/hide placeholder based on input
+function togglePlaceholder(show) {
+  if (show) {
+    placeholderText.style.display = 'block';
+    inputArea.placeholder = 'Paste your JSON here...';
+  } else {
+    placeholderText.style.display = 'none';
+    inputArea.placeholder = '';
+  }
 }
 
-// Event listeners with try-catch
-try {
-formatBtn.addEventListener('click', () => processJSON(input.value, 'format'));
-minifyBtn.addEventListener('click', () => processJSON(input.value, 'minify'));
-validateBtn.addEventListener('click', () => processJSON(input.value, 'validate'));
-clearBtn.addEventListener('click', () => {
-input.value = '';
-result.textContent = '';
-error.style.display = 'none';
-input.focus();
+// Format JSON pretty print
+function formatJSON() {
+  try {
+    const input = inputArea.value.trim();
+    if (!input) {
+      showStatus('error', 'Please paste JSON first');
+      return;
+    }
+    const data = JSON.parse(input);
+    const formatted = JSON.stringify(data, null, 2);
+    outputArea.value = formatted;
+    showStatus('success', 'JSON formatted successfully');
+    togglePlaceholder(false);
+  } catch (e) {
+    showStatus('error', 'Invalid JSON: ' + e.message);
+  }
+}
+
+// Minify JSON compact
+function minifyJSON() {
+  try {
+    const input = inputArea.value.trim();
+    if (!input) {
+      showStatus('error', 'Please paste JSON first');
+      return;
+    }
+    const data = JSON.parse(input);
+    const minified = JSON.stringify(data);
+    outputArea.value = minified;
+    showStatus('success', 'JSON minified successfully');
+    togglePlaceholder(false);
+  } catch (e) {
+    showStatus('error', 'Invalid JSON: ' + e.message);
+  }
+}
+
+// Validate JSON syntax
+function validateJSON() {
+  try {
+    const input = inputArea.value.trim();
+    if (!input) {
+      showStatus('error', 'Please paste JSON first');
+      return;
+    }
+    JSON.parse(input);
+    outputArea.value = '✅ Valid JSON\n\nOriginal: ' + input.length + ' bytes\nValidated: Syntax OK\n\nFormatted view:\n' + JSON.stringify(JSON.parse(input), null, 2);
+    showStatus('success', 'JSON validated successfully');
+    togglePlaceholder(false);
+  } catch (e) {
+    outputArea.value = '❌ Invalid JSON\n\nError: ' + e.message + '\n\nInput: ' + input.substring(0, 200) + '...';
+    showStatus('error', 'Validation failed: ' + e.message);
+  }
+}
+
+// Clear all inputs and output
+function clearAll() {
+  inputArea.value = '';
+  outputArea.value = '';
+  showStatus('', '');
+  togglePlaceholder(true);
+}
+
+// Show status message
+function showStatus(type, message) {
+  statusArea.style.display = 'block';
+  statusArea.className = type;
+  statusArea.textContent = message;
+  setTimeout(() => {
+    if (!inputArea.value && !outputArea.value) {
+      statusArea.style.display = 'none';
+    }
+  }, 3000);
+}
+
+// Keyboard shortcuts
+inputArea.addEventListener('keydown', function(e) {
+  // Enter to format
+  if (e.key === 'Enter' && e.ctrlKey === false && e.shiftKey === false) {
+    e.preventDefault();
+    formatJSON();
+  }
+  // Ctrl+Enter to minify
+  else if (e.key === 'Enter' && e.ctrlKey) {
+    e.preventDefault();
+    minifyJSON();
+  }
+  // Shift+Enter to validate
+  else if (e.key === 'Enter' && e.shiftKey) {
+    e.preventDefault();
+    validateJSON();
+  }
+  // Ctrl+Enter+C to clear (with confirmation)
+  else if (e.key === 'c' && e.ctrlKey && e.metaKey === false) {
+    e.preventDefault();
+    if (confirm('Clear all?')) {
+      clearAll();
+    }
+  }
 });
 
-// Keyboard shortcut: Enter to submit (on format button)
-input.addEventListener('keydown', (e) => {
-if (e.key === 'Enter') {
-e.preventDefault();
-formatBtn.click();
-}
+// Auto-format when pasting valid JSON
+inputArea.addEventListener('paste', function() {
+  const pasted = inputArea.value;
+  try {
+    JSON.parse(pasted);
+    showStatus('success', 'Pasted JSON is valid');
+  } catch (e) {
+    // Ignore invalid JSON paste
+  }
 });
-} catch (e) {
-console.error('Setup error:', e);
-}
+
+// Auto-clear output when input is cleared
+inputArea.addEventListener('input', function() {
+  if (this.value.length < 3) {
+    outputArea.value = '';
+    showStatus('', '');
+  }
 });
+
+// Load any existing content (simulated)
+// In production, you might load from localStorage
+// if (localStorage.getItem('jsonInput')) {
+//   inputArea.value = localStorage.getItem('jsonInput');
+// }
+
+// Initialize
+togglePlaceholder(true);
+
+})();
 </script>
 </body>
 </html>
