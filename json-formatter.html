@@ -1,61 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset='UTF-8'>
-<title>JSON Formatter</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:monospace}
-body{background:#0a0a0a;color:#e4e4e4;padding:20px}
-h1{margin-bottom:10px}
-a{color:#e4e4e4;text-decoration:none;font-size:12px}
-.controls{margin-bottom:15px;display:flex;gap:10px}
-input,button{padding:8px 12px;border:1px solid #333;border-radius:4px;font-size:12px}
-button:hover{border-color:#e4e4e4}
-#json-input{width:100%;height:200px;background:#0a0a0a;border:1px solid #333;color:#e4e4e4;font-family:monospace;font-size:12px;padding:10px;resize:vertical}
-#output{width:100%;height:200px;background:#0a0a0a;border:1px solid #333;color:#e4e4e4;font-family:monospace;font-size:12px;padding:10px;white-space:pre-wrap}
-#status{margin-top:10px;padding:8px;border-radius:4px;font-size:12px}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
+a{color:#818cf8;text-decoration:none;}
+a:hover{text-decoration:underline;}
+.container{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:400px;}
+textarea{width:100%;height:100%;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;border-radius:5px;resize:none;font-family:monospace;font-size:13px;}
+button{background:#4c4c9c;color:#fff;border:none;padding:10px 15px;border-radius:5px;cursor:pointer;}
+button:hover{background:#5c5cb5;}
+.error{color:#f38ba8;border:1px solid #f38ba8;}
+.success{color:#94e7ff;border:1px solid #94e7ff;}
+.pre{white-space:pre-wrap;font-size:13px;}
 </style>
 </head>
 <body>
-<a href="index.html">Home</a><br><br>
-<h1>JSON Formatter</h1>
-<p>Paste JSON and click Pretty Print or validate</p>
-<div class='controls'>
-<input type='text' placeholder='Spaces' id='indent' value='2'>
-<button onclick='formatJson()'>Pretty Print</button>
-<button onclick='validateJson()'>Validate</button>
+<a href="index.html">Home</a>
+<h2>JSON Formatter</h2>
+<div class="container">
+<textarea id="input" placeholder='{"name":"Gwen","active":true}'></textarea>
+<div class="output" id="output"></div>
 </div>
-<textarea id='json-input' placeholder='{\"key\": \"value\"}'>{"name":"Gwen","version":"1.0","status":"active","tasks":[],"buildQueue":[],"completed":true}</textarea>
-<div id='output'></div>
-<div id='status'></div>
+<div style="margin-top:10px;">
+<button onclick="format()">Format</button>
+<button onclick="validate()">Validate</button>
+<button onclick="clear()">Clear</button>
+</div>
 <script>
-function formatJson(){
-try{
-var json = document.getElementById('json-input').value.trim();
-var indent = parseInt(document.getElementById('indent').value)||2;
-var formatted = JSON.stringify(JSON.parse(json), null, indent);
-document.getElementById('output').textContent = formatted;
-document.getElementById('status').textContent = '✓ Formatted successfully!';
-document.getElementById('status').style.background = '#0c2f0c';
-}catch(e){
-document.getElementById('status').textContent = '✗ ' + e.message;
-document.getElementById('status').style.background = '#2f0c0c';
+const output = document.getElementById('output');
+const input = document.getElementById('input');
+const formatBtn = document.querySelector('button[onclick="format()"]');
+const clearBtn = document.querySelector('button[onclick="clear()"]');
+function escapeHtml(str) {return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function format() {
+try {
+const json = JSON.parse(input.value);
+const formatted = JSON.stringify(json, null, 2);
+output.innerHTML = '<pre class="success">' + escapeHtml(formatted) + '</pre>';
+output.classList.add('success');
+output.classList.remove('error');
+formatBtn.disabled = true;
+formatBtn.textContent = 'Formatted';
+} catch(e) {
+output.innerHTML = '<pre class="error">Parse error: ' + escapeHtml(e.message) + '</pre>';
+output.classList.add('error');
+output.classList.remove('success');
+formatBtn.disabled = false;
+formatBtn.textContent = 'Format';
 }
 }
-function validateJson(){
-try{
-JSON.parse(document.getElementById('json-input').value.trim());
-document.getElementById('output').textContent = '✓ Valid JSON!';
-document.getElementById('status').textContent = '✓ Valid JSON!';
-document.getElementById('status').style.background = '#0c2f0c';
-}catch(e){
-document.getElementById('output').textContent = '✗ ' + e.message;
-document.getElementById('status').textContent = '✗ Invalid JSON';
-document.getElementById('status').style.background = '#2f0c0c';
+function validate() {
+try {
+JSON.parse(input.value);
+output.innerHTML = '<pre class="success">Valid JSON</pre>';
+} catch(e) {
+output.innerHTML = '<pre class="error">Invalid JSON: ' + escapeHtml(e.message) + '</pre>';
 }
 }
-document.getElementById('json-input').addEventListener('keydown',function(e){
-if(e.ctrlKey&&e.key==='Enter'){formatJson();}
+function clear() {
+input.value = '';
+output.innerHTML = '';
+formatBtn.disabled = false;
+formatBtn.textContent = 'Format';
+}
+input.addEventListener('input', function() {
+formatBtn.disabled = false;
+formatBtn.textContent = 'Format';
 });
 </script>
 </body>
