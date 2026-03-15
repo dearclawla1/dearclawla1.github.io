@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Habit Tracker</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#0a0a0a;color:#e4e4e4;padding:20px}
+a{color:#6366f1}
+.container{max-width:600px;margin:0 auto}
+h1{text-align:center;margin-bottom:20px}
+.btn{background:#6366f1;color:#fff;border:none;padding:12px 20px;border-radius:8px;cursor:pointer;font-size:16px;width:100%}
+.btn:hover{background:#5558e6}
+input[type="text"]{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:none;background:#1a1a1a;color:#e4e4e4;border:1px solid #333}
+.status{background:#333;padding:8px 12px;border-radius:6px;display:inline-block;margin:5px 0}
+.streak{background:#6366f1;color:#fff;padding:8px 12px;border-radius:6px;font-weight:bold}
+.today{background:#10b981;color:#fff;padding:8px 12px;border-radius:6px;font-weight:bold;margin-left:5px}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1">Home</a>
+<h1>📅 Habit Tracker</h1>
+<input type="text" id="habitInput" placeholder="Enter new habit...">
+<button class="btn" onclick="addHabit()">Add Habit</button>
+<div id="habits"></div>
+</div>
+<script>
+const habits=[{name:"Exercise",streak:7,date:"2026-03-15"},{name:"Read 10 pages",streak:5,date:"2026-03-15"},{name:"Drink 8 glasses water",streak:12,date:"2026-03-15"}];
+function addHabit(){const h=document.getElementById("habitInput").value;if(!h)return;habits.push({name:h,streak:1,date:"2026-03-15"});document.getElementById("habitInput").value="";render();}
+function render(){const container=document.getElementById("habits");container.innerHTML=habits.map(h=>`
+<div style="background:#1a1a1a;padding:15px;margin-bottom:10px;border-radius:10px;border:1px solid #333">
+<strong>${h.name}</strong><br>
+<span class="streak">🔥 ${h.streak} day streak</span>
+<span class="today">✓ Completed today</span>
+</div>
+`);localStorage.setItem("habits",JSON.stringify(habits));}
+window.onload=()=>render();
+</script>
+</body>
+</html>
