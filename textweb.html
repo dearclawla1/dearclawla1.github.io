@@ -4,39 +4,113 @@
 <meta charset="utf-8">
 <title>Text-Web-Renderer</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
-input,button{margin:5px;padding:8px 12px;border:1px solid #6366f1;border-radius:4px;background:#1a1a1a;color:#e4e4e4;cursor:pointer}
-button:hover{background:#6366f1;color:#0a0a0a}
-#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px;margin-top:10px}
-.cell{background:#1a1a1a;border:1px solid #333;padding:4px 8px;text-align:center;cursor:pointer}
-.cell:hover{background:#6366f1}
-.cell.active{background:#6366f1;color:#0a0a0a}
-#controls{margin-bottom:10px}
-a{color:#6366f1}
+*{box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:'SF Mono','Monaco','Consolas',monospace;margin:0;padding:20px;min-height:100vh;display:flex;flex-direction:column;gap:15px}
+h1{margin:0;font-size:1.5rem;font-weight:600;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#controls{display:flex;flex-direction:column;gap:10px;background:#111111;padding:15px;border-radius:8px;border:1px solid #222}
+#text{padding:12px 15px;font-size:1rem;background:#1a1a1a;border:1px solid #6366f1;border-radius:6px;color:#e4e4e4;width:100%;min-height:44px;font-family:inherit;resize:vertical}
+#text:focus{outline:2px solid #6366f1;outline-offset:2px}
+#char-count{font-size:0.85rem;color:#888;text-align:right}
+button{margin:0;padding:10px 16px;font-size:0.95rem;border:1px solid #6366f1;border-radius:6px;background:#1a1a1a;color:#e4e4e4;cursor:pointer;transition:all 0.2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+button:hover{background:#6366f1;color:#0a0a0a;transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,0.3)}
+button:active{transform:translateY(0);box-shadow:none}
+button.primary{background:#6366f1;color:#0a0a0a;font-weight:600}
+button.primary:hover{background:#5558e6;box-shadow:0 4px 12px rgba(99,102,241,0.4)}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px;margin-top:10px;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.cell{background:#1a1a1a;border:1px solid #333;padding:6px 10px;text-align:center;cursor:pointer;transition:all 0.15s;font-family:inherit;font-size:0.95rem;border-radius:4px}
+.cell:hover{background:#252525;border-color:#444;transform:scale(1.02)}
+.cell.active{background:#6366f1;color:#0a0a0a;font-weight:600;box-shadow:0 0 15px rgba(99,102,241,0.5);border-color:#6366f1}
+.cell.empty{color:#444}
+#copy-btn{margin-top:8px;font-size:0.85rem;padding:8px 12px}
+a{color:#6366f1;text-decoration:none;font-size:0.9rem}
+a:hover{text-decoration:underline}
+@media(max-width:600px){
+body{padding:15px}
+#text{font-size:0.9rem}
+button{padding:10px 14px;font-size:0.9rem}
+}
 </style>
 </head>
 <body>
 <h1>Text-Web-Renderer</h1>
 <div id="controls">
-<input id="text" placeholder="Enter text (one char per cell)" style="width:300px">
-<button onclick="render()">Render Grid</button>
-<button onclick="clearGrid()">Clear</button>
+<input id="text" placeholder="Enter text (one character per cell) - Press Ctrl+Enter to render" style="width:100%">
+<div id="char-count">Characters: 0</div>
+<button onclick="render()" class="primary" title="Render Grid (Ctrl+Enter)">Render Grid</button>
+<button onclick="clearGrid()" title="Clear Grid (Ctrl+C)">Clear</button>
+<button onclick="copyText()" id="copy-btn" title="Copy Text (Ctrl+X)">Copy Text</button>
 </div>
 <div id="grid"></div>
+<a href="index.html">Back to Home</a>
 <script>
+const textInput=document.getElementById('text');
+const grid=document.getElementById('grid');
+const charCount=document.getElementById('char-count');
+const copyBtn=document.getElementById('copy-btn');
+
+function updateCharCount(){
+const count=textInput.value.length;
+charCount.textContent=`Characters: ${count}`;
+copyBtn.textContent=count>0?'Copy Text':'Copy Text';
+}
+
 function render(){
-const grid=document.getElementById('grid');grid.innerHTML=''
-const text=document.getElementById('text').value
+const text=textInput.value;
+grid.innerHTML='';
+grid.style.gridTemplateColumns=`repeat(auto-fill,minmax(40px,1fr))`;
 const cells=text.split('').map((c,i)=>{
-const cell=document.createElement('div');cell.className='cell';cell.textContent=c||' ';
+const cell=document.createElement('div');
+cell.className='cell'+(c?'':' empty');
+cell.textContent=c||' ';
+cell.title=`Cell ${i+1}`;
 cell.onclick=()=>cell.classList.toggle('active');
 return cell
 });
-grid.appendChild(...cells)
+grid.appendChild(...cells);
 }
-function clearGrid(){document.getElementById('grid').innerHTML=''}
-render()
+
+function clearGrid(){
+grid.innerHTML='';
+textInput.value='';
+updateCharCount();
+}
+
+function copyText(){
+const text=textInput.value;
+if(!text){
+copyBtn.textContent='No Text to Copy';
+return;
+}
+navigator.clipboard.writeText(text).then(()=>{
+copyBtn.textContent='Copied!';
+setTimeout(()=>copyBtn.textContent='Copy Text',2000);
+}).catch(err=>{
+copyBtn.textContent='Copy Failed';
+setTimeout(()=>copyBtn.textContent='Copy Text',2000);
+});
+}
+
+textInput.addEventListener('input',updateCharCount);
+textInput.addEventListener('keydown',e=>{
+if(e.ctrlKey&&e.key==='Enter'){
+e.preventDefault();
+render();
+}
+if(e.ctrlKey&&e.key==='C'){
+e.preventDefault();
+clearGrid();
+}
+if(e.ctrlKey&&e.key==='X'){
+e.preventDefault();
+copyText();
+}
+});
+
+copyBtn.addEventListener('click',copyText);
+
+updateCharCount();
+render();
 </script>
-<a href="index.html">Back to Home</a>
 </body>
 </html>
