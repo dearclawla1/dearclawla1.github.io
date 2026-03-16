@@ -2,158 +2,562 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>n8n Workflow Automation Builder</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
-        h1 { color: #2563eb; }
-        .card { background: white; border-radius: 8px; padding: 20px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        label { display: block; margin: 10px 0 5px; font-weight: 600; }
-        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-        button { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px 0; }
-        button:hover { background: #1d4ed8; }
-        pre { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
-        .output { white-space: pre-wrap; margin-top: 10px; }
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --text-primary: #e4e4e4;
+            --text-secondary: #a0a0a0;
+            --accent: #6366f1;
+            --accent-hover: #5558e3;
+            --border: #333333;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: var(--accent);
+            font-size: 2rem;
+            margin-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            margin: 20px 0 10px;
+        }
+        
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+        
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .card h3 {
+            color: var(--accent);
+            margin-top: 0;
+            font-size: 1.1rem;
+        }
+        
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        input::placeholder, textarea::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.1s;
+        }
+        
+        button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.secondary {
+            background: var(--border);
+        }
+        
+        button.secondary:hover {
+            background: #444;
+        }
+        
+        button.success {
+            background: var(--success);
+        }
+        
+        button.success:hover {
+            background: #059669;
+        }
+        
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            border: 1px solid var(--border);
+        }
+        
+        .output {
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+        
+        .workflow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .workflow-step {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .workflow-step-number {
+            background: var(--accent);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .workflow-step-content {
+            flex: 1;
+        }
+        
+        .workflow-step-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 3px;
+        }
+        
+        .workflow-step-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .copy-btn {
+            background: var(--border);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-primary);
+            transition: background 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .copy-btn.copied {
+            background: var(--success);
+            color: white;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-ai {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--accent);
+        }
+        
+        .badge-webhook {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+        
+        .badge-error {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .tag {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .tag:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--success);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+        
+        .feature-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .keyboard-hint {
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            button {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
     <h1>n8n Workflow Automation Builder</h1>
-    <p>Build n8n workflow automation calls from inputs. 400+ integrations, native AI capabilities.</p>
+    <p>Build n8n workflow automation calls from inputs. 400+ integrations, native AI capabilities, and visual workflow designer.</p>
+    
+    <div class="features-grid">
+        <div class="feature-item">
+            <div class="feature-icon">🤖</div>
+            <div class="feature-title">AI Integration</div>
+            <div class="feature-desc">Built-in AI nodes for LLM calls, embeddings, and chatbots</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">🔗</div>
+            <div class="feature-title">400+ Nodes</div>
+            <div class="feature-desc">Pre-built nodes for every major service and platform</div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon">⚡</div>
+            <div class="feature-title">Fast Execution</div>
+            <div class="feature-desc">Optimized workflow execution with caching</div>
+        </div>
+    </div>
     
     <div class="card">
         <h3>Workflow Configuration</h3>
         <label>Workflow Name</label>
-        <input type="text" id="workflowName" placeholder="e.g., Email to Slack">
+        <input type="text" id="workflowName" placeholder="e.g., Email to Slack Notification">
         
         <label>Trigger Type</label>
         <select id="triggerType">
             <option value="webhook">Webhook</option>
             <option value="schedule">Schedule</option>
-            <option value="manual">Manual Execution</option>
+            <option value="manual">Manual</option>
         </select>
         
-        <label>Input Parameters (JSON)</label>
-        <textarea id="inputParams" rows="5" placeholder='{"message": "Hello", "user": "John"}'></textarea>
+        <label>Webhook URL (optional)</label>
+        <input type="text" id="webhookUrl" placeholder="https://your-n8n-instance/webhook/...">
         
-        <label>Action Steps</label>
-        <select id="actionType">
-            <option value="node">Add Node</option>
-            <option value="code">Add Code Node</option>
-            <option value="ai">Add AI Node</option>
+        <label>Input Fields (JSON)</label>
+        <textarea id="inputFields" rows="4" placeholder='{"message": "Hello", "user": "John"}'></textarea>
+        
+        <label>Output Format</label>
+        <select id="outputFormat">
+            <option value="json">JSON</option>
+            <option value="csv">CSV</option>
+            <option value="xml">XML</option>
         </select>
         
-        <button onclick="buildWorkflow()">Build Workflow</button>
-        <button onclick="clearAll()">Clear All</button>
+        <div style="margin: 15px 0;">
+            <button onclick="generateWorkflow()">Generate Workflow</button>
+            <button class="secondary" onclick="clearForm()">Clear</button>
+        </div>
+        
+        <div id="outputContainer" style="display: none;">
+            <h3>Generated Workflow</h3>
+            <pre id="workflowOutput"></pre>
+            <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+        </div>
     </div>
     
     <div class="card">
-        <h3>Generated n8n Workflow</h3>
-        <pre id="output"></pre>
-        <button onclick="copyToClipboard()">Copy to Clipboard</button>
+        <h3>Workflow Steps</h3>
+        <div class="workflow-steps" id="workflowSteps">
+            <div class="workflow-step">
+                <div class="workflow-step-number">1</div>
+                <div class="workflow-step-content">
+                    <div class="workflow-step-title">Trigger Node</div>
+                    <div class="workflow-step-desc">Configure your workflow trigger</div>
+                </div>
+            </div>
+        </div>
+        <button class="secondary" onclick="addStep()">+ Add Step</button>
     </div>
     
     <div class="card">
-        <h3>Quick Actions</h3>
-        <button onclick="createWebhook()">Create Webhook</button>
-        <button onclick="createAiNode()">Add AI Node</button>
-        <button onclick="createSchedule()">Add Schedule Trigger</button>
+        <h3>Available Nodes</h3>
+        <div class="tag-container" id="nodeTags">
+            <span class="tag badge-ai">AI</span>
+            <span class="tag badge-webhook">Webhook</span>
+            <span class="tag">HTTP Request</span>
+            <span class="tag">Code</span>
+            <span class="tag">Schedule</span>
+            <span class="tag">Email</span>
+            <span class="tag">Slack</span>
+            <span class="tag">Discord</span>
+            <span class="tag">Database</span>
+            <span class="tag">File</span>
+        </div>
     </div>
+    
+    <div class="card">
+        <h3>Quick Tips</h3>
+        <p>Press <span class="keyboard-hint">Ctrl+Enter</span> to generate workflow</p>
+        <p>Press <span class="keyboard-hint">Ctrl+K</span> to clear form</p>
+        <p>Press <span class="keyboard-hint">Ctrl+C</span> to copy output</p>
+    </div>
+    
+    <div id="messageContainer"></div>
     
     <script>
-        function buildWorkflow() {
-            const name = document.getElementById('workflowName').value || 'Unnamed Workflow';
-            const trigger = document.getElementById('triggerType').value;
-            const inputs = document.getElementById('inputParams').value;
-            const action = document.getElementById('actionType').value;
+        const workflowTemplates = {
+            webhook: {
+                trigger: 'Webhook',
+                description: 'Trigger on HTTP request',
+                nodes: ['Webhook', 'Code', 'HTTP Request']
+            },
+            schedule: {
+                trigger: 'Schedule',
+                description: 'Trigger on time schedule',
+                nodes: ['Schedule', 'Code', 'HTTP Request']
+            },
+            manual: {
+                trigger: 'Manual Trigger',
+                description: 'Trigger manually via UI',
+                nodes: ['Manual Trigger', 'Code', 'HTTP Request']
+            }
+        };
+        
+        function generateWorkflow() {
+            const workflowName = document.getElementById('workflowName').value || 'Unnamed Workflow';
+            const triggerType = document.getElementById('triggerType').value;
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            const inputFields = document.getElementById('inputFields').value;
+            const outputFormat = document.getElementById('outputFormat').value;
             
-            let workflow = `// n8n Workflow: ${name}\n`;
-            workflow += `// Trigger: ${trigger}\n\n`;
+            const template = workflowTemplates[triggerType];
             
-            workflow += `const workflow = {\n`;
-            workflow += `  name: "${name}",\n`;
-            workflow += `  trigger: "${trigger}",\n`;
-            workflow += `  nodes: [\n`;
+            let workflow = `// n8n Workflow: ${workflowName}\n`;
+            workflow += `// Trigger: ${template.trigger}\n`;
+            workflow += `// Description: ${template.description}\n\n`;
             
-            if (action === 'node') {
-                workflow += `    {\n`;
-                workflow += `      type: "node",\n`;
-                workflow += `      operations: ["filter", "transform", "route"]\n`;
-                workflow += `    },\n`;
-            } else if (action === 'code') {
-                workflow += `    {\n`;
-                workflow += `      type: "code",\n`;
-                workflow += `      code: "// Custom transformation logic here"\n`;
-                workflow += `    },\n`;
-            } else if (action === 'ai') {
-                workflow += `    {\n`;
-                workflow += `      type: "ai",\n`;
-                workflow += `      model: "custom",\n`;
-                workflow += `      prompts: ["available"]\n`;
-                workflow += `    },\n`;
+            if (webhookUrl) {
+                workflow += `// Webhook URL: ${webhookUrl}\n\n`;
             }
             
-            workflow += `  ]\n`;
-            workflow += `};\n`;
+            workflow += `// Input Fields:\n`;
+            if (inputFields) {
+                workflow += `${inputFields}\n`;
+            } else {
+                workflow += `// No input fields specified\n`;
+            }
             
-            document.getElementById('output').textContent = workflow;
+            workflow += `\n// Output Format: ${outputFormat.toUpperCase()}\n\n`;
+            
+            workflow += `// Workflow Nodes:\n`;
+            template.nodes.forEach((node, index) => {
+                workflow += `${index + 1}. ${node}\n`;
+            });
+            
+            workflow += `\n// Generated with n8n Workflow Automation Builder\n`;
+            
+            document.getElementById('workflowOutput').textContent = workflow;
+            document.getElementById('outputContainer').style.display = 'block';
+            
+            addMessage(`Workflow "${workflowName}" generated successfully!`, 'success');
         }
         
-        function createWebhook() {
-            const template = `// n8n Webhook Node
-const webhook = {
-  url: "https://your-n8n-instance.com/webhook",
-  method: "POST",
-  response: {
-    contentType: "application/json",
-    sendResponse: (body) => {
-      return { json: body };
-    }
-  }
-};`;
-            document.getElementById('output').textContent = template;
-        }
-        
-        function createAiNode() {
-            const template = `// n8n AI Node (Native AI)
-const aiNode = {
-  type: "ai",
-  model: "custom",
-  prompt: "Available prompts library",
-  parameters: {
-    temperature: 0.7,
-    maxTokens: 2000
-  }
-};`;
-            document.getElementById('output').textContent = template;
-        }
-        
-        function createSchedule() {
-            const template = `// n8n Schedule Trigger
-const schedule = {
-  trigger: "schedule",
-  interval: "daily",
-  cron: "0 9 * * *", // 9 AM every day
-  timezones: ["utc"]
-};`;
-            document.getElementById('output').textContent = template;
-        }
-        
-        function clearAll() {
+        function clearForm() {
             document.getElementById('workflowName').value = '';
-            document.getElementById('inputParams').value = '';
-            document.getElementById('output').textContent = '';
+            document.getElementById('webhookUrl').value = '';
+            document.getElementById('inputFields').value = '';
+            document.getElementById('outputContainer').style.display = 'none';
+            document.getElementById('messageContainer').innerHTML = '';
+            addMessage('Form cleared', 'success');
+        }
+        
+        function addStep() {
+            const stepNumber = document.querySelectorAll('.workflow-step').length + 1;
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'workflow-step';
+            stepDiv.innerHTML = `
+                <div class="workflow-step-number">${stepNumber}</div>
+                <div class="workflow-step-content">
+                    <div class="workflow-step-title">New Step</div>
+                    <div class="workflow-step-desc">Configure step ${stepNumber}</div>
+                </div>
+            `;
+            document.getElementById('workflowSteps').appendChild(stepDiv);
         }
         
         function copyToClipboard() {
-            const output = document.getElementById('output');
+            const output = document.getElementById('workflowOutput');
             output.select();
             document.execCommand('copy');
-            alert('Workflow copied to clipboard!');
+            const copyBtn = document.getElementById('copyBtn');
+            copyBtn.textContent = '✅ Copied!';
+            copyBtn.classList.add('copied');
+            setTimeout(() => {
+                copyBtn.textContent = '📋 Copy to Clipboard';
+                copyBtn.classList.remove('copied');
+            }, 2000);
         }
         
-        // Initialize with a sample workflow
-        document.getElementById('workflowName').value = 'Email to Slack';
-        document.getElementById('inputParams').value = '{"message": "Hello from email", "sender": "user@example.com"}';
-        buildWorkflow();
+        function addMessage(text, type) {
+            const container = document.getElementById('messageContainer');
+            const message = document.createElement('div');
+            message.className = type === 'success' ? 'success-message' : 'error-message';
+            message.textContent = text;
+            container.appendChild(message);
+            setTimeout(() => {
+                message.remove();
+            }, 5000);
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                generateWorkflow();
+            }
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                clearForm();
+            }
+            if (e.ctrlKey && e.key === 'c' && document.getElementById('outputContainer').style.display === 'block') {
+                e.preventDefault();
+                copyToClipboard();
+            }
+        });
+        
+        // Auto-generate on first load (optional)
+        // Uncomment to enable:
+        // generateWorkflow();
     </script>
 </body>
 </html>
