@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Metrics Dashboard</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --text: #e4e4e4;
+      --accent: #6366f1;
+      --accent-hover: #5558e5;
+      --border: #333;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --card-bg: #111;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p {
+      color: #888;
+      font-size: 1.1rem;
+    }
+    .nav-link {
+      display: inline-block;
+      margin-top: 1rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .nav-link:hover { text-decoration: underline; }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+    }
+    .metric-card h3 {
+      font-size: 1rem;
+      color: #888;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .metric-label {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+    .metric-trend {
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+    .trend-up { color: var(--success); }
+    .trend-down { color: var(--danger); }
+    .trend-neutral { color: #888; }
+    .input-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .input-section h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .input-group {
+      margin-bottom: 1.2rem;
+    }
+    .input-group label {
+      display: block;
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-bottom: 0.5rem;
+    }
+    .input-group input, .input-group textarea {
+      width: 100%;
+      padding: 0.8rem;
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    .input-group input:focus, .input-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .input-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .file-input-wrapper {
+      position: relative;
+    }
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .file-input-label {
+      display: block;
+      padding: 0.8rem;
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      color: #888;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .file-input-label:hover {
+      border-color: var(--accent);
+    }
+    .file-input-label span {
+      font-size: 0.9rem;
+    }
+    .file-input-label small {
+      display: block;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+    .output-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .output-section h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .output-content {
+      background: #0f0f0f;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #a5b3ce;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .copy-btn:hover {
+      background: var(--accent-hover);
+    }
+    .copy-btn:disabled {
+      background: #333;
+      cursor: not-allowed;
+    }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 10, 10, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #666;
+    }
+    .empty-state p {
+      margin-bottom: 0.5rem;
+    }
+    .empty-state small {
+      color: #444;
+    }
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      color: var(--danger);
+      font-size: 0.9rem;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-item .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-item .stat-label {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .header h1 {
+        font-size: 2rem;
+      }
+      body {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Code Metrics Dashboard</h1>
+      <p>Analyze your code quality with comprehensive metrics: complexity, maintainability, and more</p>
+      <a href="index.html" style="color:#6366f1">Back to Home</a>
+    </div>
+
+    <div class="input-section">
+      <h2>Upload Code File</h2>
+      <div class="file-input-wrapper">
+        <div class="file-input-label">
+          <span>📁 Click to select code file</span>
+          <small>Supports .js, .ts, .jsx, .tsx, .py, .java, .c, .cpp, .go, .rs</small>
+        </div>
+        <input type="file" id="codeFile" accept=".js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.go,.rs,.html,.css,.json">
+      </div>
+      <div class="input-group">
+        <label for="codeInput">Or paste code directly:</label>
+        <textarea id="codeInput" placeholder="Paste your source code here...
+Example:
+function calculateMetrics(data) {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  return {
+    average: total / data.length,
+    max: Math.max(...data.map(d => d.value)),
+    min: Math.min(...data.map(d => d.value))
+  };
+}"></textarea>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>Lines of Code</h3>
+        <div class="metric-value" id="loc">-</div>
+        <div class="metric-label">LOC</div>
+        <div class="metric-trend" id="locTrend"></div>
+      </div>
+      <div class="metric-card">
+        <h3>Cyclomatic Complexity</h3>
+        <div class="metric-value" id="complexity">-</div>
+        <div class="metric-label">CC</div>
+        <div class="metric-trend" id="complexityTrend"></div>
+      </div>
+      <div class="metric-card">
+        <h3>Function Count</h3>
+        <div class="metric-value" id="functions">-</div>
+        <div class="metric-label">Functions</div>
+        <div class="metric-trend" id="functionsTrend"></div>
+      </div>
+      <div class="metric-card">
+        <h3>Code Density</h3>
+        <div class="metric-value" id="density">-</div>
+        <div class="metric-label">KB</div>
+        <div class="metric-trend" id="densityTrend"></div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value" id="blankLines">-</div>
+        <div class="stat-label">Blank Lines</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="comments">-</div>
+        <div class="stat-label">Comment Lines</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="classes">-</div>
+        <div class="stat-label">Classes</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="variables">-</div>
+        <div class="stat-label">Variables</div>
+      </div>
+    </div>
+
+    <div class="output-section">
+      <h2>Analysis Report</h2>
+      <div class="output-content" id="output">
+        <div class="empty-state">
+          <p>Upload a code file or paste code to begin analysis</p>
+          <small>Metrics will be calculated automatically</small>
+        </div>
+      </div>
+      <button class="copy-btn" id="copyBtn" disabled>📋 Copy Report</button>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loading" style="display:none;">
+    <div class="spinner"></div>
+  </div>
+
+  <script>
+    const codeFile = document.getElementById('codeFile');
+    const codeInput = document.getElementById('codeInput');
+    const output = document.getElementById('output');
+    const copyBtn = document.getElementById('copyBtn');
+    const loading = document.getElementById('loading');
+
+    // Display metrics
+    function displayMetrics(metrics) {
+      output.innerHTML = '';
+      
+      const sections = [
+        {
+          title: '📊 Core Metrics',
+          items: [
+            { label: 'Lines of Code', value: metrics.loc, unit: 'LOC' },
+            { label: 'Cyclomatic Complexity', value: metrics.complexity, unit: 'CC' },
+            { label: 'Function Count', value: metrics.functions, unit: 'Functions' },
+            { label: 'Code Density', value: metrics.density, unit: 'KB' }
+          ]
+        },
+        {
+          title: '📈 Code Structure',
+          items: [
+            { label: 'Blank Lines', value: metrics.blankLines, unit: '' },
+            { label: 'Comment Lines', value: metrics.comments, unit: '' },
+            { label: 'Classes', value: metrics.classes, unit: '' },
+            { label: 'Variables', value: metrics.variables, unit: '' }
+          ]
+        },
+        {
+          title: '🎯 Quality Assessment',
+          items: [
+            { label: 'Maintainability Index', value: metrics.maintainability, unit: 'Index' },
+            { label: 'Cognitive Complexity', value: metrics.cognitive, unit: 'Score' },
+            { label: 'Halstead Volume', value: metrics.halstead, unit: 'Volume' }
+          ]
+        },
+        {
+          title: '📝 Code Style',
+          items: [
+            { label: 'Lines with Code', value: metrics.codeLines, unit: 'Lines' },
+            { label: 'Empty Functions', value: metrics.emptyFunctions, unit: 'Functions' },
+            { label: 'Long Lines (>120)', value: metrics.longLines, unit: 'Lines' }
+          ]
+        }
+      ];
+
+      sections.forEach(section => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.style.marginBottom = '1.5rem';
+        sectionDiv.innerHTML = `<h3 style="color:#888;font-size:1rem;margin-bottom:0.75rem;">${section.title}</h3>`;
+        
+        section.items.forEach(item => {
+          const itemDiv = document.createElement('div');
+          itemDiv.style.display = 'flex';
+          itemDiv.style.justifyContent = 'space-between';
+          itemDiv.style.padding = '0.5rem 0';
+          itemDiv.style.borderBottom = '1px solid #222';
+          itemDiv.innerHTML = `
+            <span style="color:#aaa;font-size:0.9rem;">${item.label}</span>
+            <span style="color:#6366f1;font-weight:600;font-size:1rem;">${item.value}${item.unit}</span>
+          `;
+          sectionDiv.appendChild(itemDiv);
+        });
+        
+        sectionDiv.style.borderBottom = '1px solid #222';
+        sectionDiv.style.paddingBottom = '1.5rem';
+        output.appendChild(sectionDiv);
+      });
+    }
+
+    // Calculate metrics
+    function calculateMetrics(code) {
+      const lines = code.split('\n');
+      const loc = lines.length;
+      const blankLines = lines.filter(l => l.trim() === '').length;
+      const codeLines = loc - blankLines;
+      const comments = lines.filter(l => {
+        const trimmed = l.trim();
+        return trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('#');
+      }).length;
+      
+      // Simple class detection
+      const classes = (code.match(/class\s+\w+/g) || []).length + 
+                      (code.match(/class\s+\w+\s*[:=]/g) || []).length;
+      
+      // Simple function detection
+      const functions = (code.match(/function\s+\w+/g) || []).length +
+                       (code.match(/const\s+\w+\s*[:=]\s*\(/g) || []).length +
+                       (code.match(/let\s+\w+\s*[:=]\s*\(/g) || []).length +
+                       (code.match(/async\s+\w+\s*[:=]\s*\(/g) || []).length;
+      
+      // Simple variable detection
+      const variables = (code.match(/const\s+\w+/g) || []).length +
+                       (code.match(/let\s+\w+/g) || []).length +
+                       (code.match(/var\s+\w+/g) || []).length;
+      
+      // Cyclomatic complexity (simplified)
+      let complexity = 1;
+      const decisionKeywords = ['if', 'else if', 'for', 'while', 'case', 'switch', 'catch', '&&', '||', '?', ':'];
+      decisionKeywords.forEach(kw => {
+        complexity += (code.match(new RegExp(kw, 'g')) || []).length;
+      });
+      
+      // Cognitive complexity (simplified)
+      let cognitive = 1;
+      const nestingKeywords = ['if', 'else', 'for', 'while', 'try', 'catch', 'switch', 'case'];
+      nestingKeywords.forEach(kw => {
+        const matches = (code.match(new RegExp(kw + '\\s', 'g')) || []).length;
+        cognitive += matches;
+      });
+      
+      // Halstead volume (simplified)
+      const operators = (code.match(/[\+\-\*\/=<>!&|]/g) || []).length;
+      const operands = (code.match(/\w+/g) || []).length;
+      const halstead = operators + operands;
+      
+      // Maintainability index (simplified)
+      const avgLineLength = codeLines > 0 ? code.split('\n').reduce((sum, line) => sum + line.length, 0) / codeLines : 0;
+      const maintainability = Math.max(0, Math.min(100, 171 - 5.2 * Math.log10(loc) - 0.23 * avgLineLength - 16.2 * Math.log10(complexity)));
+      
+      // Empty functions
+      const emptyFunctions = (code.match(/function\s+\w+\s*\(\s*\)\s*\{/g) || []).length;
+      
+      // Long lines
+      const longLines = code.split('\n').filter(line => line.length > 120).length;
+      
+      return {
+        loc, blankLines, codeLines, comments, classes, functions, variables,
+        complexity, cognitive, halstead, maintainability, emptyFunctions, longLines,
+        density: (code.length / 1024).toFixed(2)
+      };
+    }
+
+    // Handle file upload
+    codeFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      showLoading(true);
+      
+      try {
+        const text = await file.text();
+        analyzeCode(text);
+      } catch (error) {
+        showError('Error reading file: ' + error.message);
+      } finally {
+        showLoading(false);
+      }
+    });
+
+    // Handle paste
+    codeInput.addEventListener('input', () => {
+      if (codeInput.value.trim()) {
+        analyzeCode(codeInput.value);
+      }
+    });
+
+    // Analyze code
+    function analyzeCode(code) {
+      const metrics = calculateMetrics(code);
+      displayMetrics(metrics);
+      
+      // Generate report
+      const report = `
+=== Code Metrics Analysis Report ===
+
+📊 Core Metrics:
+  • Lines of Code (LOC): ${metrics.loc.toLocaleString()}
+  • Cyclomatic Complexity (CC): ${metrics.complexity}
+  • Function Count: ${metrics.functions}
+  • Code Density: ${metrics.density} KB
+
+📈 Code Structure:
+  • Blank Lines: ${metrics.blankLines.toLocaleString()}
+  • Comment Lines: ${metrics.comments.toLocaleString()}
+  • Classes: ${metrics.classes}
+  • Variables: ${metrics.variables.toLocaleString()}
+
+🎯 Quality Assessment:
+  • Maintainability Index: ${metrics.maintainability.toFixed(1)}
+  • Cognitive Complexity: ${metrics.cognitive}
+  • Halstead Volume: ${metrics.halstead}
+
+📝 Code Style:
+  • Lines with Code: ${metrics.codeLines.toLocaleString()}
+  • Empty Functions: ${metrics.emptyFunctions}
+  • Long Lines (>120 chars): ${metrics.longLines}
+
+=== Analysis Complete ===
+      `.trim();
+      
+      output.innerHTML = report;
+      copyBtn.disabled = false;
+    }
+
+    // Copy to clipboard
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(output.textContent);
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '✅ Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+        }, 2000);
+      } catch (error) {
+        showError('Failed to copy to clipboard');
+      }
+    });
+
+    // Show loading
+    function showLoading(show) {
+      loading.style.display = show ? 'flex' : 'none';
+    }
+
+    // Show error
+    function showError(message) {
+      output.innerHTML = `<div class="error-message">${message}</div>`;
+      copyBtn.disabled = true;
+    }
+
+    // Track usage
+    fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?,?,?)',
+        params: ['code-metrics.html', 'load', new Date().toISOString()]
+      })
+    }).catch(() => {});
+  </script>
+</body>
+</html>
