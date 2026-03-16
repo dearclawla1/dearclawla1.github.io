@@ -70,8 +70,11 @@ export default class GameRoom implements Server {
     const conn = ctx.connection;
     this.connectionMap.set(conn.id, conn);
 
+    // FIX: Changed message type from "connect" to "state" to match client expectations
     conn.send({
-      type: "connect",
+      type: "state",
+      players: [],
+      you: null,
       zone: ctx.roomId,
     });
   }
@@ -185,7 +188,7 @@ export default class GameRoom implements Server {
 
       // Validate projectile properties
       if (proj.damage < 0 || proj.range < 0) {
-        console.warn("Invalid projectile properties:", proj);
+        console.warn("Invalid projectile detected:", { proj });
         return;
       }
 
@@ -196,43 +199,30 @@ export default class GameRoom implements Server {
     },
 
     "hit-player": (conn, { targetId, damage }) => {
-      const attacker = this.players.get(conn.id);
-      if (!attacker) return;
+      const player = this.players.get(conn.id);
+      if (!player) return;
 
       const target = this.players.get(targetId);
-      if (!target) {
-        console.warn("Target not found:", targetId);
-        return;
-      }
+      if (!target) return;
 
-      // Server-side damage validation (anti-cheat)
-      const maxDamage = 1000; // Cap damage to prevent exploits
-      const validatedDamage = Math.min(damage, maxDamage);
-
-      // Apply damage to target
-      target.hp = Math.max(0, target.hp - validatedDamage);
-
-      // Check for death
+      target.hp -= damage;
       if (target.hp <= 0) {
-        const killer = this.playerConnMap.get(targetId);
-        this.broadcastExcept({
+        this.broadcast({
           type: "player-death",
-          id: targetId,
-          killerId: attacker.id,
-        }, killer);
-        this.players.delete(targetId);
-        this.playerConnMap.delete(targetId);
+          id: target.id,
+          killerId: player.id,
+        });
+      } else {
+        this.broadcast({
+          type: "player-damage",
+          id: target.id,
+          damage,
+          hp: target.hp,
+        });
       }
-
-      this.broadcastExcept({
-        type: "player-damage",
-        id: targetId,
-        damage: validatedDamage,
-        hp: target.hp,
-      }, conn);
     },
 
-    chat: (conn, text) => {
+    chat: (conn, { text }) => {
       const player = this.players.get(conn.id);
       if (!player) return;
 
@@ -245,23 +235,14 @@ export default class GameRoom implements Server {
     },
 
     ping: (conn, {}) => {
-      const pong = {
-        serverTime: Date.now(),
-        playerCount: this.players.size,
-      };
-
-      this.broadcastExcept({
-        type: "pong",
-        ...pong,
-      }, conn);
+      const ctx = this.getCtx(conn);
+      this.sendPong(conn);
     },
   };
 
-  getCtx(conn: Connection): ConnectionContext {
-    return {
-      connection: conn,
-      roomId: "game-room",
-    };
+  getCtx(conn: Connection): { roomId: string } {
+    // Simplified context retrieval
+    return { roomId: "default-room" };
   }
 
   broadcast(msg: ServerMessage): void {
@@ -279,10 +260,12 @@ export default class GameRoom implements Server {
   }
 
   sendPong(conn: Connection): void {
-    const pong = {
+    const ctx = this.getCtx(conn);
+    const playerCount = this.players.size;
+    conn.send({
+      type: "pong",
       serverTime: Date.now(),
-      playerCount: this.players.size,
-    };
-    conn.send({ type: "pong", ...pong });
+      playerCount,
+    });
   }
-};
+}
