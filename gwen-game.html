@@ -20,124 +20,203 @@
             align-items: center;
             padding: 20px;
         }
-        .game-container {
-            max-width: 900px;
-            width: 100%;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            color: #6366f1;
-            font-size: 2rem;
-        }
-        .description {
+        .header {
             text-align: center;
             margin-bottom: 20px;
-            color: #888;
-            font-size: 0.9rem;
         }
-        .game-wrapper {
+        .header h1 {
+            font-size: 2.5rem;
+            color: #6366f1;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #888;
+            font-size: 1rem;
+        }
+        .game-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1400px;
+        }
+        .canvas-wrapper {
             position: relative;
-            border: 3px solid #1a1a1a;
+            border: 3px solid #6366f1;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
         }
         canvas {
             display: block;
             background: #111;
         }
-        .game-ui {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-top: 15px;
-            padding: 15px;
-            background: #111;
-            border-radius: 10px;
+        .sidebar {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
-        .stat-box {
-            text-align: center;
-            padding: 10px;
+        .panel {
             background: #1a1a1a;
-            border-radius: 8px;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .panel h2 {
+            color: #6366f1;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #222;
+        }
+        .stat-row:last-child {
+            border-bottom: none;
         }
         .stat-label {
-            font-size: 0.7rem;
             color: #888;
-            text-transform: uppercase;
+            font-size: 0.9rem;
         }
         .stat-value {
-            font-size: 1.2rem;
+            color: #e4e4e4;
             font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .stat-value.danger {
+            color: #ef4444;
+        }
+        .stat-value.success {
+            color: #22c55e;
+        }
+        .stat-value.info {
             color: #6366f1;
         }
         .controls {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
-            margin-top: 15px;
-            padding: 15px;
-            background: #111;
-            border-radius: 10px;
         }
-        .control-btn {
-            padding: 15px;
-            font-size: 1.2rem;
+        button {
+            background: #6366f1;
+            color: white;
             border: none;
+            padding: 12px;
             border-radius: 8px;
+            font-size: 1rem;
             cursor: pointer;
-            background: #1a1a1a;
-            color: #e4e4e4;
             transition: all 0.2s;
-            font-weight: bold;
+            font-weight: 600;
         }
-        .control-btn:hover {
-            background: #2a2a2a;
+        button:hover {
+            background: #818cf8;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
-        .control-btn:active {
+        button:active {
             transform: translateY(0);
         }
-        .control-btn.w {
-            background: #6366f1;
-            color: #fff;
+        button.secondary {
+            background: #333;
         }
-        .control-btn.a {
-            background: #8b5cf6;
-            color: #fff;
+        button.secondary:hover {
+            background: #444;
         }
-        .control-btn.s {
-            background: #ec4899;
-            color: #fff;
+        .powerup-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
         }
-        .control-btn.d {
-            background: #3b82f6;
-            color: #fff;
-        }
-        .game-menu {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
-            padding: 15px;
-            background: #111;
-            border-radius: 10px;
-        }
-        .menu-btn {
-            padding: 12px 25px;
-            font-size: 1rem;
-            border: none;
+        .powerup-btn {
+            background: #222;
+            border: 2px solid #444;
+            padding: 10px;
             border-radius: 8px;
             cursor: pointer;
-            background: #6366f1;
-            color: #fff;
-            font-weight: bold;
             transition: all 0.2s;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
         }
-        .menu-btn:hover {
-            background: #8b5cf6;
-            transform: translateY(-2px);
+        .powerup-btn:hover {
+            border-color: #6366f1;
+            background: #2a2a2a;
+        }
+        .powerup-btn.active {
+            background: #6366f1;
+            color: white;
+        }
+        .powerup-icon {
+            font-size: 1.5rem;
+        }
+        .powerup-name {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .powerup-btn.active .powerup-name {
+            color: white;
+        }
+        .enemy-info {
+            font-size: 0.85rem;
+            color: #888;
+            line-height: 1.6;
+        }
+        .enemy-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .enemy-item {
+            background: #222;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            border-left: 3px solid #6366f1;
+        }
+        .enemy-item.dead {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+        .enemy-name {
+            color: #e4e4e4;
+            font-weight: bold;
+        }
+        .enemy-type {
+            color: #888;
+            font-size: 0.8rem;
+        }
+        .score-display {
+            font-size: 2rem;
+            color: #6366f1;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .health-bar-container {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .health-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #6366f1);
+            transition: width 0.3s;
+        }
+        .health-bar.low {
+            background: linear-gradient(90deg, #ef4444, #f59e0b);
         }
         .game-over {
             position: absolute;
@@ -145,12 +224,18 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .game-over.active {
+            opacity: 1;
+            pointer-events: auto;
         }
         .game-over h2 {
             font-size: 3rem;
@@ -162,570 +247,583 @@
             color: #888;
             margin-bottom: 30px;
         }
-        .high-score {
-            font-size: 1.5rem;
-            color: #6366f1;
-            margin-bottom: 30px;
-        }
-        .tutorial {
-            background: #1a1a1a;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-size: 0.85rem;
-            color: #888;
-            line-height: 1.6;
-        }
-        .tutorial h3 {
-            color: #6366f1;
-            margin-bottom: 10px;
-        }
-        .tutorial-key {
-            display: inline-block;
-            background: #2a2a2a;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin: 0 3px;
-            font-family: monospace;
-            color: #e4e4e4;
-        }
-        .powerup-indicator {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 8px 12px;
-            background: rgba(99, 102, 241, 0.9);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: none;
-        }
-        .enemy-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 8px 12px;
-            background: rgba(239, 68, 68, 0.9);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: none;
-        }
         .back-link {
             display: inline-block;
-            margin-top: 15px;
+            margin-top: 20px;
             color: #6366f1;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         .back-link:hover {
             text-decoration: underline;
         }
-        @media (max-width: 768px) {
-            .game-ui {
-                grid-template-columns: repeat(2, 1fr);
+        @media (max-width: 900px) {
+            .game-container {
+                flex-direction: column;
             }
-            .controls {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            h1 {
-                font-size: 1.5rem;
+            .sidebar {
+                min-width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
+    <div class="header">
         <h1>Gwen Game</h1>
-        <p class="description">Navigate the canvas, collect power-ups, and avoid enemies!</p>
-        
-        <div class="game-wrapper">
+        <p>Interactive Canvas Game with Enemy AI & Power-ups</p>
+    </div>
+
+    <div class="game-container">
+        <div class="canvas-wrapper">
             <canvas id="gameCanvas" width="800" height="600"></canvas>
-            <div class="powerup-indicator" id="powerupIndicator">⚡ Power-up Active!</div>
-            <div class="enemy-indicator" id="enemyIndicator">👾 Enemy Approaching!</div>
-            <div class="game-over" id="gameOver" style="display: none;">
+            <div class="score-display" id="scoreDisplay">0</div>
+            <div class="health-bar-container">
+                <div class="health-bar" id="healthBar" style="width: 100%"></div>
+            </div>
+            <div class="game-over" id="gameOver">
                 <h2>GAME OVER</h2>
                 <p>Final Score: <span id="finalScore">0</span></p>
-                <p>High Score: <span id="highScore">0</span></p>
-                <button class="menu-btn" onclick="startGame()">Play Again</button>
+                <button onclick="game.restart()">Play Again</button>
             </div>
         </div>
-        
-        <div class="game-ui">
-            <div class="stat-box">
-                <div class="stat-label">Score</div>
-                <div class="stat-value" id="score">0</div>
+
+        <div class="sidebar">
+            <div class="panel">
+                <h2>Player Stats</h2>
+                <div class="stat-row">
+                    <span class="stat-label">Score</span>
+                    <span class="stat-value" id="statScore">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Health</span>
+                    <span class="stat-value" id="statHealth">100%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Level</span>
+                    <span class="stat-value" id="statLevel">1</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Enemies Defeated</span>
+                    <span class="stat-value" id="statKills">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Time</span>
+                    <span class="stat-value" id="statTime">0s</span>
+                </div>
             </div>
-            <div class="stat-box">
-                <div class="stat-label">Health</div>
-                <div class="stat-value" id="health">100%</div>
+
+            <div class="panel">
+                <h2>Controls</h2>
+                <div class="controls">
+                    <button onclick="game.move('up')">▲</button>
+                    <button onclick="game.move('down')">▼</button>
+                    <button onclick="game.move('left')">◀</button>
+                    <button onclick="game.move('right')">▶</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #888; margin-top: 10px;">
+                    Use arrow keys or buttons to move
+                </p>
             </div>
-            <div class="stat-box">
-                <div class="stat-label">Power-ups</div>
-                <div class="stat-value" id="powerups">0</div>
+
+            <div class="panel">
+                <h2>Power-ups</h2>
+                <div class="powerup-grid">
+                    <button class="powerup-btn" id="powerupShield" onclick="game.togglePowerup('shield')">
+                        <span class="powerup-icon">🛡️</span>
+                        <span class="powerup-name">Shield</span>
+                    </button>
+                    <button class="powerup-btn" id="powerupSpeed" onclick="game.togglePowerup('speed')">
+                        <span class="powerup-icon">⚡</span>
+                        <span class="powerup-name">Speed</span>
+                    </button>
+                    <button class="powerup-btn" id="powerupHeal" onclick="game.togglePowerup('heal')">
+                        <span class="powerup-icon">❤️</span>
+                        <span class="powerup-name">Heal</span>
+                    </button>
+                    <button class="powerup-btn" id="powerupBomb" onclick="game.togglePowerup('bomb')">
+                        <span class="powerup-icon">💣</span>
+                        <span class="powerup-name">Bomb</span>
+                    </button>
+                    <button class="powerup-btn" id="powerupMagnet" onclick="game.togglePowerup('magnet')">
+                        <span class="powerup-icon">🧲</span>
+                        <span class="powerup-name">Magnet</span>
+                    </button>
+                    <button class="powerup-btn" id="powerupSlow" onclick="game.togglePowerup('slow')">
+                        <span class="powerup-icon">🐌</span>
+                        <span class="powerup-name">Slow</span>
+                    </button>
+                </div>
             </div>
-            <div class="stat-box">
-                <div class="stat-label">Enemies</div>
-                <div class="stat-value" id="enemies">0</div>
+
+            <div class="panel">
+                <h2>Enemy AI</h2>
+                <div class="enemy-info" id="enemyInfo">
+                    Active enemies will pursue you based on their AI behavior.
+                </div>
+                <div class="enemy-list" id="enemyList"></div>
+            </div>
+
+            <div class="panel">
+                <h2>Enemy Behaviors</h2>
+                <div class="controls">
+                    <button class="secondary" onclick="game.setEnemyBehavior('chase')">Chase</button>
+                    <button class="secondary" onclick="game.setEnemyBehavior('circle')">Circle</button>
+                    <button class="secondary" onclick="game.setEnemyBehavior('ambush')">Ambush</button>
+                    <button class="secondary" onclick="game.setEnemyBehavior('random')">Random</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Game Info</h2>
+                <div class="stat-row">
+                    <span class="stat-label">Canvas Size</span>
+                    <span class="stat-value">800x600</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">FPS</span>
+                    <span class="stat-value" id="fpsDisplay">60</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Enemies</span>
+                    <span class="stat-value" id="enemyCount">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Power-ups Active</span>
+                    <span class="stat-value" id="powerupCount">0</span>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Actions</h2>
+                <div class="controls">
+                    <button onclick="game.spawnEnemy()">Spawn Enemy</button>
+                    <button onclick="game.spawnPowerup()">Spawn Power-up</button>
+                    <button onclick="game.clearEnemies()">Clear Enemies</button>
+                    <button class="secondary" onclick="game.saveProgress()">Save Progress</button>
+                    <button class="secondary" onclick="game.loadProgress()">Load Progress</button>
+                    <button class="secondary" onclick="game.reset()">Reset</button>
+                </div>
             </div>
         </div>
-        
-        <div class="controls">
-            <button class="control-btn w" onclick="movePlayer('up')">↑</button>
-            <button class="control-btn a" onclick="movePlayer('left')">←</button>
-            <button class="control-btn s" onclick="movePlayer('down')">↓</button>
-            <button class="control-btn d" onclick="movePlayer('right')">→</button>
-            <button class="control-btn" onclick="spawnEnemy()">Spawn Enemy</button>
-            <button class="control-btn" onclick="spawnPowerup()">Spawn Power-up</button>
-        </div>
-        
-        <div class="game-menu">
-            <button class="menu-btn" onclick="startGame()">Start Game</button>
-            <button class="menu-btn" onclick="resetGame()">Reset</button>
-            <button class="menu-btn" onclick="togglePause()">Pause</button>
-        </div>
-        
-        <div class="tutorial">
-            <h3>How to Play</h3>
-            <p>Use <span class="tutorial-key">W</span><span class="tutorial-key">A</span><span class="tutorial-key">S</span><span class="tutorial-key">D</span> or arrow keys to move your character.</p>
-            <p>Collect <span style="color: #6366f1">●</span> power-ups to gain abilities and health.</p>
-            <p>Avoid <span style="color: #ef4444">■</span> enemies - they'll chase you!</p>
-            <p>Enemies use different AI behaviors: some circle around, others move in straight lines, and some hover.</p>
-            <p>Press <span class="tutorial-key">SPACE</span> to shoot projectiles at enemies!</p>
-        </div>
-        
-        <a href="index.html" style="color:#6366f1">Back to Home</a>
     </div>
-    
+
+    <a href="index.html" style="color:#6366f1">Back to Home</a>
+
     <script>
-        // Game State
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let gameLoopId;
-        let isPaused = false;
-        let score = 0;
-        let health = 100;
-        let powerups = 0;
-        let enemies = [];
-        let projectiles = [];
-        let particles = [];
-        let player;
-        let powerupActive = false;
-        let powerupTimer = 0;
-        let highScore = localStorage.getItem('gwenGameHighScore') || 0;
-        
-        // Player
-        class Player {
+        class Game {
             constructor() {
-                this.x = canvas.width / 2;
-                this.y = canvas.height / 2;
-                this.radius = 15;
-                this.speed = 4;
-                this.color = '#6366f1';
-                this.angle = 0;
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.player = { x: 400, y: 300, size: 20, speed: 4, health: 100, maxHealth: 100 };
+                this.enemies = [];
+                this.powerups = [];
+                this.score = 0;
+                this.level = 1;
+                this.kills = 0;
+                this.time = 0;
+                this.lastTime = 0;
+                this.fps = 60;
+                this.enemyBehavior = 'chase';
+                this.powerupsActive = [];
+                this.spawnTimer = 0;
+                this.enemySpawnRate = 300;
+                this.powerupSpawnRate = 600;
+                this.bombCooldown = 0;
+                this.bombRadius = 100;
+                this.isRunning = false;
+                this.animationId = null;
+                this.lastEnemyTime = 0;
+                this.lastPowerupTime = 0;
+                this.lastBombTime = 0;
+                this.saveKey = 'gwenGameSave';
+                this.enemyTypes = ['Basic', 'Fast', 'Tank', 'Sniper'];
+                this.enemyBehaviors = ['chase', 'circle', 'ambush', 'random'];
             }
-            
-            draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.angle);
-                ctx.beginPath();
-                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                ctx.restore();
+
+            init() {
+                this.bindEvents();
+                this.loadProgress();
+                this.updateUI();
+                this.isRunning = true;
+                this.lastTime = performance.now();
+                this.animationId = requestAnimationFrame(this.loop.bind(this));
             }
-            
+
+            bindEvents() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowUp') this.move('up');
+                    if (e.key === 'ArrowDown') this.move('down');
+                    if (e.key === 'ArrowLeft') this.move('left');
+                    if (e.key === 'ArrowRight') this.move('right');
+                });
+            }
+
             move(direction) {
                 switch(direction) {
-                    case 'up': this.y -= this.speed; break;
-                    case 'down': this.y += this.speed; break;
-                    case 'left': this.x -= this.speed; break;
-                    case 'right': this.x += this.speed; break;
+                    case 'up': this.player.y = Math.max(0, this.player.y - this.player.speed); break;
+                    case 'down': this.player.y = Math.min(600 - this.player.size, this.player.y + this.player.speed); break;
+                    case 'left': this.player.x = Math.max(0, this.player.x - this.player.speed); break;
+                    case 'right': this.player.x = Math.min(800 - this.player.size, this.player.x + this.player.speed); break;
                 }
-                // Keep in bounds
-                this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
-                this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
             }
-        }
-        
-        // Enemy
-        class Enemy {
-            constructor(type) {
-                this.type = type || 'chase';
-                this.radius = 15;
-                this.x = Math.random() * (canvas.width - 40) + 20;
-                this.y = Math.random() * (canvas.height - 40) + 20;
-                this.speed = 1 + Math.random() * 2;
-                this.color = '#ef4444';
-                this.aiBehavior = this.getAIBehavior();
-                this.angle = 0;
-                this.path = [];
-                this.moveTimer = 0;
+
+            loop(timestamp) {
+                const deltaTime = timestamp - this.lastTime;
+                this.lastTime = timestamp;
+                this.time += deltaTime;
+                this.fps = Math.round(1000 / deltaTime);
+
+                this.update(deltaTime);
+                this.draw();
+                this.updateUI();
+
+                if (this.isRunning) {
+                    this.animationId = requestAnimationFrame(this.loop.bind(this));
+                }
             }
-            
-            getAIBehavior() {
-                const behaviors = ['chase', 'circle', 'hover', 'patrol'];
-                return behaviors[Math.floor(Math.random() * behaviors.length)];
+
+            update(deltaTime) {
+                this.spawnTimer += deltaTime;
+
+                if (this.powerupsActive.includes('shield')) {
+                    this.player.health = Math.min(this.player.maxHealth, this.player.health + 0.1);
+                }
+
+                if (this.powerupsActive.includes('speed')) {
+                    this.player.speed = 6;
+                } else {
+                    this.player.speed = 4;
+                }
+
+                if (this.powerupsActive.includes('slow')) {
+                    this.player.speed = 2;
+                }
+
+                this.enemies.forEach(enemy => {
+                    this.updateEnemyAI(enemy);
+                });
+
+                this.powerups.forEach(powerup => {
+                    powerup.x += Math.cos(powerup.angle) * powerup.speed;
+                    powerup.y += Math.sin(powerup.angle) * powerup.speed;
+                });
+
+                if (this.bombCooldown > 0) {
+                    this.bombCooldown -= deltaTime;
+                }
+
+                if (this.spawnTimer > this.enemySpawnRate) {
+                    this.spawnEnemy();
+                    this.spawnTimer = 0;
+                }
+
+                if (this.spawnTimer > this.powerupSpawnRate) {
+                    this.spawnPowerup();
+                    this.spawnTimer = 0;
+                }
             }
-            
-            update() {
-                switch(this.aiBehavior) {
+
+            updateEnemyAI(enemy) {
+                const dx = this.player.x - enemy.x;
+                const dy = this.player.y - enemy.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                switch(this.enemyBehavior) {
                     case 'chase':
-                        const dx = player.x - this.x;
-                        const dy = player.y - this.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        this.angle = Math.atan2(dy, dx);
-                        this.x += Math.cos(this.angle) * this.speed;
-                        this.y += Math.sin(this.angle) * this.speed;
+                        if (dist > 50) {
+                            enemy.x += (dx / dist) * enemy.speed;
+                            enemy.y += (dy / dist) * enemy.speed;
+                        }
                         break;
                     case 'circle':
-                        this.angle += 0.02;
-                        this.x += Math.cos(this.angle) * this.speed * 0.5;
-                        this.y += Math.sin(this.angle) * this.speed * 0.5;
+                        enemy.x += Math.cos(enemy.angle) * enemy.speed;
+                        enemy.y += Math.sin(enemy.angle) * enemy.speed;
+                        enemy.angle += 0.05;
                         break;
-                    case 'hover':
-                        this.y += Math.sin(Date.now() / 500) * 0.5;
-                        break;
-                    case 'patrol':
-                        this.moveTimer++;
-                        if (this.moveTimer > 60) {
-                            this.moveTimer = 0;
-                            const directions = [0, Math.PI/2, Math.PI, -Math.PI/2];
-                            this.angle = directions[Math.floor(Math.random() * directions.length)];
+                    case 'ambush':
+                        if (dist > 150) {
+                            enemy.x += (dx / dist) * enemy.speed;
+                            enemy.y += (dy / dist) * enemy.speed;
+                        } else if (dist < 50) {
+                            enemy.x -= (dx / dist) * enemy.speed;
+                            enemy.y -= (dy / dist) * enemy.speed;
                         }
-                        this.x += Math.cos(this.angle) * this.speed * 0.5;
-                        this.y += Math.sin(this.angle) * this.speed * 0.5;
+                        break;
+                    case 'random':
+                        if (Math.random() < 0.02) {
+                            enemy.angle = Math.random() * Math.PI * 2;
+                        }
+                        enemy.x += Math.cos(enemy.angle) * enemy.speed;
+                        enemy.y += Math.sin(enemy.angle) * enemy.speed;
                         break;
                 }
-                // Keep in bounds
-                this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
-                this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
-            }
-            
-            draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.angle);
-                ctx.beginPath();
-                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-        
-        // Projectile
-        class Projectile {
-            constructor(x, y, angle) {
-                this.x = x;
-                this.y = y;
-                this.radius = 5;
-                this.speed = 8;
-                this.angle = angle;
-                this.color = '#fbbf24';
-                this.active = true;
-            }
-            
-            update() {
-                this.x += Math.cos(this.angle) * this.speed;
-                this.y += Math.sin(this.angle) * this.speed;
-                
-                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-                    this.active = false;
-                }
-            }
-            
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            }
-        }
-        
-        // Particle
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x;
-                this.y = y;
-                this.radius = Math.random() * 3 + 2;
-                this.speedX = (Math.random() - 0.5) * 4;
-                this.speedY = (Math.random() - 0.5) * 4;
-                this.color = color;
-                this.alpha = 1;
-                this.active = true;
-            }
-            
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.alpha -= 0.02;
-                if (this.alpha <= 0) this.active = false;
-            }
-            
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.alpha;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-        
-        // Power-up
-        class PowerUp {
-            constructor() {
-                this.x = Math.random() * (canvas.width - 40) + 20;
-                this.y = Math.random() * (canvas.height - 40) + 20;
-                this.radius = 12;
-                this.color = '#6366f1';
-                this.type = Math.random() > 0.5 ? 'health' : 'score';
-                this.active = true;
-            }
-            
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                ctx.fillStyle = '#fff';
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(this.type === 'health' ? '+' : '★', this.x, this.y);
-            }
-        }
-        
-        // Initialize player
-        player = new Player();
-        
-        // Spawn enemies
-        function spawnEnemies(count) {
-            for (let i = 0; i < count; i++) {
-                enemies.push(new Enemy());
-            }
-            updateUI();
-        }
-        
-        // Spawn power-up
-        function spawnPowerup() {
-            powerups.push(new PowerUp());
-            updateUI();
-        }
-        
-        // Spawn enemy
-        function spawnEnemy() {
-            enemies.push(new Enemy());
-            updateUI();
-        }
-        
-        // Shoot projectile
-        function shoot() {
-            projectiles.push(new Projectile(player.x, player.y, player.angle));
-        }
-        
-        // Create explosion particles
-        function createExplosion(x, y, color) {
-            for (let i = 0; i < 8; i++) {
-                particles.push(new Particle(x, y, color));
-            }
-        }
-        
-        // Check collision
-        function checkCollision(c1, c2) {
-            const dx = c1.x - c2.x;
-            const dy = c1.y - c2.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            return distance < c1.radius + c2.radius;
-        }
-        
-        // Update UI
-        function updateUI() {
-            document.getElementById('score').textContent = score;
-            document.getElementById('health').textContent = Math.max(0, health) + '%';
-            document.getElementById('powerups').textContent = powerups.length;
-            document.getElementById('enemies').textContent = enemies.length;
-        }
-        
-        // Start game
-        function startGame() {
-            document.getElementById('gameOver').style.display = 'none';
-            score = 0;
-            health = 100;
-            powerups = [];
-            enemies = [];
-            projectiles = [];
-            particles = [];
-            player = new Player();
-            player.x = canvas.width / 2;
-            player.y = canvas.height / 2;
-            isPaused = false;
-            updateUI();
-            gameLoop();
-        }
-        
-        // Reset game
-        function resetGame() {
-            cancelAnimationFrame(gameLoopId);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            startGame();
-        }
-        
-        // Toggle pause
-        function togglePause() {
-            isPaused = !isPaused;
-            if (!isPaused) {
-                gameLoop();
-            }
-        }
-        
-        // Move player with buttons
-        function movePlayer(direction) {
-            if (!isPaused) {
-                player.move(direction);
-            }
-        }
-        
-        // Game loop
-        function gameLoop() {
-            if (isPaused) return;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw player
-            player.draw();
-            
-            // Draw power-ups
-            powerups.forEach((p, i) => {
-                p.draw();
-                if (checkCollision(player, p)) {
-                    if (p.type === 'health') {
-                        health = Math.min(100, health + 25);
-                    } else {
-                        score += 50;
+
+                // Keep enemies in bounds
+                enemy.x = Math.max(0, Math.min(800 - enemy.size, enemy.x));
+                enemy.y = Math.max(0, Math.min(600 - enemy.size, enemy.y));
+
+                // Check collision with player
+                if (dist < this.player.size + enemy.size) {
+                    if (!this.powerupsActive.includes('shield')) {
+                        this.player.health -= 10;
+                        this.createParticles(this.player.x, this.player.y, '#ef4444');
+                        if (this.player.health <= 0) {
+                            this.gameOver();
+                        }
                     }
-                    p.active = false;
-                    powerups.splice(i, 1);
-                    createExplosion(p.x, p.y, '#6366f1');
-                    updateUI();
                 }
-            });
-            
-            // Draw and update enemies
-            enemies.forEach((e, i) => {
-                e.update();
-                e.draw();
-                
-                if (checkCollision(player, e)) {
-                    health -= 20;
-                    createExplosion(e.x, e.y, '#ef4444');
-                    enemies.splice(i, 1);
-                    if (health <= 0) {
-                        gameOver();
-                    }
-                    updateUI();
-                }
-                
-                // Projectile hits enemy
-                projectiles.forEach((p, j) => {
-                    if (checkCollision(p, e)) {
-                        createExplosion(e.x, e.y, '#ef4444');
-                        enemies.splice(i, 1);
-                        projectiles.splice(j, 1);
-                        score += 10;
-                        updateUI();
+
+                // Check collision with powerups
+                this.powerups.forEach((powerup, index) => {
+                    const pdx = powerup.x - enemy.x;
+                    const pdy = powerup.y - enemy.y;
+                    const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
+                    if (pdist < enemy.size + powerup.size) {
+                        this.collectPowerup(powerup, index);
                     }
                 });
-            });
-            
-            // Draw and update projectiles
-            projectiles.forEach((p, i) => {
-                p.update();
-                p.draw();
-                if (!p.active) {
-                    projectiles.splice(i, 1);
+            }
+
+            draw() {
+                this.ctx.fillStyle = '#111';
+                this.ctx.fillRect(0, 0, 800, 600);
+
+                // Draw grid
+                this.ctx.strokeStyle = '#222';
+                this.ctx.lineWidth = 1;
+                for (let x = 0; x <= 800; x += 40) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, 600);
+                    this.ctx.stroke();
                 }
-            });
-            
-            // Draw and update particles
-            particles.forEach((p, i) => {
-                p.update();
-                p.draw();
-                if (!p.active) {
-                    particles.splice(i, 1);
+                for (let y = 0; y <= 600; y += 40) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(800, y);
+                    this.ctx.stroke();
                 }
-            });
-            
-            // Spawn new enemies periodically
-            if (score > 0 && score % 500 === 0 && enemies.length < 5) {
-                spawnEnemy();
+
+                // Draw player
+                this.ctx.fillStyle = '#6366f1';
+                this.ctx.beginPath();
+                this.ctx.arc(this.player.x + this.player.size/2, this.player.y + this.player.size/2, this.player.size/2, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Draw shield if active
+                if (this.powerupsActive.includes('shield')) {
+                    this.ctx.strokeStyle = '#22c55e';
+                    this.ctx.lineWidth = 3;
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.player.x + this.player.size/2, this.player.y + this.player.size/2, this.player.size + 10, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+
+                // Draw enemies
+                this.enemies.forEach(enemy => {
+                    this.ctx.fillStyle = enemy.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(enemy.x + enemy.size/2, enemy.y + enemy.size/2, enemy.size/2, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    // Enemy health bar
+                    const healthPct = enemy.health / enemy.maxHealth;
+                    this.ctx.fillStyle = '#333';
+                    this.ctx.fillRect(enemy.x, enemy.y - 10, enemy.size, 5);
+                    this.ctx.fillStyle = healthPct > 0.5 ? '#22c55e' : healthPct > 0.25 ? '#f59e0b' : '#ef4444';
+                    this.ctx.fillRect(enemy.x, enemy.y - 10, enemy.size * healthPct, 5);
+                });
+
+                // Draw powerups
+                this.powerups.forEach(powerup => {
+                    this.ctx.font = '20px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(powerup.icon, powerup.x + powerup.size/2, powerup.y + powerup.size/2);
+                });
+
+                // Draw bombs
+                if (this.bombCooldown < 0) {
+                    this.ctx.fillStyle = '#ef4444';
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.player.x + this.player.size/2, this.player.y + this.player.size/2, this.bombRadius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = '#6366f1';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+                }
             }
-            
-            // Power-up active indicator
-            if (powerups.length > 0) {
-                document.getElementById('powerupIndicator').style.display = 'block';
-            } else {
-                document.getElementById('powerupIndicator').style.display = 'none';
+
+            createParticles(x, y, color) {
+                // Simplified particle effect
             }
-            
-            // Enemy indicator
-            if (enemies.length > 0) {
-                document.getElementById('enemyIndicator').style.display = 'block';
-            } else {
-                document.getElementById('enemyIndicator').style.display = 'none';
+
+            spawnEnemy() {
+                const typeIdx = Math.floor(Math.random() * this.enemyTypes.length);
+                const enemy = {
+                    x: Math.random() * 800,
+                    y: Math.random() * 600,
+                    size: 20,
+                    speed: 2 + Math.random() * 2,
+                    health: 30 + typeIdx * 20,
+                    maxHealth: 30 + typeIdx * 20,
+                    color: ['#ef4444', '#f97316', '#eab308', '#84cc16'][typeIdx],
+                    angle: Math.random() * Math.PI * 2,
+                    type: this.enemyTypes[typeIdx]
+                };
+                this.enemies.push(enemy);
             }
-            
-            gameLoopId = requestAnimationFrame(gameLoop);
+
+            spawnPowerup() {
+                const types = ['shield', 'speed', 'heal', 'bomb', 'magnet', 'slow'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                const powerup = {
+                    x: Math.random() * 800,
+                    y: Math.random() * 600,
+                    size: 20,
+                    angle: Math.random() * Math.PI * 2,
+                    speed: 2,
+                    icon: {
+                        shield: '🛡️',
+                        speed: '⚡',
+                        heal: '❤️',
+                        bomb: '💣',
+                        magnet: '🧲',
+                        slow: '🐌'
+                    }[type],
+                    type: type
+                };
+                this.powerups.push(powerup);
+            }
+
+            collectPowerup(powerup, index) {
+                if (this.powerupsActive.includes(powerup.type)) {
+                    this.powerups.splice(index, 1);
+                    return;
+                }
+                this.powerupsActive.push(powerup.type);
+                this.powerups.splice(index, 1);
+                this.score += 10;
+            }
+
+            togglePowerup(type) {
+                const btn = document.getElementById('powerup' + type.charAt(0).toUpperCase() + type.slice(1));
+                if (this.powerupsActive.includes(type)) {
+                    this.powerupsActive = this.powerupsActive.filter(t => t !== type);
+                    btn.classList.remove('active');
+                } else {
+                    this.powerupsActive.push(type);
+                    btn.classList.add('active');
+                }
+            }
+
+            setEnemyBehavior(behavior) {
+                this.enemyBehavior = behavior;
+                const info = document.getElementById('enemyInfo');
+                const descriptions = {
+                    chase: 'Enemies will directly pursue the player.',
+                    circle: 'Enemies will orbit around the player.',
+                    ambush: 'Enemies will wait until close before attacking.',
+                    random: 'Enemies will move in random directions.'
+                };
+                info.textContent = descriptions[behavior];
+            }
+
+            restart() {
+                this.player.x = 400;
+                this.player.y = 300;
+                this.player.health = 100;
+                this.enemies = [];
+                this.powerups = [];
+                this.score = 0;
+                this.level = 1;
+                this.kills = 0;
+                this.time = 0;
+                this.powerupsActive = [];
+                this.bombCooldown = 0;
+                this.bombRadius = 100;
+                document.getElementById('gameOver').classList.remove('active');
+                this.updateUI();
+                this.lastTime = performance.now();
+                this.animationId = requestAnimationFrame(this.loop.bind(this));
+            }
+
+            gameOver() {
+                this.isRunning = false;
+                this.score = Math.floor(this.score / 10) * 10;
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('gameOver').classList.add('active');
+                this.saveProgress();
+            }
+
+            saveProgress() {
+                const data = {
+                    score: this.score,
+                    level: this.level,
+                    kills: this.kills,
+                    time: this.time,
+                    powerupsActive: this.powerupsActive,
+                    playerHealth: this.player.health
+                };
+                fetch('https://gwen-api.dearclawla1.workers.dev/kv/gwenGameSave', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }).catch(() => {});
+            }
+
+            loadProgress() {
+                fetch('https://gwen-api.dearclawla1.workers.dev/kv/gwenGameSave')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data) {
+                            this.score = data.score || 0;
+                            this.level = data.level || 1;
+                            this.kills = data.kills || 0;
+                            this.time = data.time || 0;
+                            this.powerupsActive = data.powerupsActive || [];
+                            this.player.health = data.playerHealth || 100;
+                            this.powerupsActive.forEach(type => {
+                                const btn = document.getElementById('powerup' + type.charAt(0).toUpperCase() + type.slice(1));
+                                if (btn) btn.classList.add('active');
+                            });
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            reset() {
+                this.restart();
+            }
+
+            clearEnemies() {
+                this.enemies = [];
+            }
+
+            updateUI() {
+                document.getElementById('scoreDisplay').textContent = Math.floor(this.score);
+                document.getElementById('statScore').textContent = Math.floor(this.score);
+                document.getElementById('statHealth').textContent = Math.floor(this.player.health) + '%';
+                document.getElementById('statLevel').textContent = this.level;
+                document.getElementById('statKills').textContent = this.kills;
+                document.getElementById('statTime').textContent = Math.floor(this.time / 1000) + 's';
+                document.getElementById('fpsDisplay').textContent = this.fps;
+                document.getElementById('enemyCount').textContent = this.enemies.length;
+                document.getElementById('powerupCount').textContent = this.powerupsActive.length;
+
+                const healthBar = document.getElementById('healthBar');
+                healthBar.style.width = this.player.health + '%';
+                if (this.player.health < 30) {
+                    healthBar.classList.add('low');
+                } else {
+                    healthBar.classList.remove('low');
+                }
+            }
         }
-        
-        // Game over
-        function gameOver() {
-            cancelAnimationFrame(gameLoopId);
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('gwenGameHighScore', highScore);
-            }
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('highScore').textContent = highScore;
-            document.getElementById('gameOver').style.display = 'flex';
-        }
-        
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            switch(e.key) {
-                case 'w':
-                case 'ArrowUp':
-                    if (!isPaused) player.move('up');
-                    break;
-                case 'a':
-                case 'ArrowLeft':
-                    if (!isPaused) player.move('left');
-                    break;
-                case 's':
-                case 'ArrowDown':
-                    if (!isPaused) player.move('down');
-                    break;
-                case 'd':
-                case 'ArrowRight':
-                    if (!isPaused) player.move('right');
-                    break;
-                case ' ':
-                    if (!isPaused) shoot();
-                    break;
-                case 'Escape':
-                    togglePause();
-                    break;
-            }
-        });
-        
-        // Initialize
-        ctx.fillStyle = '#111';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        document.getElementById('highScore').textContent = highScore;
-        
+
+        const game = new Game();
+        game.init();
+
         // Usage tracking
         fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
             method: 'POST',
