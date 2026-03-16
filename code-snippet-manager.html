@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Code Snippet Manager</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+.container{max-width:600px;margin:0 auto}
+h1{color:#6366f1;margin-bottom:20px}
+input,textarea,button{margin:10px 0;padding:8px;border-radius:4px;border:none;font-family:inherit}
+input,textarea{background:#1a1a1a;color:#e4e4e4;border:1px solid #333}
+button{background:#6366f1;color:#fff;cursor:pointer}
+button:hover{background:#5558f5}
+#snippets{margin-top:20px}
+.snippet{background:#1a1a1a;border:1px solid #333;padding:10px;margin:10px 0;border-radius:4px}
+.snippet h3{color:#6366f1;margin:0 0 5px}
+.delete-btn{background:#ef4444;color:#fff;padding:4px 8px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h1>Code Snippet Manager</h1>
+<input type="text" id="title" placeholder="Snippet Title" style="width:100%">
+<textarea id="code" placeholder="Paste your code here" style="width:100%;height:100px"></textarea>
+<button onclick="addSnippet()">Add Snippet</button>
+<div id="snippets"></div>
+</div>
+<script>
+let snippets=[];
+function save(){localStorage.setItem('snippets',JSON.stringify(snippets));render();}
+function render(){const div=document.getElementById('snippets');div.innerHTML=snippets.map((s,i)=>`<div class="snippet"><h3>${s.title}</h3><pre>${escapeHtml(s.code)}</pre><button class="delete-btn" onclick="deleteSnippet(${i})">Delete</button></div>`).join('')||'<p>No snippets yet</p>'}
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')};
+function addSnippet(){const title=document.getElementById('title').value.trim();const code=document.getElementById('code').value.trim();if(!title||!code){alert('Please enter both title and code');return}snippets.push({title,code});document.getElementById('title').value='';document.getElementById('code').value='';save();}
+function deleteSnippet(i){snippets.splice(i,1);save();}
+if(localStorage.getItem('snippets')){snippets=JSON.parse(localStorage.getItem('snippets'));render()}
+</script>
+</body>
+</html>
