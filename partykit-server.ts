@@ -31,6 +31,7 @@ interface ProjectileState {
   range: number;
   traveled: number;
   color: string;
+  size: number;
 }
 
 interface ClientMessage {
@@ -57,354 +58,226 @@ interface ServerMessage {
 }
 
 // ============================================================
-// SERVER CONSTANTS
-// ============================================================
-
-const DAMAGE_CAPS = {
-  melee: 50,
-  ranged: 30,
-  magic: 40,
-};
-
-const RATE_LIMITS = {
-  attacks: 1000, // ms between attacks
-  moves: 500, // ms between moves
-};
-
-const POSITION_VALIDATION = {
-  maxDistance: 100, // max movement per tick
-  minDistance: 1, // min movement to prevent teleporting
-};
-
-// ============================================================
-// SERVER CLASS
+// SERVER IMPLEMENTATION
 // ============================================================
 
 export default class GameRoom implements Server {
-  players = new Map<string, PlayerState>();
-  connectionMap = new Map<string, Connection>();
-  playerConnMap = new Map<string, Connection>();
+  players: Map<string, PlayerState> = new Map();
+  connectionMap: Map<string, Connection> = new Map();
+  playerConnMap: Map<string, Connection> = new Map();
 
-  constructor(public room: Party) {}
-
-  // ===========================================================
-  // CONNECTION HANDLERS
-  // ===========================================================
-
-  async onConnect(conn: Connection, ctx: ConnectionContext) {
-    console.log(`[${ctx.room.id}] Player connected: ${conn.id}`);
+  onConnect(ctx: ConnectionContext): void {
+    const conn = ctx.connection;
     this.connectionMap.set(conn.id, conn);
+
+    conn.send({
+      type: "connect",
+      zone: ctx.roomId,
+    });
   }
 
-  async onClose(conn: Connection) {
-    console.log(`[${ctx.room.id}] Player disconnected: ${conn.id}`);
+  onClose(conn: Connection): void {
     this.connectionMap.delete(conn.id);
-    const player = this.players.get(conn.id);
-    if (player) {
-      this.broadcastExcept({ type: "player-leave", id: player.id }, conn);
-      this.players.delete(conn.id);
-    }
-  }
-
-  // ===========================================================
-  // MESSAGE HANDLERS
-  // ===========================================================
-
-  async onMessage(conn: Connection, msg: any) {
-    try {
-      const type = msg.type;
-      const payload = msg.payload;
-
-      switch (type) {
-        case "join":
-          await this.handleJoin(conn, payload);
-          break;
-
-        case "move":
-          await this.handleMove(conn, payload);
-          break;
-
-        case "attack":
-          await this.handleAttack(conn, payload);
-          break;
-
-        case "projectile":
-          await this.handleProjectile(conn, payload);
-          break;
-
-        case "hit-player":
-          await this.handleHitPlayer(conn, payload);
-          break;
-
-        case "chat":
-          await this.handleChat(conn, payload);
-          break;
-
-        case "ping":
-          await this.handlePing(conn);
-          break;
-
-        default:
-          console.log(`[${this.room.id}] Unknown message type: ${type}`);
+    for (const [id, conn] of this.playerConnMap) {
+      if (conn.id === conn.id) {
+        this.playerConnMap.delete(id);
+        this.broadcastExcept({
+          type: "player-leave",
+          id,
+        }, conn);
+        break;
       }
-    } catch (error) {
-      console.error(`[${this.room.id}] Error handling message:`, error);
     }
   }
 
-  // ===========================================================
-  // MESSAGE HANDLER IMPLEMENTATIONS
-  // ===========================================================
+  onMessage(conn: Connection, msg: any): void {
+    try {
+      const parsed = this.parseMessage(msg);
+      if (!parsed) return;
 
-  async handleJoin(conn: Connection, payload: { player: PlayerState }) {
-    const player = payload.player;
-    
-    // Validate player data
-    if (!player.id || !player.name || !player.zone) {
-      throw new Error("Invalid player data");
+      const handler = this.handlers[parsed.type];
+      if (handler) {
+        handler(conn, parsed.payload);
+      }
+    } catch (err) {
+      console.error("Error handling message:", err);
     }
-
-    // Check if player already exists (prevent duplicate join)
-    if (this.players.has(player.id)) {
-      console.log(`[${this.room.id}] Player ${player.id} already in zone`);
-      return;
-    }
-
-    // Set last update time
-    player.lastUpdate = Date.now();
-
-    // Add player to server
-    this.players.set(player.id, player);
-    this.playerConnMap.set(player.id, conn);
-
-    // Broadcast state to all except joining player
-    const state: ServerMessage["state"] = {
-      players: Array.from(this.players.values()),
-      you: player,
-    };
-    this.broadcastExcept(state, conn);
-
-    // Broadcast player join
-    this.broadcast({ type: "player-join", player });
-
-    console.log(`[${this.room.id}] Player joined: ${player.name} (${player.id})`);
   }
 
-  async handleMove(conn: Connection, payload: { x: number; y: number; facing: { x: number; y: number } }) {
-    const player = this.playerConnMap.get(conn.id);
-    if (!player) return;
-
-    // Validate movement
-    const dx = payload.x - player.x;
-    const dy = payload.y - player.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    if (distance > POSITION_VALIDATION.maxDistance) {
-      console.log(`[${this.room.id}] Movement too far: ${distance.toFixed(2)} > ${POSITION_VALIDATION.maxDistance}`);
-      return;
+  parseMessage(msg: any): { type: keyof ClientMessage; payload: any } | null {
+    if (!msg) return null;
+    const type = Object.keys(msg)[0] as keyof ClientMessage;
+    if (!type) return null;
+    try {
+      return { type, payload: msg[type] };
+    } catch {
+      return null;
     }
-
-    if (distance < POSITION_VALIDATION.minDistance) {
-      console.log(`[${this.room.id}] Movement too small (possible teleport): ${distance.toFixed(2)}`);
-      return;
-    }
-
-    // Update player position
-    player.x = payload.x;
-    player.y = payload.y;
-    player.facing = payload.facing;
-    player.lastUpdate = Date.now();
-
-    // Broadcast movement
-    this.broadcast({
-      type: "player-move",
-      id: player.id,
-      x: player.x,
-      y: player.y,
-      facing: player.facing,
-    });
-
-    console.log(`[${this.room.id}] Player moved: ${player.name} to (${player.x.toFixed(1)}, ${player.y.toFixed(1)})`);
   }
 
-  async handleAttack(conn: Connection, payload: { facing: { x: number; y: number }; weapon: string; damage: number }) {
-    const player = this.playerConnMap.get(conn.id);
-    if (!player) return;
+  handlers: Record<string, (conn: Connection, payload: any) => void> = {
+    join: (conn, player) => {
+      const playerState = {
+        ...player,
+        zone: ctx.roomId,
+        lastUpdate: Date.now(),
+      };
 
-    // Rate limit attacks
-    const now = Date.now();
-    const lastAttack = player.lastAttack || 0;
-    if (now - lastAttack < RATE_LIMITS.attacks) {
-      console.log(`[${this.room.id}] Attack rate limited: ${player.name}`);
-      return;
-    }
-    player.lastAttack = now;
+      this.players.set(player.id, playerState);
+      this.playerConnMap.set(player.id, conn);
+      this.connectionMap.set(conn.id, conn);
 
-    // Cap damage by weapon type
-    let cappedDamage = payload.damage;
-    const weaponType = payload.weapon.toLowerCase();
-    if (weaponType.includes("melee") || weaponType.includes("sword") || weaponType.includes("axe")) {
-      cappedDamage = Math.min(cappedDamage, DAMAGE_CAPS.melee);
-    } else if (weaponType.includes("bow") || weaponType.includes("arrow") || weaponType.includes("gun")) {
-      cappedDamage = Math.min(cappedDamage, DAMAGE_CAPS.ranged);
-    } else if (weaponType.includes("spell") || weaponType.includes("fireball") || weaponType.includes("magic")) {
-      cappedDamage = Math.min(cappedDamage, DAMAGE_CAPS.magic);
-    }
-
-    // Broadcast attack
-    this.broadcast({
-      type: "player-attack",
-      id: player.id,
-      facing: payload.facing,
-      weapon: payload.weapon,
-    });
-
-    console.log(`[${this.room.id}] Attacked: ${player.name} with ${payload.weapon} (damage: ${cappedDamage})`);
-  }
-
-  async handleProjectile(conn: Connection, payload: { proj: ProjectileState }) {
-    const player = this.playerConnMap.get(conn.id);
-    if (!player) return;
-
-    // Validate projectile owner
-    if (payload.proj.ownerId !== player.id) {
-      console.log(`[${this.room.id}] Invalid projectile owner: ${payload.proj.ownerId} vs ${player.id}`);
-      return;
-    }
-
-    // Cap projectile damage
-    let cappedDamage = payload.proj.damage;
-    const weaponType = player.weapon.toLowerCase();
-    if (weaponType.includes("spell") || weaponType.includes("fireball") || weaponType.includes("magic")) {
-      cappedDamage = Math.min(cappedDamage, DAMAGE_CAPS.magic);
-    } else if (weaponType.includes("bow") || weaponType.includes("arrow") || weaponType.includes("gun")) {
-      cappedDamage = Math.min(cappedDamage, DAMAGE_CAPS.ranged);
-    }
-
-    // Update projectile damage
-    payload.proj.damage = cappedDamage;
-
-    // Broadcast projectile
-    this.broadcast({
-      type: "projectile",
-      proj: payload.proj,
-    });
-
-    console.log(`[${this.room.id}] Projectile fired: ${player.name} (damage: ${cappedDamage})`);
-  }
-
-  async handleHitPlayer(conn: Connection, payload: { targetId: string; damage: number }) {
-    const attacker = this.playerConnMap.get(conn.id);
-    if (!attacker) return;
-
-    const target = this.players.get(payload.targetId);
-    if (!target) {
-      console.log(`[${this.room.id}] Target not found: ${payload.targetId}`);
-      return;
-    }
-
-    // Server-side damage validation (anti-cheat)
-    // Only allow damage if attacker is within reasonable range
-    const dx = attacker.x - target.x;
-    const dy = attacker.y - target.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Cap damage by weapon type
-    let cappedDamage = payload.damage;
-    const weaponType = attacker.weapon.toLowerCase();
-    if (weaponType.includes("melee") || weaponType.includes("sword") || weaponType.includes("axe")) {
-      cappedDamage = Math.min(cappedDamage, DAMAGE_CAPS.melee);
-    } else if (weaponType.includes("bow") || weaponType.includes("arrow") || weaponType.includes("gun")) {
-      cappedDamage = Math.min(cappedDamage, DAMAGE_CAPS.ranged);
-    } else if (weaponType.includes("spell") || weaponType.includes("fireball") || weaponType.includes("magic")) {
-      cappedDamage = Math.min(cappedDamage, DAMAGE_CAPS.magic);
-    }
-
-    // Validate damage is not excessive (anti-cheat)
-    if (cappedDamage > 100) {
-      console.log(`[${this.room.id}] Excessive damage blocked: ${cappedDamage} > 100`);
-      cappedDamage = 100;
-    }
-
-    // Apply damage (authoritative)
-    const newHp = target.hp - cappedDamage;
-    target.hp = newHp;
-    target.lastUpdate = Date.now();
-
-    // Broadcast damage
-    this.broadcast({
-      type: "player-damage",
-      id: target.id,
-      damage: cappedDamage,
-      hp: newHp,
-    });
-
-    // Check for death
-    if (newHp <= 0) {
-      // Find killer for death broadcast
-      const killerId = conn.id;
       this.broadcast({
-        type: "player-death",
-        id: target.id,
-        killerId: killerId,
+        type: "state",
+        players: Array.from(this.players.values()),
+        you: playerState,
       });
-      console.log(`[${this.room.id}] Player died: ${target.name} killed by ${attacker.name}`);
-    }
 
-    console.log(`[${this.room.id}] Damage applied: ${attacker.name} dealt ${cappedDamage} to ${target.name} (hp: ${newHp})`);
-  }
+      this.broadcastExcept({
+        type: "player-join",
+        player: playerState,
+      }, conn);
 
-  async handleChat(conn: Connection, payload: { text: string }) {
-    const player = this.playerConnMap.get(conn.id);
-    if (!player) return;
+      this.sendPong(conn);
+    },
 
-    // Basic chat validation
-    if (payload.text.length > 200) {
-      console.log(`[${this.room.id}] Chat message too long: ${payload.text.length}`);
-      return;
-    }
+    move: (conn, { x, y, facing }) => {
+      const player = this.players.get(conn.id);
+      if (!player) return;
 
-    // Broadcast chat
-    this.broadcast({
-      type: "chat",
-      id: player.id,
-      name: player.name,
-      text: payload.text,
-    });
+      // Validate position bounds (prevent teleporting)
+      const maxBound = 10000;
+      if (x < -maxBound || x > maxBound || y < -maxBound || y > maxBound) {
+        console.warn("Invalid position detected:", { x, y });
+        return;
+      }
 
-    console.log(`[${this.room.id}] Chat: ${player.name}: ${payload.text}`);
-  }
+      player.x = x;
+      player.y = y;
+      player.facing = facing;
+      player.lastUpdate = Date.now();
 
-  async handlePing(conn: Connection) {
-    const now = Date.now();
+      this.broadcast({
+        type: "player-move",
+        id: player.id,
+        x,
+        y,
+        facing,
+      });
+    },
+
+    attack: (conn, { facing, weapon, damage }) => {
+      const player = this.players.get(conn.id);
+      if (!player) return;
+
+      this.broadcast({
+        type: "player-attack",
+        id: player.id,
+        facing,
+        weapon,
+      });
+    },
+
+    projectile: (conn, { proj }) => {
+      const player = this.players.get(conn.id);
+      if (!player) return;
+
+      // Validate projectile properties
+      if (proj.damage < 0 || proj.range < 0) {
+        console.warn("Invalid projectile properties:", proj);
+        return;
+      }
+
+      this.broadcast({
+        type: "projectile",
+        proj,
+      });
+    },
+
+    "hit-player": (conn, { targetId, damage }) => {
+      const attacker = this.players.get(conn.id);
+      if (!attacker) return;
+
+      const target = this.players.get(targetId);
+      if (!target) {
+        console.warn("Target not found:", targetId);
+        return;
+      }
+
+      // Server-side damage validation (anti-cheat)
+      const maxDamage = 1000; // Cap damage to prevent exploits
+      const validatedDamage = Math.min(damage, maxDamage);
+
+      // Apply damage to target
+      target.hp = Math.max(0, target.hp - validatedDamage);
+
+      // Check for death
+      if (target.hp <= 0) {
+        const killer = this.playerConnMap.get(targetId);
+        this.broadcastExcept({
+          type: "player-death",
+          id: targetId,
+          killerId: attacker.id,
+        }, killer);
+        this.players.delete(targetId);
+        this.playerConnMap.delete(targetId);
+      }
+
+      this.broadcastExcept({
+        type: "player-damage",
+        id: targetId,
+        damage: validatedDamage,
+        hp: target.hp,
+      }, conn);
+    },
+
+    chat: (conn, text) => {
+      const player = this.players.get(conn.id);
+      if (!player) return;
+
+      this.broadcast({
+        type: "chat",
+        id: player.id,
+        name: player.name,
+        text,
+      });
+    },
+
+    ping: (conn, {}) => {
+      this.sendPong(conn);
+    },
+  };
+
+  sendPong(conn: Connection): void {
     const playerCount = this.players.size;
-
-    this.broadcast({
+    this.broadcastExcept({
       type: "pong",
-      serverTime: now,
+      serverTime: Date.now(),
       playerCount,
-    });
-
-    console.log(`[${this.room.id}] Ping response: ${playerCount} players`);
+    }, conn);
   }
 
-  // ===========================================================
-  // BROADCAST UTILITIES
-  // ===========================================================
-
-  broadcast(msg: ServerMessage) {
-    const allConns = Array.from(this.connectionMap.values());
-    allConns.forEach((conn) => {
+  broadcast(msg: ServerMessage): void {
+    for (const conn of this.connectionMap.values()) {
       conn.send(msg);
-    });
+    }
   }
 
-  broadcastExcept(msg: ServerMessage, exceptConn: Connection) {
-    const allConns = Array.from(this.connectionMap.values());
-    allConns.forEach((conn) => {
-      if (conn !== exceptConn) {
+  broadcastExcept(msg: ServerMessage, exceptConn: Connection): void {
+    for (const conn of this.connectionMap.values()) {
+      if (conn.id !== exceptConn.id) {
         conn.send(msg);
       }
-    });
+    }
+  }
+
+  send(msg: ServerMessage, conn: Connection): void {
+    conn.send(msg);
   }
 }
+
+// ============================================================
+// SERVER CONTEXT
+// ============================================================
+
+const ctx = {} as ConnectionContext;
