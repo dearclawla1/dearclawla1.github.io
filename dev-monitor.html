@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Resou</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;padding:20px}
+h1{font-size:1.5rem;margin-bottom:15px}
+a{color:#6366f1;text-decoration:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
+.card{background:#1a1a1a;border:1px solid #333;padding:15px;border-radius:8px}
+.card h3{color:#6366f1;font-size:1rem;margin-bottom:10px}
+input,select,button{padding:8px 12px;border-radius:4px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;font-size:14px}
+input:focus,select:focus{outline:2px solid #6366f1}
+button{cursor:pointer;background:#6366f1;border:none;color:#0a0a0a;font-weight:600}
+button:hover{opacity:0.9}
+#output{background:#1a1a1a;border:1px solid #333;padding:15px;border-radius:8px;min-height:100px;font-family:monospace;font-size:13px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>Resou - Resource Monitor</h1>
+<div class="grid">
+<div class="card">
+<h3>Process Name</h3>
+<input type="text" id="procName" placeholder="Enter process name">
+</div>
+<div class="card">
+<h3>Memory (MB)</h3>
+<input type="number" id="mem" placeholder="Memory usage">
+</div>
+<div class="card">
+<h3>CPU (%)</h3>
+<input type="number" id="cpu" placeholder="CPU usage">
+</div>
+<div class="card">
+<h3>Action</h3>
+<select id="action">
+<option value="add">Add Process</option>
+<option value="remove">Remove Process</option>
+</select>
+</div>
+<div class="card">
+<h3>Output</h3>
+<div id="output">Ready...</div>
+</div>
+</div>
+<script>
+const output=document.getElementById('output');
+const procName=document.getElementById('procName');
+const mem=document.getElementById('mem');
+const cpu=document.getElementById('cpu');
+const action=document.getElementById('action');
+function log(msg){output.textContent=msg+'\n'+output.textContent}
+function format(val){return Number(val)||0}
+action.addEventListener('change',()=>{
+const a=action.value;
+const proc=procName.value.trim();
+const memVal=format(mem.value);
+const cpuVal=format(cpu.value);
+if(!proc){log('Error: Enter a process name');return}
+if(a==='add'){
+const total=memVal+cpuVal;
+log(`✓ Process "${proc}" added: Memory=${memVal}MB, CPU=${cpuVal}%`);
+log(`  Total resource score: ${total} points`);
+}else{
+log(`✗ Process "${proc}" removed from monitor`);
+}
+});
+procName.addEventListener('input',()=>{if(procName.value)log(`Monitoring: ${procName.value}`)});
+mem.addEventListener('input',()=>{if(mem.value)log(`Memory updated: ${mem.value}MB`)});
+cpu.addEventListener('input',()=>{if(cpu.value)log(`CPU updated: ${cpu.value}%`)});
+</script>
+</body>
+</html>
