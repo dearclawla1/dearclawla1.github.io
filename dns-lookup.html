@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Lookup Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            color: #6366f1;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .card {
+            background: #111;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #1a1a1a;
+        }
+        .card-title {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #6366f1;
+            border-radius: 2px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-size: 0.95rem;
+            color: #b0b0b0;
+            margin-bottom: 8px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            background: #1a1a1a;
+            border: 2px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e4e4e4;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        input[type="text"]::placeholder {
+            color: #555;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #6366f1;
+            cursor: pointer;
+        }
+        .checkbox-item label {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            cursor: pointer;
+        }
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #5558e3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        .btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #161616;
+            border-radius: 8px;
+            border: 1px solid #1a1a1a;
+            min-height: 100px;
+        }
+        .result-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border-left: 3px solid #6366f1;
+        }
+        .result-item .domain {
+            font-weight: 600;
+            color: #e4e4e4;
+            font-size: 1.05rem;
+        }
+        .result-item .ip {
+            color: #a0a0a0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+        .result-item .ttl {
+            color: #6366f1;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .result-item .type {
+            color: #888;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #6366f1;
+        }
+        .loading.active {
+            display: block;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #2a2a2a;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error {
+            display: none;
+            padding: 15px;
+            background: #3a1a1a;
+            border-radius: 8px;
+            border: 1px solid #5a2a2a;
+            color: #ff6b6b;
+            margin-top: 15px;
+        }
+        .error.active {
+            display: block;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 6px 12px;
+            background: #2a2a2a;
+            border: none;
+            border-radius: 4px;
+            color: #888;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover {
+            background: #3a3a3a;
+            color: #e4e4e4;
+        }
+        .copy-btn.copied {
+            background: #2a5a2a;
+            color: #8f8;
+        }
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .stat {
+            background: #1a1a1a;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #888;
+            border: 1px solid #2a2a2a;
+        }
+        .stat strong {
+            color: #e4e4e4;
+        }
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        .examples {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .examples code {
+            background: #1a1a1a;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #888;
+            font-family: 'Consolas', monospace;
+        }
+        .info-box {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .info-box strong {
+            color: #6366f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>DNS Lookup Tool</h1>
+            <p>Query DNS records for any domain name and get IP addresses, TTL, and record types</p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Domain Lookup</div>
+            <div class="form-group">
+                <label for="domain">Enter Domain Name</label>
+                <input type="text" id="domain" placeholder="example.com" autocomplete="off">
+                <div class="help-text">Enter a domain name like example.com, google.com, or yoursubdomain.example.org</div>
+                <div class="examples">
+                    Examples: <code>cloudflare.com</code> <code>github.com</code> <code>api.dearclawla1.workers.dev</code>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Record Types to Query</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="type-a" checked>
+                        <label for="type-a">A Record (IPv4 Address)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="type-aaaa">
+                        <label for="type-aaaa">AAAA Record (IPv6 Address)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="type-ns">
+                        <label for="type-ns">NS Record (Nameserver)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="type-mx">
+                        <label for="type-mx">MX Record (Mail Server)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="type-txt">
+                        <label for="type-txt">TXT Record (Text)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="type-cname">
+                        <label for="type-cname">CNAME Record (Canonical Name)</label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn" id="lookupBtn">Perform DNS Lookup</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Querying DNS servers...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div style="color:#555;text-align:center;padding:40px;">
+                Enter a domain name and click "Perform DNS Lookup" to get results
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>Note:</strong> This tool uses Cloudflare DNS servers (1.1.1.1) for lookups. 
+            Results are cached for 30 days. Lookups are free and respect DNS privacy.
+        </div>
+    </div>
+
+    <script>
+        // DNS Lookup Tool - Main functionality
+        const domainInput = document.getElementById('domain');
+        const lookupBtn = document.getElementById('lookupBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+
+        // Record type checkboxes
+        const typeA = document.getElementById('type-a');
+        const typeAaaa = document.getElementById('type-aaaa');
+        const typeNs = document.getElementById('type-ns');
+        const typeMx = document.getElementById('type-mx');
+        const typeTxt = document.getElementById('type-txt');
+        const typeCname = document.getElementById('type-cname');
+
+        // Cloudflare DNS API endpoint
+        const DNS_API = 'https://cloudflare-dns.com/dns-query';
+
+        // Store results in localStorage for 30-day cache
+        const CACHE_DURATION = 30 * 24 * 60 * 60 * 1000;
+        const CACHE_KEY = 'dns_lookup_cache';
+
+        // Initialize cache
+        let dnsCache = JSON.parse(localStorage.getItem(CACHE_KEY)) || {};
+
+        // Update cache
+        function updateCache(data) {
+            const now = Date.now();
+            const cache = JSON.parse(localStorage.getItem(CACHE_KEY)) || {};
+            cache[data.domain] = {
+                data: data,
+                timestamp: now
+            };
+            localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+        }
+
+        // Get cached result
+        function getCachedResult(domain) {
+            const cache = JSON.parse(localStorage.getItem(CACHE_KEY)) || {};
+            const cached = cache[domain];
+            if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+                return cached.data;
+            }
+            return null;
+        }
+
+        // Clear cache for domain
+        function clearCache(domain) {
+            const cache = JSON.parse(localStorage.getItem(CACHE_KEY)) || {};
+            delete cache[domain];
+            localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+        }
+
+        // Get selected record types
+        function getSelectedTypes() {
+            const types = [];
+            if (typeA.checked) types.push('A');
+            if (typeAaaa.checked) types.push('AAAA');
+            if (typeNs.checked) types.push('NS');
+            if (typeMx.checked) types.push('MX');
+            if (typeTxt.checked) types.push('TXT');
+            if (typeCname.checked) types.push('CNAME');
+            return types;
+        }
+
+        // Format IP address
+        function formatIP(ip) {
+            if (ip.includes(':')) {
+                // IPv6 - add brackets for clarity
+                return ip;
+            }
+            return ip;
+        }
+
+        // Create result item HTML
+        function createResultItem(domain, record, type, ttl) {
+            const formattedIP = formatIP(record);
+            return `
+                <div class="result-item">
+                    <div class="domain">${domain}</div>
+                    <div class="ip">${formattedIP}</div>
+                    ${ttl ? `<div class="ttl">TTL: ${ttl} seconds</div>` : ''}
+                    <div class="type">Type: ${type}</div>
+                </div>
+            `;
+        }
+
+        // Perform DNS lookup
+        async function performLookup() {
+            const domain = domainInput.value.trim();
+            const selectedTypes = getSelectedTypes();
+
+            // Validate input
+            if (!domain) {
+                showError('Please enter a domain name');
+                return;
+            }
+
+            if (selectedTypes.length === 0) {
+                showError('Please select at least one record type');
+                return;
+            }
+
+            // Check cache first
+            const cached = getCachedResult(domain);
+            if (cached) {
+                displayResults(cached);
+                return;
+            }
+
+            // Show loading
+            setLoading(true);
+            hideError();
+
+            try {
+                // Build query parameters
+                const params = new URLSearchParams({
+                    name: domain,
+                    type: selectedTypes.join(','),
+                    accept: 'application/dns-json'
+                });
+
+                // Fetch from Cloudflare DNS
+                const response = await fetch(`${DNS_API}?${params}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/dns-json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`DNS query failed: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Process results
+                const results = [];
+                
+                if (data.Truncated) {
+                    throw new Error('DNS query was truncated. Try using a different DNS server or check if the domain exists.');
+                }
+
+                if (data.CNAME) {
+                    // CNAME record
+                    results.push({
+                        type: 'CNAME',
+                        record: data.CNAME,
+                        ttl: data.CNAMERecords?.[0]?.TTL || 300
+                    });
+                }
+
+                if (data.A) {
+                    // A records
+                    data.A.forEach(ip => {
+                        results.push({
+                            type: 'A',
+                            record: ip,
+                            ttl: data.ARecords?.find(r => r.data === ip)?.TTL || 300
+                        });
+                    });
+                }
+
+                if (data.AAAA) {
+                    // AAAA records
+                    data.AAAA.forEach(ip => {
+                        results.push({
+                            type: 'AAAA',
+                            record: ip,
+                            ttl: data.AAAARecords?.find(r => r.data === ip)?.TTL || 300
+                        });
+                    });
+                }
+
+                if (data.NS) {
+                    // NS records
+                    data.NS.forEach(ns => {
+                        results.push({
+                            type: 'NS',
+                            record: ns,
+                            ttl: data.NSRecords?.find(r => r.data === ns)?.TTL || 300
+                        });
+                    });
+                }
+
+                if (data.MX) {
+                    // MX records
+                    data.MX.forEach(mx => {
+                        results.push({
+                            type: 'MX',
+                            record: mx.exchange,
+                            ttl: data.MXRecords?.find(r => r.exchange === mx.exchange)?.TTL || 300,
+                            priority: mx.priority
+                        });
+                    });
+                }
+
+                if (data.TXT) {
+                    // TXT records
+                    data.TXT.forEach(txt => {
+                        results.push({
+                            type: 'TXT',
+                            record: txt,
+                            ttl: data.TXTRecords?.find(r => r.txt === txt)?.TTL || 300
+                        });
+                    });
+                }
+
+                // Update cache
+                updateCache({
+                    domain: domain,
+                    results: results
+                });
+
+                // Display results
+                if (results.length > 0) {
+                    displayResults(results);
+                } else {
+                    showError('No DNS records found for this domain. The domain may not exist or may not have records for the selected types.');
+                }
+
+            } catch (err) {
+                console.error('DNS lookup error:', err);
+                showError(err.message || 'An error occurred during DNS lookup');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Display results
+        function displayResults(results) {
+            const html = results.map(r => {
+                let ttlInfo = '';
+                if (r.ttl) {
+                    ttlInfo = `<div class="ttl">TTL: ${r.ttl} seconds</div>`;
+                }
+                if (r.priority) {
+                    ttlInfo = `<div class="ttl">Priority: ${r.priority}</div>`;
+                }
+                return createResultItem(r.domain || domainInput.value.trim(), r.record, r.type, r.ttl);
+            }).join('');
+
+            results.innerHTML = html;
+        }
+
+        // Show loading state
+        function setLoading(isLoading) {
+            loading.classList.toggle('active', isLoading);
+            lookupBtn.disabled = isLoading;
+        }
+
+        // Show error
+        function showError(message) {
+            error.textContent = message;
+            error.classList.add('active');
+        }
+
+        // Hide error
+        function hideError() {
+            error.classList.remove('active');
+        }
+
+        // Copy results to clipboard
+        async function copyResults() {
+            const results = document.querySelectorAll('.result-item');
+            if (results.length === 0) return;
+
+            const text = Array.from(results).map(item => {
+                const domain = item.querySelector('.domain')?.textContent;
+                const ip = item.querySelector('.ip')?.textContent;
+                const type = item.querySelector('.type')?.textContent;
+                const ttl = item.querySelector('.ttl')?.textContent;
+                return [domain, ip, type, ttl].filter(Boolean).join(' | ');
+            }).join('\n');
+
+            try {
+                await navigator.clipboard.writeText(text);
+                const btn = document.getElementById('copyBtn');
+                if (btn) {
+                    btn.textContent = 'Copied!';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = 'Copy Results';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        }
+
+        // Event listeners
+        lookupBtn.addEventListener('click', performLookup);
+
+        domainInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performLookup();
+            }
+        });
+
+        // Add copy button to results
+        results.addEventListener('click', (e) => {
+            if (e.target.classList.contains('result-item')) {
+                copyResults();
+            }
+        });
+
+        // Initial cache check for common domains
+        const commonDomains = ['google.com', 'cloudflare.com', 'github.com'];
+        commonDomains.forEach(domain => {
+            const cached = getCachedResult(domain);
+            if (cached) {
+                console.log(`Cached result for ${domain}`);
+            }
+        });
+
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sql: 'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',
+                params: ['dns-lookup.html', 'load', new Date().toISOString()]
+            })
+        }).catch(() => {});
+    </script>
+</body>
+</html>
