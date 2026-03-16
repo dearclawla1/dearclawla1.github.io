@@ -2,33 +2,202 @@
 <html>
 <head>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
-.container{max-width:600px;margin:0 auto;}
-input,button{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:none;font-size:16px;}
-input{background:#1a1a1a;color:#e4e4e4;}
-button{background:#6366f1;color:#fff;}
-.result{background:#1a1a1a;padding:20px;border-radius:8px;margin-top:10px;}
-.result h3{margin:0 0 10px;opacity:0.8;}
-.result p{opacity:0.9;margin:5px 0;}
-.back{color:#6366f1;text-decoration:none;font-size:14px;}
+*{box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e44;font-family:'Segoe UI',sans-serif;margin:0;padding:20px;min-height:100vh;display:flex;justify-content:center;align-items:center;}
+.container{max-width:600px;width:100%;background:#111111;border-radius:16px;padding:30px;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+h1{margin:0 0 15px;font-size:28px;color:#e4e4e4;text-align:center;}
+p{margin:0 0 20px;font-size:14px;color:#a0a0a0;text-align:center;}
+.input-group{margin:20px 0;}
+input{width:100%;padding:14px;margin:8px 0;border-radius:10px;border:2px solid #2a2a2a;background:#1a1a1a;color:#e4e4e4;font-size:16px;transition:all 0.3s;}
+input:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.2);}
+input::placeholder{color:#606060;}
+button{width:100%;padding:14px;margin:8px 0;border-radius:10px;border:none;background:#6366f1;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;}
+button:hover{background:#5558e3;transform:translateY(-2px);}
+button:active{transform:translateY(0);}
+.result{background:#1a1a1a;padding:20px;border-radius:12px;margin-top:20px;border:1px solid #2a2a2a;}
+.result h3{margin:0 0 12px;font-size:16px;color:#a0a0a0;}
+.result p{margin:0;font-size:20px;color:#e4e4e4;font-weight:600;}
+.result.error{border-color:#ef4444;}
+.result.error p{color:#ef4444;}
+.copy-btn{background:#2a2a2a;color:#e4e4e4;font-size:14px;padding:8px 12px;margin-top:10px;border-radius:8px;border:none;cursor:pointer;transition:all 0.3s;}
+.copy-btn:hover{background:#3a3a3a;color:#fff;}
+.copy-btn:active{transform:scale(0.98);}
+.shortcuts{margin-top:20px;padding:15px;background:#151515;border-radius:10px;font-size:13px;color:#808080;}
+.shortcuts code{background:#252525;padding:2px 6px;border-radius:4px;color:#a0a0a0;}
+.back{display:inline-block;margin-top:20px;color:#6366f1;text-decoration:none;font-size:14px;}
+.back:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Roman Numeral Converter</h1>
-<p>Convert numbers to Roman numerals and vice versa</p>
-<input type="text" id="arabic" placeholder="Arabic Number (e.g., 1987)">
-<button onclick="toRoman()">To Roman Numeral</button>
-<input type="text" id="roman" placeholder="Roman Numeral (e.g., MCMXXXVII)">
-<button onclick="toArabic()">To Arabic Number</button>
-<div class="result" id="result"></div>
+<p>Convert between Arabic numbers and Roman numerals instantly</p>
+<div class="input-group">
+<input type="text" id="arabic" placeholder="Arabic Number (e.g., 1987)" oninput="livePreview()">
+</div>
+<div class="input-group">
+<input type="text" id="roman" placeholder="Roman Numeral (e.g., MCMXXXVII)" oninput="livePreview()">
+</div>
+<div class="result" id="result">
+<h3>Result:</h3>
+<p id="output">Enter a number or Roman numeral above</p>
+<button class="copy-btn" onclick="copyToClipboard()" id="copyBtn" style="display:none;">Copy</button>
+</div>
+<div class="shortcuts">
+<code>Tip:</code> Press <code>Enter</code> to convert
+</div>
 <a href="index.html" class="back">Home</a>
 </div>
 <script>
-function romanToInt(s){const m={M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};let i=0,n=0;while(i<s.length){let v=0;for(let k in m)if(s.slice(i,k.length+1+i)===k){v=m[k];break}n+=v;i+=k.length+1}return n}
-function intToRoman(n){const c=[1000,900,500,400,100,90,50,40,10,9,5,4,1],v=['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];let r='';while(n>0){for(let i=0;i<c.length;i++)if(n>=c[i]){r+=v[i];n-=c[i];break}}return r}
-function toRoman(){const a=document.getElementById('arabic').value.trim();if(!a) return document.getElementById('result');try{const r=intToRoman(parseInt(a));document.getElementById('result').innerHTML='<h3>Result</h3><p>' + a + ' in Roman: ' + r + '</p>'}catch(e){document.getElementById('result').innerHTML='<h3>Error</h3><p>' + e.message + '</p>'}}
-function toArabic(){const r=document.getElementById('roman').value.trim();if(!r) return document.getElementById('result');try{const n=romanToInt(r);document.getElementById('result').innerHTML='<h3>Result</h3><p>' + r + ' in Arabic: ' + n + '</p>'}catch(e){document.getElementById('result').innerHTML='<h3>Error</h3><p>' + e.message + '</p>'}}
+const arabicInput=document.getElementById('arabic');
+const romanInput=document.getElementById('roman');
+const output=document.getElementById('output');
+const resultDiv=document.getElementById('result');
+const copyBtn=document.getElementById('copyBtn');
+
+function romanToInt(s){
+    const m={M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};
+    let i=0,n=0;
+    while(i<s.length){
+        let v=0;
+        for(let k in m){
+            if(s.slice(i,k.length+1+i)===k){
+                v=m[k];
+                break;
+            }
+        }
+        if(v===0){
+            i++;
+            continue;
+        }
+        n+=v;
+        i+=k.length+1;
+    }
+    return n;
+}
+
+function intToRoman(n){
+    const c=[1000,900,500,400,100,90,50,40,10,9,5,4,1];
+    const v=['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
+    let r='';
+    while(n>0){
+        for(let i=0;i<c.length;i++){
+            if(n>=c[i]){
+                r+=v[i];
+                n-=c[i];
+                break;
+            }
+        }
+    }
+    return r;
+}
+
+function validateArabic(s){
+    const num=s.trim();
+    if(num==='')return true;
+    if(!/^\d+$/.test(num))return false;
+    const n=parseInt(num);
+    return n>=1&&n<=3999;
+}
+
+function validateRoman(s){
+    const romanPattern=/^M{0,3}(CM|CD|D?C{0,3})(XC|XL|X?L?X{0,3})(IX|IV|V?I?I{0,3})$/;
+    return romanPattern.test(s.trim());
+}
+
+function livePreview(){
+    const arabic=arabicInput.value.trim();
+    const roman=romanInput.value.trim();
+    
+    if(arabic!==''&&arabicInput.value!==''){}
+    if(roman!==''){
+        if(validateRoman(roman)){
+            const arabicNum=romanToInt(roman);
+            output.textContent=arabicNum;
+            output.style.color='#e4e4e4';
+            resultDiv.classList.remove('error');
+            copyBtn.style.display='block';
+            copyToClipboard();
+        }else{
+            output.textContent='Invalid Roman numeral';
+            output.style.color='#ef4444';
+            resultDiv.classList.add('error');
+            copyBtn.style.display='none';
+        }
+    }
+}
+
+function convertArabicToRoman(){
+    const arabic=arabicInput.value.trim();
+    if(!validateArabic(arabic)){
+        output.textContent='Invalid Arabic number (1-3999)';
+        output.style.color='#ef4444';
+        resultDiv.classList.add('error');
+        copyBtn.style.display='none';
+        return;
+    }
+    const roman=intToRoman(parseInt(arabic));
+    output.textContent=roman;
+    output.style.color='#e4e4e4';
+    resultDiv.classList.remove('error');
+    copyBtn.style.display='block';
+    copyToClipboard();
+}
+
+function convertRomanToArabic(){
+    const roman=romanInput.value.trim();
+    if(!validateRoman(roman)){
+        output.textContent='Invalid Roman numeral';
+        output.style.color='#ef4444';
+        resultDiv.classList.add('error');
+        copyBtn.style.display='none';
+        return;
+    }
+    const arabic=romanToInt(roman);
+    output.textContent=arabic;
+    output.style.color='#e4e4e4';
+    resultDiv.classList.remove('error');
+    copyBtn.style.display='block';
+    copyToClipboard();
+}
+
+function copyToClipboard(){
+    const text=output.textContent;
+    navigator.clipboard.writeText(text).then(()=>{
+        const originalText=copyBtn.textContent;
+        copyBtn.textContent='Copied!';
+        setTimeout(()=>{
+            copyBtn.textContent=originalText;
+        },1500);
+    }).catch(err=>{
+        console.error('Copy failed:',err);
+    });
+}
+
+arabicInput.addEventListener('keypress',(e)=>{
+    if(e.key==='Enter'){
+        convertArabicToRoman();
+    }
+});
+
+romanInput.addEventListener('keypress',(e)=>{
+    if(e.key==='Enter'){
+        convertRomanToArabic();
+    }
+});
+
+arabicInput.addEventListener('input',()=>{
+    if(romanInput.value!==''){
+        convertRomanToArabic();
+    }
+});
+
+romanInput.addEventListener('input',()=>{
+    if(arabicInput.value!==''){
+        convertArabicToRoman();
+    }
+});
+
 </script>
 </body>
 </html>
