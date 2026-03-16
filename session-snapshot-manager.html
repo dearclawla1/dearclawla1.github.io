@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Snapshots</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #1f1f1f;
+            padding-bottom: 1rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: #e4e4e4;
+            margin-bottom: 0.5rem;
+        }
+        .description {
+            color: #a0a0a0;
+            font-size: 0.95rem;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #e4e4e4;
+        }
+        .hint {
+            font-size: 0.85rem;
+            color: #808080;
+            margin-left: 0.5rem;
+        }
+        textarea, input {
+            width: 100%;
+            padding: 0.8rem;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #e4e4e4;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        textarea {
+            min-height: 120px;
+        }
+        .output-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #141414;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+        }
+        .output-label {
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: #e4e4e4;
+        }
+        .output-content {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: #c0c0c0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+            min-height: 80px;
+        }
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 0.6rem 1rem;
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .copy-btn:hover {
+            background: #5558e3;
+        }
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+        .copy-btn.copied {
+            background: #10b981;
+        }
+        .tabs-preview {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .tab-item {
+            padding: 0.4rem 0.8rem;
+            background: #1f1f1f;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+        .scroll-pos {
+            font-size: 0.8rem;
+            color: #808080;
+        }
+        .selection-preview {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #1f1f1f;
+            border-radius: 4px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        .error-message.visible {
+            display: block;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        .status-indicator.ready {
+            background: #10b981;
+        }
+        .status-indicator.processing {
+            background: #f59e0b;
+        }
+        .status-indicator.error {
+            background: #ef4444;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            textarea, input {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Session Snapshots</h1>
+            <p class="description">
+                Captures browser state (tabs, scroll positions, selections) for later restoration.
+                Paste your current browser state below to generate a snapshot JSON.
+            </p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </header>
+
+        <div class="input-group">
+            <label for="state-input">Browser State Input</label>
+            <span class="hint">Paste your current browser state (tabs, scroll positions, selections) here</span>
+            <textarea 
+                id="state-input" 
+                placeholder="Paste your browser state here...
+
+Example format:
+{
+  "tabs": [
+    {
+      "title": "Example Page",
+      "url": "https://example.com",
+      "scrollX": 150,
+      "scrollY": 200
+    }
+  ],
+  "selections": [
+    {
+      "text": "Selected text",
+      "container": "div"
+    }
+  ]
+}"
+                rows="12"
+            ></textarea>
+            <div class="error-message" id="error-message">
+                <span class="status-indicator error"></span>
+                <span id="error-text"></span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="output-label">Snapshot Output</label>
+            <span class="hint">Generated snapshot will appear here</span>
+            <div class="output-label">
+                <span class="status-indicator ready" id="status-indicator"></span>
+                <span id="output-label">Ready</span>
+            </div>
+            <div class="output-content" id="output-content">
+                Click "Generate Snapshot" to create your session snapshot...
+            </div>
+            <button class="copy-btn" id="copy-btn" onclick="copyOutput()">
+                <span>📋</span>
+                <span id="copy-text">Copy to Clipboard</span>
+            </button>
+        </div>
+
+        <div class="input-group">
+            <label>Preview</label>
+            <div class="tabs-preview" id="tabs-preview"></div>
+            <div class="selection-preview" id="selections-preview"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const stateInput = document.getElementById('state-input');
+            const outputContent = document.getElementById('output-content');
+            const outputLabel = document.getElementById('output-label');
+            const statusIndicator = document.getElementById('status-indicator');
+            const copyBtn = document.getElementById('copy-btn');
+            const copyText = document.getElementById('copy-text');
+            const tabsPreview = document.getElementById('tabs-preview');
+            const selectionsPreview = document.getElementById('selections-preview');
+            const errorMessage = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+
+            let currentSnapshot = null;
+
+            function showError(message) {
+                errorText.textContent = message;
+                errorMessage.classList.add('visible');
+                statusIndicator.className = 'status-indicator error';
+                outputLabel.textContent = 'Error';
+            }
+
+            function clearError() {
+                errorMessage.classList.remove('visible');
+                statusIndicator.className = 'status-indicator ready';
+                outputLabel.textContent = 'Ready';
+            }
+
+            function validateInput(input) {
+                if (!input || input.trim() === '') {
+                    return { valid: false, message: 'Please enter browser state to generate a snapshot.' };
+                }
+
+                try {
+                    const state = JSON.parse(input);
+                    
+                    if (!state.tabs && !state.selections) {
+                        return { 
+                            valid: false, 
+                            message: 'Browser state must contain either "tabs" or "selections" property.' 
+                        };
+                    }
+
+                    if (state.tabs && !Array.isArray(state.tabs)) {
+                        return { valid: false, message: '"tabs" must be an array.' };
+                    }
+
+                    if (state.tabs && state.tabs.length === 0) {
+                        return { valid: false, message: '"tabs" array cannot be empty.' };
+                    }
+
+                    if (state.tabs) {
+                        state.tabs.forEach((tab, index) => {
+                            if (!tab.title) {
+                                return { valid: false, message: `Tab ${index + 1} must have a "title" property.` };
+                            }
+                            if (!tab.url) {
+                                return { valid: false, message: `Tab ${index + 1} must have a "url" property.` };
+                            }
+                        });
+                    }
+
+                    if (state.selections && !Array.isArray(state.selections)) {
+                        return { valid: false, message: '"selections" must be an array.' };
+                    }
+
+                    return { valid: true };
+                } catch (e) {
+                    return { 
+                        valid: false, 
+                        message: 'Invalid JSON format. Please check your input and try again.' 
+                    };
+                }
+            }
+
+            function generateSnapshot(input) {
+                const state = JSON.parse(input);
+                const snapshot = {
+                    timestamp: new Date().toISOString(),
+                    browserState: {
+                        tabs: state.tabs.map((tab, index) => ({
+                            index: index + 1,
+                            title: tab.title,
+                            url: tab.url,
+                            scrollX: tab.scrollX || 0,
+                            scrollY: tab.scrollY || 0
+                        })),
+                        selections: state.selections || [],
+                        viewport: {
+                            width: state.viewport?.width || 1920,
+                            height: state.viewport?.height || 1080
+                        }
+                    },
+                    metadata: {
+                        generatedBy: 'Session Snapshot Manager',
+                        version: '1.0.0'
+                    }
+                };
+
+                return JSON.stringify(snapshot, null, 2);
+            }
+
+            function renderPreview(state) {
+                tabsPreview.innerHTML = '';
+                selectionsPreview.innerHTML = '';
+
+                if (state.tabs && state.tabs.length > 0) {
+                    state.tabs.forEach((tab, index) => {
+                        const tabItem = document.createElement('div');
+                        tabItem.className = 'tab-item';
+                        tabItem.textContent = `${index + 1}. ${tab.title}`;
+                        tabsPreview.appendChild(tabItem);
+                    });
+                }
+
+                if (state.selections && state.selections.length > 0) {
+                    state.selections.forEach((sel, index) => {
+                        const selItem = document.createElement('div');
+                        selItem.className = 'tab-item';
+                        selItem.textContent = `Selection ${index + 1}: ${sel.text || 'No text'}`;
+                        selectionsPreview.appendChild(selItem);
+                    });
+                }
+            }
+
+            function updateOutput(snapshot) {
+                currentSnapshot = snapshot;
+                outputContent.textContent = snapshot;
+                outputLabel.textContent = 'Snapshot Generated';
+                statusIndicator.className = 'status-indicator ready';
+                clearError();
+            }
+
+            function copyOutput() {
+                if (!currentSnapshot) {
+                    showError('No snapshot to copy. Generate a snapshot first.');
+                    return;
+                }
+
+                navigator.clipboard.writeText(currentSnapshot).then(() => {
+                    copyBtn.classList.add('copied');
+                    copyText.textContent = 'Copied!';
+                    
+                    setTimeout(() => {
+                        copyBtn.classList.remove('copied');
+                        copyText.textContent = 'Copy to Clipboard';
+                    }, 2000);
+                }).catch(err => {
+                    showError('Failed to copy to clipboard: ' + err.message);
+                });
+            }
+
+            function handleInput() {
+                const input = stateInput.value;
+                
+                if (!input || input.trim() === '') {
+                    outputContent.textContent = 'Click "Generate Snapshot" to create your session snapshot...';
+                    outputLabel.textContent = 'Ready';
+                    statusIndicator.className = 'status-indicator ready';
+                    tabsPreview.innerHTML = '';
+                    selectionsPreview.innerHTML = '';
+                    clearError();
+                    return;
+                }
+
+                const validation = validateInput(input);
+                
+                if (!validation.valid) {
+                    showError(validation.message);
+                    outputContent.textContent = 'Validation failed. Please check your input.';
+                    return;
+                }
+
+                const state = JSON.parse(input);
+                renderPreview(state);
+
+                const snapshot = generateSnapshot(input);
+                updateOutput(snapshot);
+            }
+
+            stateInput.addEventListener('input', handleInput);
+
+            // Initial state
+            clearError();
+        })();
+    </script>
+</body>
+</html>
