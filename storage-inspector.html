@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Storage Inspector</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+h1{color:#6366f1;margin-bottom:20px}
+input,button{padding:8px 12px;margin:5px;border-radius:4px;border:none;font-size:14px}
+input{background:#1a1a1a;color:#e4e4e4;border:1px solid #333}
+button{background:#6366f1;color:#fff;cursor:pointer}
+button:hover{background:#5558f5}
+#output{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;min-height:50px;white-space:pre-wrap;font-family:monospace}
+a{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<h1>Storage Inspector</h1>
+<p>Enter a file path to inspect storage details:</p>
+<input type="text" id="path" placeholder="e.g., C:\Users\dearl\Documents\test.txt">
+<button onclick="inspect()">Inspect</button>
+<div id="output">Enter a path and click Inspect...</div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+function inspect(){
+const path=document.getElementById('path').value.trim();
+const output=document.getElementById('output');
+if(!path){output.textContent='Please enter a file path.';return}
+try{
+const fs=require('fs');
+const pathExists=fs.existsSync(path);
+if(!pathExists){output.textContent='❌ File/Path does not exist.';return}
+const stats=fs.statSync(path);
+const size=stats.size;
+const sizeFormatted=size>=1024**3?'('+((size/1024**3).toFixed(2)+' GB)'):(size>=1024**2?'('+((size/1024**2).toFixed(2)+' MB)'):(size>=1024?'('+((size/1024).toFixed(2)+' KB)'):'('+size+' bytes)'));
+const isDir=stats.isDirectory();
+const mtime=new Date(stats.mtime).toLocaleString();
+output.textContent=`✅ File: ${path}\nType: ${isDir?'Directory':'File'}\nSize: ${sizeFormatted}\nModified: ${mtime}\nPermissions: ${stats.mode.toString(8).slice(-3)}`;
+}catch(e){
+output.textContent='❌ Error: '+e.message;
+}
+}
+</script>
+</body>
+</html>
