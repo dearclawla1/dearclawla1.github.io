@@ -12,6 +12,17 @@ button{background:#6366f1;color:#0a0a0a;border:none;cursor:pointer}
 button:hover{background:#5558e6}
 #output{background:#1a1a1a;border:1px solid #333;padding:15px;width:320px;height:200px;overflow:auto;font-family:monospace;font-size:12px;border-radius:4px}
 a{margin-top:10px}
+#filter-controls{margin:10px 0;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:4px;width:320px}
+.filter-group{margin:8px 0}
+.filter-group label{display:inline-block;margin-right:8px}
+.filter-group input[type="checkbox"]{margin:0}
+.filter-group input[type="text"]{width:150px;margin:0}
+.header-category{color:#8b5cf6;font-weight:bold;margin:8px 0 4px 0}
+.header-item{margin:4px 0;padding:4px;background:#1a1a1a;border-radius:3px}
+.header-key{color:#60a5fa;font-weight:600}
+.header-value{color:#a7f3d0}
+.header-item:hover{background:#252525}
+#search-results{background:#1a1a1a;border:1px solid #333;padding:10px;width:320px;height:150px;overflow:auto;font-family:monospace;font-size:12px;border-radius:4px;display:none}
 </style>
 </head>
 <body>
@@ -20,16 +31,130 @@ a{margin-top:10px}
 <button onclick="fetchHeaders()">Fetch Headers</button>
 <button onclick="clearOutput()">Clear</button>
 <div id="output"></div>
+<div id="filter-controls">
+<div class="filter-group">
+<label>Search headers:</label>
+<input type="text" id="search-input" placeholder="Type to search...">
+</div>
+<div class="filter-group">
+<label><input type="checkbox" id="show-all" checked> Show All</label>
+<label><input type="checkbox" id="hide-cookies" checked> Hide Cookies</label>
+<label><input type="checkbox" id="hide-security" checked> Hide Security</label>
+<label><input type="checkbox" id="hide-cache" checked> Hide Cache</label>
+<label><input type="checkbox" id="hide-content" checked> Hide Content</label>
+<label><input type="checkbox" id="hide-other" checked> Hide Other</label>
+</div>
+</div>
+<div id="search-results"></div>
 <a href="index.html" style="color:#6366f1">Back to Home</a>
 <script>
+const headerCategories = {
+  'Content': ['Content-Type', 'Content-Length', 'Content-Encoding', 'Content-Language', 'Content-MD5', 'Content-Range', 'Content-Disposition'],
+  'Security': ['X-Frame-Options', 'X-Content-Type-Options', 'X-XSS-Protection', 'Strict-Transport-Security', 'X-Download-Options', 'X-Permitted-Cross-Domain-Policies'],
+  'Cache': ['Cache-Control', 'Expires', 'Pragma', 'Last-Modified', 'ETag'],
+  'Other': ['Server', 'Date', 'Location', 'Set-Cookie', 'Link', 'Allow', 'Vary', 'Access-Control-Allow-Origin', 'Access-Control-Allow-Credentials']
+};
+
 async function fetchHeaders(){
 try{
 let res = await fetch(document.getElementById('url').value)
 let headers = {}
 for(let [k,v] of Object.entries(res.headers)){headers[k]=v}
-document.getElementById('output').textContent = JSON.stringify(headers, null, 2)
+displayHeaders(headers)
 }catch(e){document.getElementById('output').textContent = 'Error: ' + e.message}
 }
+
+function displayHeaders(headers){
+let output = document.getElementById('output')
+output.innerHTML = ''
+
+// Group headers by category
+let groupedHeaders = {}
+for(let key in headers){
+let category = 'Other'
+for(let cat in headerCategories){
+if(headerCategories[cat].includes(key)){
+category = cat
+break
+}
+}
+if(!groupedHeaders[category]){groupedHeaders[category] = []}
+groupedHeaders[category].push({key, value: headers[key]})
+}
+
+// Render headers
+for(let category in groupedHeaders){
+let div = document.createElement('div')
+div.className = 'header-category'
+div.textContent = category
+output.appendChild(div)
+
+for(let item of groupedHeaders[category]){
+let headerItem = document.createElement('div')
+headerItem.className = 'header-item'
+headerItem.innerHTML = `<span class="header-key">${item.key}:</span> <span class="header-value">${item.value}</span>`
+headerItem.dataset.key = item.key
+headerItem.dataset.value = item.value
+headerItem.dataset.category = category
+output.appendChild(headerItem)
+}
+}
+
+// Apply filters
+applyFilters()
+}
+
+function applyFilters(){
+let headers = document.querySelectorAll('.header-item')
+let showAll = document.getElementById('show-all').checked
+let hideCookies = document.getElementById('hide-cookies').checked
+let hideSecurity = document.getElementById('hide-security').checked
+let hideCache = document.getElementById('hide-cache').checked
+let hideContent = document.getElementById('hide-content').checked
+let hideOther = document.getElementById('hide-other').checked
+
+headers.forEach(header => {
+let category = header.dataset.category
+let shouldShow = true
+
+if(!showAll){
+if(category === 'Cookies' && hideCookies) shouldShow = false
+if(category === 'Security' && hideSecurity) shouldShow = false
+if(category === 'Cache' && hideCache) shouldShow = false
+if(category === 'Content' && hideContent) shouldShow = false
+if(category === 'Other' && hideOther) shouldShow = false
+}
+
+header.style.display = shouldShow ? 'block' : 'none'
+})
+
+// Search functionality
+let searchInput = document.getElementById('search-input')
+searchInput.addEventListener('input', function(){
+let searchTerm = this.value.toLowerCase()
+if(searchTerm === ''){
+document.getElementById('search-results').style.display = 'none'
+return
+}
+let results = []
+headers.forEach(header => {
+let key = header.dataset.key.toLowerCase()
+let value = header.dataset.value.toLowerCase()
+if(key.includes(searchTerm) || value.includes(searchTerm)){
+results.push({key, value, category: header.dataset.category})
+}
+})
+
+let resultsDiv = document.getElementById('search-results')
+if(results.length > 0){
+resultsDiv.style.display = 'block'
+resultsDiv.innerHTML = results.map(r => 
+  `<div><span class="header-key">${r.key}:</span> <span class="header-value">${r.value}</span> <span style="color:#8b5cf6">[${r.category}]</span></div>`
+).join('')
+}
+})
+}
+
 function clearOutput(){document.getElementById('output').textContent = ''}
 </script>
 </body>
