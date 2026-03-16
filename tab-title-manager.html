@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>tab-title-manager</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+input,select,button{margin:5px 0;padding:8px 12px;border-radius:4px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4}
+button{cursor:pointer;border-color:#6366f1;color:#6366f1}
+button:hover{background:#6366f1;color:#0a0a0a}
+a{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<h2>Tab Title Manager</h2>
+<input id="tabName" placeholder="Tab name">
+<input id="tabTitle" placeholder="Tab title">
+<button onclick="addTab()">Add Tab</button>
+<select id="tabSelect"></select>
+<button onclick="updateTitle()">Update Title</button>
+<button onclick="removeTab()">Remove Tab</button>
+<div id="tabList"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+let tabs=[];
+function save(){localStorage.setItem('tabs',JSON.stringify(tabs));render();}
+function render(){
+const list=document.getElementById('tabList'),sel=document.getElementById('tabSelect');
+list.innerHTML='';sel.innerHTML='';
+tabs.forEach((t,i)=>{
+const div=document.createElement('div');div.style.margin='5px 0';
+div.innerHTML=`<span>${t.name}</span> <button onclick="removeTab(${i})">✕</button>`;
+list.appendChild(div);
+});
+if(tabs.length>0){
+sel.onchange=e=>{const idx=parseInt(e.target.value);document.getElementById('tabTitle').value=tabs[idx].title;};
+sel.innerHTML='<option value="">Select tab</option>';
+tabs.forEach((t,i)=>sel.innerHTML+='<option value="'+i+'">'+t.name+'</option>');
+}
+}
+function addTab(){
+const name=document.getElementById('tabName').value.trim();
+const title=document.getElementById('tabTitle').value.trim();
+if(name&&title){tabs.push({name,title});document.getElementById('tabName').value='';document.getElementById('tabTitle').value='';save();}
+}
+function updateTitle(){
+const idx=document.getElementById('tabSelect').value;
+if(idx!==''){tabs[parseInt(idx)].title=document.getElementById('tabTitle').value.trim();save();}
+}
+function removeTab(idx){tabs.splice(idx,1);save();}
+render();
+</script>
+</body>
+</html>
