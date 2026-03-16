@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Research Notes Organizer</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+input,select,button{padding:8px 12px;margin:4px 0;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#e4e4e4}
+button:hover{background:#6366f1}
+.note{background:#111;border:1px solid #333;padding:10px;margin:8px 0;border-radius:4px}
+textarea{background:#111;border:1px solid #333;color:#e4e4e4;width:100%;min-height:60px}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h1>Research Notes Organizer</h1>
+<input id="topic" placeholder="Topic">
+<select id="category">
+<option value="">Category</option>
+<option value="general">General</option>
+<option value="academic">Academic</option>
+<option value="personal">Personal</option>
+</select>
+<textarea id="content" placeholder="Enter your notes here..."></textarea>
+<button onclick="addNote()">Add Note</button>
+<div id="notesList"></div>
+<script>
+function addNote(){
+const topic=document.getElementById('topic').value;
+const category=document.getElementById('category').value;
+const content=document.getElementById('content').value;
+if(!topic||!content){alert('Please fill in topic and content');return}
+const note=document.createElement('div');
+note.className='note';
+note.innerHTML=`<strong>${topic}</strong> <span style="color:#888; font-size:0.8em">[${category||'Uncategorized'}]</span><br><textarea readonly>${content}</textarea><button onclick="deleteNote(this)">Delete</button>`;
+document.getElementById('notesList').appendChild(note);
+document.getElementById('topic').value='';
+document.getElementById('content').value='';
+}
+function deleteNote(btn){
+btn.parentElement.parentElement.remove();
+}
+</script>
+</body>
+</html>
