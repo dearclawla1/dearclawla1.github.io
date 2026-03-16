@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gwen Particle Studio - Interactive Canvas Playground</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --fg: #e4e4e4;
+      --muted: #9e9e9e;
+      --primary: #6366f1;
+      --card: #171717;
+      --border: #333;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header { text-align: center; margin-bottom: 1.5rem; }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; }
+    .container { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
+    .canvas-wrapper {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    #particleCanvas {
+      width: 100%;
+      height: 400px;
+      display: block;
+      cursor: crosshair;
+    }
+    .controls {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .control-group { margin-bottom: 1.2rem; }
+    .control-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .control-group input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      margin-top: -5px;
+    }
+    .control-group input[type="number"] {
+      width: 100%;
+      padding: 0.6rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--fg);
+      font-size: 0.9rem;
+    }
+    .control-group select {
+      width: 100%;
+      padding: 0.6rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--fg);
+      font-size: 0.9rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.7rem 1.2rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    .btn:hover { background: #5558e6; }
+    .btn:active { transform: scale(0.98); }
+    .btn-secondary { background: var(--muted); }
+    .btn-secondary:hover { background: #888; }
+    .output-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .output-section h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+    .output-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      min-height: 100px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.85rem;
+      color: var(--fg);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      width: 100%;
+    }
+    .copy-btn:hover { background: #059669; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .stat-item {
+      background: var(--bg);
+      padding: 0.6rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+    .stat-item span { display: block; color: var(--muted); font-size: 0.7rem; }
+    .stat-item strong { color: var(--fg); }
+    .back-link {
+      display: inline-block;
+      margin-top: 1.5rem;
+      color: var(--primary);
+    }
+    .back-link:hover { text-decoration: underline; }
+    @media (max-width: 800px) {
+      .container { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gwen Particle Studio</h1>
+    <p class="subtitle">Interactive Canvas Playground - Create, Control, and Experiment</p>
+  </header>
+
+  <div class="container">
+    <div class="canvas-wrapper">
+      <canvas id="particleCanvas" width="800" height="400"></canvas>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="particleCount">Particle Count: <span id="countValue">100</span></label>
+        <input type="range" id="particleCount" min="10" max="500" value="100">
+      </div>
+
+      <div class="control-group">
+        <label for="velocity">Velocity: <span id="velocityValue">2</span></label>
+        <input type="range" id="velocity" min="0.5" max="10" step="0.5" value="2">
+      </div>
+
+      <div class="control-group">
+        <label for="size">Particle Size: <span id="sizeValue">4</span></label>
+        <input type="range" id="size" min="1" max="15" value="4">
+      </div>
+
+      <div class="control-group">
+        <label for="colorMode">Color Mode</label>
+        <select id="colorMode">
+          <option value="rainbow">Rainbow</option>
+          <option value="gradient">Gradient</option>
+          <option value="single">Single Color</option>
+          <option value="hue">Hue Cycle</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="gravity">Gravity: <span id="gravityValue">0</span></label>
+        <input type="range" id="gravity" min="-2" max="2" step="0.1" value="0">
+      </div>
+
+      <div class="control-group">
+        <label for="friction">Friction: <span id="frictionValue">0.99</span></label>
+        <input type="range" id="friction" min="0.90" max="1.0" step="0.01" value="0.99">
+      </div>
+
+      <div class="control-group">
+        <label for="trail">Trail Effect</label>
+        <select id="trail">
+          <option value="none">None</option>
+          <option value="short">Short</option>
+          <option value="long">Long</option>
+        </select>
+      </div>
+
+      <button class="btn" id="addParticle">Add Random Particles</button>
+      <button class="btn btn-secondary" id="clearCanvas">Clear Canvas</button>
+      <button class="btn btn-secondary" id="resetSettings">Reset Settings</button>
+
+      <div class="output-section">
+        <h3>Particle Data</h3>
+        <div class="output-box" id="outputBox">
+          // Click on canvas to add particles at that position
+          // Use controls to adjust particle properties
+          // Data updates in real-time
+        </div>
+        <button class="copy-btn" id="copyBtn">Copy to Clipboard</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat-item">
+          <span>Particles</span>
+          <strong id="statCount">0</strong>
+        </div>
+        <div class="stat-item">
+          <span>Canvas Size</span>
+          <strong id="statSize">800 x 400</strong>
+        </div>
+        <div class="stat-item">
+          <span>Memory</span>
+          <strong id="statMemory">0 KB</strong>
+        </div>
+        <div class="stat-item">
+          <span>FPS</span>
+          <strong id="statFPS">0</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="index.html" class="back-link">Back to Home</a>
+
+  <script>
+    (function() {
+      // Particle Studio - Main Application
+      const canvas = document.getElementById('particleCanvas');
+      const ctx = canvas.getContext('2d');
+      const particles = [];
+      let animationId;
+      let fps = 0;
+      let lastFpsTime = performance.now();
+      let fpsCount = 0;
+
+      // DOM Elements
+      const countInput = document.getElementById('particleCount');
+      const velocityInput = document.getElementById('velocity');
+      const sizeInput = document.getElementById('size');
+      const colorModeSelect = document.getElementById('colorMode');
+      const gravityInput = document.getElementById('gravity');
+      const frictionInput = document.getElementById('friction');
+      const trailSelect = document.getElementById('trail');
+      const addBtn = document.getElementById('addParticle');
+      const clearBtn = document.getElementById('clearCanvas');
+      const resetBtn = document.getElementById('resetSettings');
+      const outputBox = document.getElementById('outputBox');
+      const copyBtn = document.getElementById('copyBtn');
+
+      // Display values
+      const countValue = document.getElementById('countValue');
+      const velocityValue = document.getElementById('velocityValue');
+      const sizeValue = document.getElementById('sizeValue');
+      const gravityValue = document.getElementById('gravityValue');
+      const frictionValue = document.getElementById('frictionValue');
+      const statCount = document.getElementById('statCount');
+      const statSize = document.getElementById('statSize');
+      const statMemory = document.getElementById('statMemory');
+      const statFPS = document.getElementById('statFPS');
+
+      // Initialize
+      function init() {
+        resizeCanvas();
+        createInitialParticles();
+        setupEventListeners();
+        animate();
+        updateStats();
+      }
+
+      function resizeCanvas() {
+        const wrapper = canvas.parentElement;
+        canvas.width = wrapper.clientWidth;
+        canvas.height = 400;
+        statSize.textContent = `${canvas.width} x ${canvas.height}`;
+      }
+
+      function createInitialParticles() {
+        particles.length = 0;
+        const count = parseInt(countInput.value);
+        for (let i = 0; i < count; i++) {
+          addParticleAtRandom();
+        }
+        updateOutput();
+      }
+
+      function addParticleAtRandom() {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * parseFloat(velocityInput.value),
+          vy: (Math.random() - 0.5) * parseFloat(velocityInput.value),
+          size: parseFloat(sizeInput.value),
+          hue: Math.random() * 360,
+          age: 0
+        });
+      }
+
+      function addParticleAtPosition(x, y) {
+        const vx = (Math.random() - 0.5) * parseFloat(velocityInput.value);
+        const vy = (Math.random() - 0.5) * parseFloat(velocityInput.value);
+        particles.push({
+          x,
+          y,
+          vx,
+          vy,
+          size: parseFloat(sizeInput.value),
+          hue: Math.random() * 360,
+          age: 0
+        });
+        updateOutput();
+      }
+
+      function setupEventListeners() {
+        window.addEventListener('resize', resizeCanvas);
+
+        canvas.addEventListener('click', (e) => {
+          const rect = canvas.getBoundingClientRect();
+          addParticleAtPosition(e.clientX - rect.left, e.clientY - rect.top);
+        });
+
+        countInput.addEventListener('input', () => {
+          countValue.textContent = countInput.value;
+        });
+
+        velocityInput.addEventListener('input', () => {
+          velocityValue.textContent = velocityInput.value;
+        });
+
+        sizeInput.addEventListener('input', () => {
+          sizeValue.textContent = sizeInput.value;
+        });
+
+        gravityInput.addEventListener('input', () => {
+          gravityValue.textContent = gravityInput.value;
+        });
+
+        frictionInput.addEventListener('input', () => {
+          frictionValue.textContent = frictionInput.value;
+        });
+
+        addBtn.addEventListener('click', () => {
+          for (let i = 0; i < 10; i++) {
+            addParticleAtRandom();
+          }
+          updateOutput();
+        });
+
+        clearBtn.addEventListener('click', () => {
+          particles.length = 0;
+          updateOutput();
+        });
+
+        resetBtn.addEventListener('click', () => {
+          countInput.value = 100;
+          countValue.textContent = '100';
+          velocityInput.value = 2;
+          velocityValue.textContent = '2';
+          sizeInput.value = 4;
+          sizeValue.textContent = '4';
+          gravityInput.value = 0;
+          gravityValue.textContent = '0';
+          frictionInput.value = 0.99;
+          frictionValue.textContent = '0.99';
+          createInitialParticles();
+        });
+
+        copyBtn.addEventListener('click', copyOutput);
+
+        // Color mode change
+        colorModeSelect.addEventListener('change', updateOutput);
+      }
+
+      function updateOutput() {
+        const data = particles.map(p => ({
+          x: p.x.toFixed(2),
+          y: p.y.toFixed(2),
+          vx: p.vx.toFixed(3),
+          vy: p.vy.toFixed(3),
+          size: p.size,
+          hue: p.hue.toFixed(1)
+        }));
+
+        const json = JSON.stringify(data, null, 2);
+        outputBox.textContent = json;
+      }
+
+      function copyOutput() {
+        const text = outputBox.textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          const original = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => {
+            copyBtn.textContent = original;
+          }, 1500);
+        }).catch(err => {
+          console.error('Copy failed:', err);
+        });
+      }
+
+      function draw() {
+        // Clear or trail effect
+        if (trailSelect.value === 'none') {
+          ctx.fillStyle = '#0a0a0a';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (trailSelect.value === 'short') {
+          ctx.fillStyle = 'rgba(10, 10, 10, 0.3)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        const gravity = parseFloat(gravityInput.value);
+        const friction = parseFloat(frictionInput.value);
+        const colorMode = colorModeSelect.value;
+
+        particles.forEach(p => {
+          // Update position
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += gravity;
+          p.vx *= friction;
+          p.vy *= friction;
+
+          // Bounce off walls
+          if (p.x <= 0 || p.x >= canvas.width) {
+            p.vx *= -1;
+            p.x = Math.max(0, Math.min(p.x, canvas.width));
+          }
+          if (p.y <= 0 || p.y >= canvas.height) {
+            p.vy *= -1;
+            p.y = Math.max(0, Math.min(p.y, canvas.height));
+          }
+
+          // Draw particle
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+
+          // Color based on mode
+          if (colorMode === 'rainbow') {
+            ctx.fillStyle = `hsl(${p.hue}, 100%, 50%)`;
+          } else if (colorMode === 'gradient') {
+            const gradient = (p.y / canvas.height) * 360;
+            ctx.fillStyle = `hsl(${gradient}, 100%, 50%)`;
+          } else if (colorMode === 'single') {
+            ctx.fillStyle = '#6366f1';
+          } else if (colorMode === 'hue') {
+            p.hue += 0.5;
+            ctx.fillStyle = `hsl(${p.hue}, 100%, 50%)`;
+          }
+
+          ctx.fill();
+        });
+      }
+
+      function animate() {
+        draw();
+
+        // FPS calculation
+        const now = performance.now();
+        fpsCount++;
+        if (now - lastFpsTime >= 1000) {
+          fps = fpsCount;
+          fpsCount = 0;
+          lastFpsTime = now;
+          statFPS.textContent = fps;
+        }
+
+        animationId = requestAnimationFrame(animate);
+      }
+
+      function updateStats() {
+        const memory = particles.length * 100; // Approximate
+        statMemory.textContent = `${(memory / 1024).toFixed(2)} KB`;
+      }
+
+      // Initialize application
+      init();
+
+      // Usage tracking
+      fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sql: "INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)",
+          params: ['gwen-particle-studio.html', 'load', new Date().toISOString()]
+        })
+      }).catch(() => {});
+    })();
+  </script>
+</body>
+</html>
