@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Slop Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .header h1 {
+            font-size: 2rem;
+            color: #e4e4e4;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #999;
+            font-size: 1rem;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #e4e4e4;
+            font-size: 0.95rem;
+        }
+        .input-group textarea {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 12px;
+            color: #e4e4e4;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 150px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        .input-group textarea::placeholder {
+            color: #666;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .stat-card {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 5px;
+        }
+        .output-section {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .output-header h2 {
+            font-size: 1.2rem;
+            color: #e4e4e4;
+        }
+        .copy-btn {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .copy-btn:hover {
+            background: #5558e3;
+        }
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+        .output-content {
+            flex: 1;
+            min-height: 150px;
+            background: #0a0a0a;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        @media (max-width: 600px) {
+            .feedback-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .feedback-card {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .feedback-card h3 {
+            font-size: 0.9rem;
+            color: #e4e4e4;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .feedback-card .icon {
+            font-size: 1.2rem;
+        }
+        .feedback-card .content {
+            font-size: 0.85rem;
+            color: #999;
+            line-height: 1.5;
+        }
+        .slop-indicator {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .slop-indicator.high {
+            background: #ef4444;
+            color: #fff;
+        }
+        .slop-indicator.medium {
+            background: #f59e0b;
+            color: #fff;
+        }
+        .slop-indicator.low {
+            background: #10b981;
+            color: #fff;
+        }
+        .slop-indicator.none {
+            background: #6366f1;
+            color: #fff;
+        }
+        .analysis-bar {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .analysis-bar h3 {
+            font-size: 0.9rem;
+            color: #e4e4e4;
+            margin-bottom: 10px;
+        }
+        .analysis-bar .progress {
+            height: 8px;
+            background: #2a2a2a;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .analysis-bar .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .analysis-bar .text {
+            font-size: 0.85rem;
+            color: #999;
+        }
+        .visual-feedback {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .feedback-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #6366f1;
+        }
+        .feedback-dot.warn {
+            background: #f59e0b;
+        }
+        .feedback-dot.danger {
+            background: #ef4444;
+        }
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+        }
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Prompt Slop Detector</h1>
+            <p>An AI prompt inspector that detects patterns leading to boring/generic outputs, provides real-time visual feedback on prompt quality, and suggests improvements to prevent slop.</p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="prompt-input">Enter Your Prompt</label>
+                    <textarea 
+                        id="prompt-input" 
+                        placeholder="Describe what you want the AI to generate. For example:
+Write a blog post about sustainable living tips for urban apartment dwellers. Include practical advice on composting, recycling, and reducing waste. Use an engaging tone with actionable takeaways."
+                    ></textarea>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="value" id="char-count">0</div>
+                        <div class="label">Characters</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="word-count">0</div>
+                        <div class="label">Words</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="slop-score">100</div>
+                        <div class="label">Slop Risk (%)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="output-header">
+                    <h2>Analysis Results</h2>
+                    <button class="copy-btn" id="copy-btn">Copy Results</button>
+                </div>
+                <div class="output-content" id="output-content">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>Enter a prompt to see real-time analysis and slop detection</p>
+                    </div>
+                </div>
+
+                <div class="feedback-grid">
+                    <div class="feedback-card">
+                        <h3><span class="icon">📊</span> Slop Risk Level</h3>
+                        <div class="content" id="slop-level">
+                            <span class="slop-indicator none" id="slop-indicator">None</span>
+                        </div>
+                    </div>
+                    <div class="feedback-card">
+                        <h3><span class="icon">⚡</span> Analysis Progress</h3>
+                        <div class="content">
+                            <div class="progress">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <div class="text" id="progress-text">Waiting for input...</div>
+                        </div>
+                    </div>
+                    <div class="feedback-card">
+                        <h3><span class="icon">🎯</span> Key Issues</h3>
+                        <div class="content" id="key-issues">
+                            <div class="text">No issues detected yet</div>
+                        </div>
+                    </div>
+                    <div class="feedback-card">
+                        <h3><span class="icon">💡</span> Suggestions</h3>
+                        <div class="content" id="suggestions">
+                            <div class="text">Enter a prompt to get suggestions</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-bar">
+                    <h3>Prompt Quality Score</h3>
+                    <div class="progress">
+                        <div class="progress-fill" id="quality-fill"></div>
+                    </div>
+                    <div class="text" id="quality-text">Waiting for input...</div>
+                    <div class="visual-feedback" id="visual-feedback">
+                        <div class="feedback-dot"></div>
+                        <div class="feedback-dot"></div>
+                        <div class="feedback-dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const promptInput = document.getElementById('prompt-input');
+            const outputContent = document.getElementById('output-content');
+            const charCount = document.getElementById('char-count');
+            const wordCount = document.getElementById('word-count');
+            const slopScore = document.getElementById('slop-score');
+            const slopLevel = document.getElementById('slop-level');
+            const slopIndicator = document.getElementById('slop-indicator');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            const keyIssues = document.getElementById('key-issues');
+            const suggestions = document.getElementById('suggestions');
+            const qualityFill = document.getElementById('quality-fill');
+            const qualityText = document.getElementById('quality-text');
+            const visualFeedback = document.getElementById('visual-feedback');
+            const copyBtn = document.getElementById('copy-btn');
+
+            const slopPatterns = [
+                { name: 'Generic Opening', pattern: /^(write|create|make|generate|produce|develop|design|build|craft|formulate|compose|form)/i, severity: 'high' },
+                { name: 'Vague Instructions', pattern: /vague|unclear|not sure|maybe|possibly|somewhat|kind of|sort of/i, severity: 'medium' },
+                { name: 'No Context', pattern: /no context|without context|standalone|independent|alone/i, severity: 'high' },
+                { name: 'Overly Broad Topic', pattern: /everything|all|every|any|nothing|anything|something|everybody|everyone|anyone|anyone/i, severity: 'medium' },
+                { name: 'Filler Words', pattern: /really|very|quite|rather|fairly|pretty|somewhat|kind of|sort of|actually|basically|literally|absolutely|totally|completely/i, severity: 'low' },
+                { name: 'Cliché Phrases', pattern: /in conclusion|in summary|to sum up|in short|in brief|let me tell you|as you know|it is important|it is crucial|it is essential|it is vital/i, severity: 'medium' },
+                { name: 'Passive Voice', pattern: /is written|is created|is made|is generated|is produced|is developed|is designed|is built|is crafted|is formulated|is composed/i, severity: 'low' },
+                { name: 'No Specific Goal', pattern: /just|only|simple|basic|easy|hard|difficult|complicated|complex|interesting|funny|amazing|wonderful|great|good|bad|terrible|awful|horrible|perfect|imperfect/i, severity: 'medium' },
+                { name: 'Question Mark Without Question', pattern: /\\?[^\\?]*\\?/, severity: 'high' },
+                { name: 'Repetitive Structure', pattern: /\\.(\\s+\\w+\\s+\\w+\\s+\\w+\\s+\\.)+/, severity: 'low' }
+            ];
+
+            const qualitySuggestions = [
+                'Add specific details about the desired output format',
+                'Include context about the target audience',
+                'Specify the tone and style preferences',
+                'Define clear constraints or requirements',
+                'Provide examples of what you like or dislike',
+                'Mention any relevant background information',
+                'State the purpose or goal explicitly'
+            ];
+
+            function analyzePrompt(text) {
+                if (!text || text.trim().length === 0) {
+                    return null;
+                }
+
+                const charCount = text.length;
+                const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+                const slopScore = calculateSlopScore(text);
+                const qualityScore = calculateQualityScore(text, slopScore);
+
+                return {
+                    charCount,
+                    wordCount,
+                    slopScore,
+                    qualityScore,
+                    slopLevel: getSlopLevel(slopScore),
+                    issues: extractIssues(text),
+                    suggestions: generateSuggestions(charCount, wordCount, slopScore)
+                };
+            }
+
+            function calculateSlopScore(text) {
+                let score = 100;
+                const matches = slopPatterns.filter(p => p.pattern.test(text));
+                matches.forEach(match => {
+                    if (match.severity === 'high') score -= 15;
+                    else if (match.severity === 'medium') score -= 10;
+                    else score -= 5;
+                });
+                return Math.max(0, Math.min(100, score));
+            }
+
+            function calculateQualityScore(text, slopScore) {
+                let score = 100 - slopScore;
+                
+                if (text.length < 50) score -= 10;
+                else if (text.length > 500) score += 5;
+
+                if (text.includes('context') || text.includes('for') || text.includes('about')) score += 5;
+                if (text.includes('format') || text.includes('style') || text.includes('tone')) score += 5;
+                if (text.includes('audience') || text.includes('target')) score += 5;
+                if (text.includes('example') || text.includes('like') || text.includes('dislike')) score += 5;
+
+                return Math.max(0, Math.min(100, score));
+            }
+
+            function getSlopLevel(score) {
+                if (score >= 90) return { level: 'Low', class: 'low', icon: '✅' };
+                if (score >= 70) return { level: 'Medium', class: 'medium', icon: '⚠️' };
+                if (score >= 50) return { level: 'High', class: 'high', icon: '🔴' };
+                return { level: 'Critical', class: 'danger', icon: '🚨' };
+            }
+
+            function extractIssues(text) {
+                const issues = [];
+                slopPatterns.forEach(pattern => {
+                    if (pattern.pattern.test(text)) {
+                        issues.push({
+                            name: pattern.name,
+                            severity: pattern.severity
+                        });
+                    }
+                });
+                return issues.slice(0, 5);
+            }
+
+            function generateSuggestions(charCount, wordCount, slopScore) {
+                const suggestions = [];
+                
+                if (charCount < 50) suggestions.push('Your prompt is quite short. Add more details.');
+                if (charCount > 300) suggestions.push('Consider being more concise.');
+                if (wordCount < 10) suggestions.push('Add more specific requirements.');
+                if (wordCount > 100) suggestions.push('You might be over-specifying. Focus on key points.');
+                if (slopScore > 80) suggestions.push('High slop risk detected. Review for generic patterns.');
+                if (slopScore > 60) suggestions.push('Some improvements could reduce slop risk.');
+                
+                return suggestions.slice(0, 3);
+            }
+
+            function updateDisplay() {
+                const text = promptInput.value;
+                const analysis = analyzePrompt(text);
+
+                if (!analysis) {
+                    outputContent.innerHTML = `
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p>Enter a prompt to see real-time analysis and slop detection</p>
+                        </div>
+                    `;
+                    slopScore.textContent = '100';
+                    slopScore.style.color = '#6366f1';
+                    progressFill.style.width = '0%';
+                    qualityFill.style.width = '0%';
+                    progressText.textContent = 'Waiting for input...';
+                    qualityText.textContent = 'Waiting for input...';
+                    visualFeedback.innerHTML = `
+                        <div class="feedback-dot"></div>
+                        <div class="feedback-dot"></div>
+                        <div class="feedback-dot"></div>
+                    `;
+                    return;
+                }
+
+                const slopLevelData = getSlopLevel(analysis.slopScore);
+                slopScore.textContent = analysis.slopScore;
+                slopScore.style.color = slopLevelData.class === 'danger' ? '#ef4444' : 
+                                       slopLevelData.class === 'high' ? '#f59e0b' : '#10b981';
+
+                slopIndicator.textContent = `${slopLevelData.icon} ${slopLevelData.level}`;
+                slopIndicator.className = `slop-indicator ${slopLevelData.class}`;
+
+                progressFill.style.width = `${100 - analysis.slopScore}%`;
+                progressText.textContent = `Analysis complete. Slop risk: ${analysis.slopScore}%`;
+
+                qualityFill.style.width = `${analysis.qualityScore}%`;
+                qualityText.textContent = `Quality Score: ${analysis.qualityScore}/100`;
+
+                let feedbackDots = '';
+                if (analysis.slopScore > 80) {
+                    feedbackDots = `<div class="feedback-dot danger"></div>`;
+                } else if (analysis.slopScore > 60) {
+                    feedbackDots = `<div class="feedback-dot warn"></div>`;
+                }
+                feedbackDots += `<div class="feedback-dot"></div>`;
+                feedbackDots += `<div class="feedback-dot"></div>`;
+                visualFeedback.innerHTML = feedbackDots;
+
+                if (analysis.issues.length === 0) {
+                    keyIssues.innerHTML = `<div class="text" style="color: #10b981;">No slop patterns detected!</div>`;
+                } else {
+                    keyIssues.innerHTML = analysis.issues.map(issue => `
+                        <div style="margin-bottom: 5px;">
+                            <span style="color: ${issue.severity === 'high' ? '#ef4444' : issue.severity === 'medium' ? '#f59e0b' : '#10b981'}">${issue.severity.toUpperCase()}</span>
+                            ${issue.name}
+                        </div>
+                    `).join('');
+                }
+
+                if (analysis.suggestions.length === 0) {
+                    suggestions.innerHTML = `<div class="text" style="color: #10b981;">Great prompt! No major suggestions.</div>`;
+                } else {
+                    suggestions.innerHTML = analysis.suggestions.map(s => `
+                        <div style="margin-bottom: 5px; color: #999;">• ${s}</div>
+                    `).join('');
+                }
+
+                outputContent.innerHTML = `
+                    <div style="color: #e4e4e4; font-size: 0.9rem; line-height: 1.6;">
+                        <strong>Analysis Summary:</strong>
+                        <br><br>
+                        <span style="color: ${slopLevelData.class === 'danger' ? '#ef4444' : slopLevelData.class === 'high' ? '#f59e0b' : '#10b981'}">
+                            Slop Risk: ${analysis.slopScore}%
+                        </span>
+                        <br>
+                        <span style="color: ${analysis.qualityScore >= 80 ? '#10b981' : analysis.qualityScore >= 60 ? '#f59e0b' : '#ef4444'}">
+                            Quality Score: ${analysis.qualityScore}/100
+                        </span>
+                        <br><br>
+                        <strong>Character Count:</strong> ${analysis.charCount}
+                        <br>
+                        <strong>Word Count:</strong> ${analysis.wordCount}
+                        <br><br>
+                        <strong>Key Findings:</strong>
+                        <br>
+                        ${analysis.issues.length === 0 ? 'No slop patterns detected!' : 
+                         analysis.issues.map(issue => `• <span style="color: ${issue.severity === 'high' ? '#ef4444' : issue.severity === 'medium' ? '#f59e0b' : '#10b981'}">${issue.name}</span>`).join('')}
+                        <br><br>
+                        <strong>Suggestions:</strong>
+                        <br>
+                        ${analysis.suggestions.map(s => `• ${s}`).join('')}
+                    </div>
+                `;
+            }
+
+            function copyResults() {
+                const text = outputContent.innerText;
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.style.background = '#10b981';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                        copyBtn.style.background = '#6366f1';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                });
+            }
+
+            promptInput.addEventListener('input', updateDisplay);
+            copyBtn.addEventListener('click', copyResults);
+
+            updateDisplay();
+        })();
+    </script>
+</body>
+</html>
