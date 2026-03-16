@@ -2,33 +2,338 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CSS Selector Tester</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;padding:20px;}
-input,select,button{margin:5px 0;min-width:100px;}
-textarea{width:100%;height:100px;margin:10px 0;}
-#result{background:#1a1a1a;padding:15px;border-radius:5px;}
-button{background:#6366f1;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+background:#0a0a0a;color:#e4e4e4;font-family:'Segoe UI',sans-serif;
+padding:20px;min-height:100vh;line-height:1.6;
+}
+.container{max-width:1200px;margin:0 auto;}
+header{
+display:flex;justify-content:space-between;align-items:center;
+margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #1a1a1a;
+}
+h1{font-size:1.8rem;color:#6366f1;}
+nav a{
+color:#e4e4e4;text-decoration:none;font-size:0.9rem;
+padding:8px 12px;border-radius:4px;transition:all 0.2s;
+}
+nav a:hover{background:#1a1a1a;color:#6366f1;}
+.main-content{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+@media(max-width:768px){.main-content{grid-template-columns:1fr;}}
+.card{
+background:#111111;border-radius:8px;padding:20px;
+border:1px solid #1a1a1a;transition:all 0.2s;
+}
+.card:hover{border-color:#2a2a2a;box-shadow:0 4px 12px rgba(99,102,241,0.1);}
+.card h2{
+font-size:1.2rem;margin-bottom:15px;color:#6366f1;
+border-bottom:1px solid #1a1a1a;padding-bottom:10px;
+}
+input,textarea,select{
+width:100%;padding:12px 14px;border:none;border-radius:6px;
+background:#1a1a1a;color:#e4e4e4;font-size:0.95rem;
+transition:all 0.2s;outline:none;
+}
+input:focus,textarea:focus,select:focus{
+border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.2);
+}
+input::placeholder,textarea::placeholder{color:#666;}
+button{
+padding:12px 20px;border:none;border-radius:6px;
+background:#6366f1;color:#fff;font-size:0.95rem;
+font-weight:600;cursor:pointer;transition:all 0.2s;
+margin-right:10px;margin-top:10px;
+}
+button:hover{background:#5558dd;transform:translateY(-1px);}
+button:active{transform:translateY(0);}
+button.secondary{background:#2a2a2a;color:#e4e4e4;}
+button.secondary:hover{background:#3a3a3a;}
+button.success{background:#10b981;color:#fff;}
+button.success:hover{background:#0d9f6e;}
+textarea{height:180px;resize:vertical;font-family:'Consolas',monospace;}
+.result-box{
+background:#1a1a1a;padding:15px;border-radius:6px;
+border-left:4px solid #6366f1;min-height:60px;
+}
+.result-box.valid{border-left-color:#10b981;}
+.result-box.invalid{border-left-color:#ef4444;}
+.result-box h3{
+font-size:1rem;margin-bottom:10px;color:#e4e4e4;
+}
+.result-box p{font-size:0.9rem;color:#aaa;}
+.preview-box{
+background:#1a1a1a;padding:15px;border-radius:6px;
+min-height:150px;overflow:auto;max-height:300px;
+}
+.preview-box h3{
+font-size:1rem;margin-bottom:10px;color:#e4e4e4;
+}
+.preview-box pre{
+margin:0;font-family:'Consolas',monospace;font-size:0.85rem;
+white-space:pre-wrap;word-break:break-all;
+}
+.copy-btn{
+padding:6px 12px;font-size:0.85rem;background:#2a2a2a;
+color:#e4e4e4;border:none;border-radius:4px;
+cursor:pointer;margin-left:10px;transition:all 0.2s;
+}
+.copy-btn:hover{background:#3a3a3a;color:#6366f1;}
+.status-badge{
+display:inline-block;padding:4px 10px;border-radius:4px;
+font-size:0.8rem;font-weight:600;text-transform:uppercase;
+}
+.status-badge.valid{background:#10b981;color:#fff;}
+.status-badge.invalid{background:#ef4444;color:#fff;}
+.status-badge.warning{background:#f59e0b;color:#fff;}
+.shortcuts{
+background:#1a1a1a;padding:15px;border-radius:6px;
+margin-top:20px;font-size:0.85rem;color:#888;
+}
+.shortcuts h3{color:#e4e4e4;margin-bottom:10px;}
+.shortcuts ul{list-style:none;}
+.shortcuts li{margin:5px 0;padding-left:15px;position:relative;}
+.shortcuts li::before{
+content:'•';position:absolute;left:0;color:#6366f1;font-size:1.2rem;
+}
 </style>
 </head>
 <body>
-<a href="index.html" style="color:#6366f1">Back to Home</a>
-<h2>CSS Selector Tester</h2>
-<input type="text" id="selector" placeholder="Enter selector (e.g., div.container)">
-<button onclick="test()">Test Selector</button>
-<button onclick="generateHTML()">Generate HTML</button>
-<textarea id="htmlCode" placeholder="Generated HTML will appear here"></textarea>
-<div id="result"></div>
+<div class="container">
+<header>
+<h1>CSS Selector Tester</h1>
+<nav>
+<a href="index.html">Back to Home</a>
+</nav>
+</header>
+
+<div class="main-content">
+<div class="card">
+<h2>Enter CSS Selector</h2>
+<input type="text" id="selector" placeholder="e.g., div.container, .btn-primary, #main-header" autocomplete="off">
+<div style="margin-top:15px;">
+<button onclick="testSelector()" class="success">Test Selector</button>
+<button onclick="generateHTML()" class="secondary">Generate HTML</button>
+<button onclick="copySelector()" class="copy-btn">Copy Selector</button>
+</div>
+<div id="status" class="result-box" style="margin-top:15px;">
+<h3>Validation Result</h3>
+<p>Enter a selector and click "Test Selector" to validate it.</p>
+</div>
+</div>
+
+<div class="card">
+<h2>HTML Preview</h2>
+<textarea id="htmlCode" placeholder="Generated HTML will appear here..."></textarea>
+<div style="margin-top:10px;">
+<button onclick="copyHTML()" class="copy-btn">Copy HTML</button>
+</div>
+<div id="preview" class="preview-box" style="margin-top:15px;">
+<h3>Live Preview</h3>
+<pre id="previewContent">Enter a selector to see the preview...</pre>
+</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:20px;">
+<h2>Shortcut Keys</h2>
+<div class="shortcuts">
+<h3>Keyboard Shortcuts</h3>
+<ul>
+<li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> - Test Selector</li>
+<li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> - Copy Selector</li>
+<li><kbd>Ctrl</kbd> + <kbd>C</kbd> - Copy HTML</li>
+</ul>
+</div>
+</div>
+
+<div class="card" style="margin-top:20px;">
+<h2>Examples</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+<div style="background:#1a1a1a;padding:10px;border-radius:4px;">
+<code style="color:#6366f1;">div.container</code>
+</div>
+<div style="background:#1a1a1a;padding:10px;border-radius:4px;">
+<code style="color:#6366f1;">.btn-primary</code>
+</div>
+<div style="background:#1a1a1a;padding:10px;border-radius:4px;">
+<code style="color:#6366f1;">#main-header</code>
+</div>
+<div style="background:#1a1a1a;padding:10px;border-radius:4px;">
+<code style="color:#6366f1;">div.nav > a</code>
+</div>
+</div>
+</div>
+
 <script>
-function test(){
-const s=document.getElementById('selector').value;
-document.getElementById('result').textContent='Selector: '+s+'\nValid: Yes (basic parsing)';
+const selectorInput = document.getElementById('selector');
+const htmlCode = document.getElementById('htmlCode');
+const previewContent = document.getElementById('previewContent');
+const statusBox = document.getElementById('status');
+
+// Test selector validation
+function testSelector(){
+const s = selectorInput.value.trim();
+if(!s){
+statusBox.innerHTML = '<h3>Validation Result</h3><p class="invalid">Please enter a selector.</p>';
+statusBox.className = 'result-box invalid';
+return;
 }
-function generateHTML(){
-const s=document.getElementById('selector').value;
-const h='<div class="'+s+'">Sample content</div>';
-document.getElementById('htmlCode').value=h;
+
+// Basic CSS selector validation
+const validPatterns = [
+    /^#[\w-]+$/, // ID selector
+    /^\. [\w-]+$/, // Class selector
+    /^[\w-]+$/, // Element selector
+    /^[\w-]+ \. [\w-]+$/, // Element.class
+    /^[\w-]+ > [\w-]+$/, // Descendant
+    /^[\w-]+ \. [\w-]+ > [\w-]+$/, // Complex
+    /^[\w-]+ \. [\w-]+, [\w-]+ \. [\w-]+$/, // Multiple
+    /^[\w-]+ \. [\w-]+, [\w-]+$/, // Multiple with class
+    /^[\w-]+, [\w-]+$/, // Multiple elements
+    /^[\w-]+ \. [\w-]+, [\w-]+ \. [\w-]+, [\w-]+$/, // Multiple complex
+];
+
+let isValid = false;
+let message = '';
+
+for(const pattern of validPatterns){
+if(new RegExp(pattern).test(s)){
+isValid = true;
+break;
 }
+}
+
+if(isValid){
+statusBox.innerHTML = `
+<h3>Validation Result</h3>
+<p class="valid"><span class="status-badge valid">Valid</span> Selector "${escapeHtml(s)}" is syntactically correct.</p>
+<p>Ready to generate HTML preview.</p>
+`;
+statusBox.className = 'result-box valid';
+generateHTML(s);
+}else{
+statusBox.innerHTML = `
+<h3>Validation Result</h3>
+<p class="invalid"><span class="status-badge invalid">Invalid</span> Selector "${escapeHtml(s)}" contains syntax errors.</p>
+<p>Common issues: spaces around special characters, invalid characters in selectors.</p>
+`;
+statusBox.className = 'result-box invalid';
+}
+}
+
+// Generate HTML preview
+function generateHTML(selector){
+const s = selector || selectorInput.value.trim();
+if(!s){
+htmlCode.value = '';
+previewContent.textContent = 'Enter a selector to see the preview...';
+return;
+}
+
+// Create sample HTML based on selector type
+let html = '';
+if(s.startsWith('#')){
+html = `<div id="${s.substring(1)}">Sample content for ID selector</div>`;
+}elseif(s.startsWith('.')){
+const className = s.substring(1).split(',')[0].trim();
+html = `<div class="${className}">Sample content for class selector</div>`;
+}else{
+const element = s.split('.')[0].split('>')[0].trim();
+html = `<${element}>Sample content for element selector</${element}>`;
+}
+
+// Add more samples if multiple selectors
+const selectors = s.split(',');
+if(selectors.length > 1){
+html = selectors.map(s => {
+const trimmed = s.trim();
+if(trimmed.startsWith('#')){
+return `<div id="${trimmed.substring(1)}">ID: ${trimmed}</div>`;
+}elseif(trimmed.startsWith('.')){
+return `<div class="${trimmed.substring(1)}">Class: ${trimmed}</div>`;
+}else{
+return `<${trimmed.split('.')[0].trim()}>Element: ${trimmed}</${trimmed.split('.')[0].trim()}>`;
+}
+}).join('\n');
+}
+
+htmlCode.value = html;
+previewContent.textContent = html;
+}
+
+// Copy selector to clipboard
+function copySelector(){
+const s = selectorInput.value.trim();
+if(s){
+navigator.clipboard.writeText(s).then(() => {
+const btn = event.target;
+const originalText = btn.textContent;
+btn.textContent = 'Copied!';
+setTimeout(() => btn.textContent = originalText, 1500);
+}).catch(err => {
+console.error('Failed to copy:', err);
+});
+}
+}
+
+// Copy HTML to clipboard
+function copyHTML(){
+const html = htmlCode.value;
+if(html){
+navigator.clipboard.writeText(html).then(() => {
+const btn = event.target;
+const originalText = btn.textContent;
+btn.textContent = 'Copied!';
+setTimeout(() => btn.textContent = originalText, 1500);
+}).catch(err => {
+console.error('Failed to copy:', err);
+});
+}
+}
+
+// Escape HTML for display
+function escapeHtml(text){
+const div = document.createElement('div');
+div.textContent = text;
+return div.innerHTML;
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e){
+if(e.ctrlKey && e.key === 'Enter'){
+e.preventDefault();
+testSelector();
+}
+if(e.ctrlKey && e.shiftKey && e.key === 'C'){
+e.preventDefault();
+copySelector();
+}
+if(e.ctrlKey && e.key === 'c'){
+e.preventDefault();
+copyHTML();
+}
+});
+
+// Auto-generate on Enter key
+selectorInput.addEventListener('keydown', function(e){
+if(e.key === 'Enter'){
+testSelector();
+}
+});
+
+// Auto-generate on blur
+selectorInput.addEventListener('blur', function(){
+if(selectorInput.value.trim()){
+testSelector();
+}
+});
+
+// Initial state
+statusBox.innerHTML = '<h3>Validation Result</h3><p>Enter a selector and click "Test Selector" to validate it.</p>';
+statusBox.className = 'result-box';
 </script>
 </body>
 </html>
