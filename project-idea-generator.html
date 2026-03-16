@@ -34,36 +34,55 @@ button:hover{background:#5558ff}
 <option value="Beginners">Beginners</option>
 <option value="Experts">Experts</option>
 <option value="Students">Students</option>
-<option value="Professionals">Professionals</option>
 </select>
-<label>Difficulty</label>
-<select id="difficulty">
-<option value="easy">Easy</option>
-<option value="medium">Medium</option>
-<option value="hard">Hard</option>
-</select>
-<button onclick="generate()">Generate Project Idea</button>
-<div id="output">Enter your preferences and click Generate!</div>
+<button id="generate">Generate Project Idea</button>
+<div id="output"></div>
 <script>
-function generate(){
-const domain=document.getElementById('domain').value;
-const audience=document.getElementById('audience').value;
-const diff=document.getElementById('difficulty').value;
-let text="";
-if(!domain||!audience){text="Please select both domain and audience."}else{
-const ideas={
-AI:["AI-powered homework helper","Smart study planner with habit tracking","AI tutor for coding basics","Personalized quiz generator","Code snippet explainer bot","Math problem solver assistant","Essay outline generator","Vocabulary builder app","Research summary tool","Grammar checker for students"],
-Space:["Citizen science platform for space data","Virtual planetarium for classrooms","Space mission simulator game","Astronomy photo analysis tool","Space news digest app","Rocket science visualizer","Moon landing timeline interactive","Satellite image viewer","Space trivia quiz","Astronomy observation guide"],
-Health:["Medication reminder app","Symptom checker assistant","Mental health mood tracker","Nutrition plan generator","Exercise tracker","Sleep quality analyzer","Hydration reminder","Meditation guide","Health habit builder","Wellness journal"],
-Education:["Interactive history timeline","Language learning game","Science experiment simulator","Literature analysis tool","History quiz maker","Math visualizer","Grammar practice app","Debate practice assistant","Study group scheduler","Research paper organizer"],
-Finance:["Budget tracker for students","Investment portfolio simulator","Expense categorizer app","Savings goal planner","Debt payoff calculator","Subscription manager","Credit score checker","Financial literacy quiz","Investment education tool","Tax prep helper"]
-};
-text=ideas[domain]||[];
-text=text[Math.floor(Math.random()*text.length)];
-text+=" (Domain: "+domain+", Audience: "+audience+", Difficulty: "+diff+")";
-}
-document.getElementById('output').innerText=text;
-}
+document.getElementById('generate').addEventListener('click', function() {
+  const domain = document.getElementById('domain').value;
+  const audience = document.getElementById('audience').value;
+  const output = document.getElementById('output');
+  
+  if (!domain || !audience) {
+    output.innerHTML = '<span style="color:#ff6b6b">Please select both a domain and target audience.</span>';
+    return;
+  }
+  
+  const ideas = {
+    AI: {
+      Beginners: "AI-Powered Personal Budget Tracker: A simple app that uses machine learning to categorize expenses and predict future spending patterns.",
+      Experts: "Federated Learning Platform for Healthcare: Build a distributed ML system that trains models across multiple hospitals while keeping patient data local.",
+      Students: "Smart Study Companion: An AI chatbot that helps students understand complex topics by breaking them down into simple explanations with examples."
+    },
+    Space: {
+      Beginners: "Space Mission Planner: A web app that helps beginners plan simple space missions with visual timelines and resource tracking.",
+      Experts: "Real-Time Satellite Data Pipeline: Build a system that processes and visualizes live satellite imagery for environmental monitoring.",
+      Students: "Astronomy Data Explorer: An interactive tool that lets students visualize and analyze real astronomical data from NASA archives."
+    },
+    Health: {
+      Beginners: "Mental Health Check-in App: A simple daily mood tracker with gentle reminders and basic mindfulness exercises.",
+      Experts: "Predictive Readmission System: Build ML models that predict patient readmission risk using electronic health records.",
+      Students: "Medication Reminder with AI: A smart app that learns from user habits and sends personalized medication reminders."
+    },
+    Education: {
+      Beginners: "Interactive Vocabulary Builder: A flashcard app that uses spaced repetition to help beginners learn new words efficiently.",
+      Experts: "Adaptive Learning Platform: Build an AI system that customizes curriculum difficulty based on student performance in real-time.",
+      Students: "Collaborative Research Assistant: A tool that helps students find, organize, and cite academic sources for their projects."
+    },
+    Finance: {
+      Beginners: "Investment Portfolio Visualizer: A simple app that shows portfolio performance with interactive charts and basic analytics.",
+      Experts: "Algorithmic Trading Simulator: Build a platform that simulates trading strategies using historical market data.",
+      Students: "Financial Literacy Game: An interactive web app that teaches basic financial concepts through gamified scenarios."
+    }
+  };
+  
+  const domainIdeas = ideas[domain];
+  const selectedIdea = domainIdeas[audience];
+  
+  output.innerHTML = `<span style="color:#6366f1;font-weight:600">Project Idea:</span>
+    <p style="margin-top:10px;line-height:1.6">${selectedIdea}</p>
+    <p style="margin-top:15px;font-size:14px;color:#888">Domain: ${domain} | Audience: ${audience}</p>`;
+});
 </script>
 </div>
 </body>
