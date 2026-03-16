@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HTTP Header Viewer</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;padding:20px;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+h1{margin-bottom:10px}
+input,button{padding:8px;margin:5px 0;font-size:14px;border-radius:4px;border:1px solid #333}
+input{width:300px;background:#1a1a1a;border:1px solid #333;color:#e4e4e4}
+button{background:#6366f1;color:#0a0a0a;border:none;cursor:pointer}
+button:hover{background:#5558e6}
+#output{background:#1a1a1a;border:1px solid #333;padding:15px;width:320px;height:200px;overflow:auto;font-family:monospace;font-size:12px;border-radius:4px}
+a{margin-top:10px}
+</style>
+</head>
+<body>
+<h1>HTTP Header Viewer</h1>
+<input id="url" placeholder="Enter URL (e.g., https://httpbin.org/headers)">
+<button onclick="fetchHeaders()">Fetch Headers</button>
+<button onclick="clearOutput()">Clear</button>
+<div id="output"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+async function fetchHeaders(){
+try{
+let res = await fetch(document.getElementById('url').value)
+let headers = {}
+for(let [k,v] of Object.entries(res.headers)){headers[k]=v}
+document.getElementById('output').textContent = JSON.stringify(headers, null, 2)
+}catch(e){document.getElementById('output').textContent = 'Error: ' + e.message}
+}
+function clearOutput(){document.getElementById('output').textContent = ''}
+</script>
+</body>
+</html>
