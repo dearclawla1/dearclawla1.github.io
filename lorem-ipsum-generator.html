@@ -4,28 +4,57 @@
 <meta charset="UTF-8">
 <title>Lorem Ipsum Generator</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;margin:0;padding:2rem;display:flex;flex-direction:column;align-items:center;gap:1rem}
-h1{margin:0;font-size:1.5rem}
-input,select,button{padding:0.5rem 1rem;border:none;border-radius:4px;font-size:1rem}
-input{background:#1a1a1a;border:1px solid #333;color:#e4e4e4}
-button{background:#6366f1;color:#fff;cursor:pointer}
-button:hover{background:#5558e6}
-textarea{width:100%;max-width:600px;height:150px;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:0.5rem;border-radius:4px;font-family:inherit;font-size:1rem}
-.controls{display:flex;gap:0.5rem;flex-wrap:wrap}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0a0a0a;color:#e4e4e4;padding:2rem}
+.container{max-width:600px;margin:0 auto}
+h1{margin-bottom:1.5rem;color:#6366f1}
+a{display:block;margin-bottom:1rem;color:#6366f1;text-decoration:none}
+a:hover{text-decoration:underline}
+.controls{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem}
+.controls label{font-size:0.9rem;color:#a0a0a0}
+.controls input,controls select{padding:0.75rem;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;font-size:1rem}
+button{padding:0.75rem 1.5rem;border:none;border-radius:4px;background:#6366f1;color:#fff;font-size:1rem;cursor:pointer;transition:background 0.2s}
+button:hover{background:#5558f5}
+#output{background:#1a1a1a;padding:1.5rem;border-radius:8px;border:1px solid #333;min-height:150px;font-size:1rem;line-height:1.6;white-space:pre-wrap}
+.copy-btn{margin-top:1rem;background:#333;color:#e4e4e4;border:1px solid #444}
+.copy-btn:hover{background:#444}
 </style>
 </head>
 <body>
+<div class="container">
+<a href="index.html" style="color:#6366f1">Back to Home</a>
 <h1>Lorem Ipsum Generator</h1>
 <div class="controls">
-<select id="type"><option value="paragraphs">Paragraphs</option><option value="sentences">Sentences</option><option value="words">Words</option></select>
-<input type="number" id="count" value="3" min="1" max="100">
-<button onclick="generate()">Generate</button>
+<label>Words per paragraph: <input type="number" id="words" value="100" min="10" max="500"></label>
+<label>Style: <select id="style"><option value="standard">Standard Lorem Ipsum</option><option value="classy">Classy Lorem Ipsum</option><option value="random">Random Words</option></select></label>
+<button id="generate">Generate</button>
+<button id="copy" class="copy-btn">Copy to Clipboard</button>
 </div>
-<textarea id="output" readonly></textarea>
-<a href="index.html" style="color:#6366f1">Back to Home</a>
+<div id="output">Lorem ipsum dolor sit amet...</div>
+</div>
 <script>
-const lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-function generate(){const type=document.getElementById("type").value,count=document.getElementById("count").value;const arr=lorem.split(". ");const out=[];for(let i=0;i<Math.min(count,Math.floor(lorem.length/10));i++){if(type==="paragraphs")out.push(lorem);else if(type==="sentences")out.push(lorem.substring(0,lorem.indexOf(". ")+2));else out.push(lorem.substring(0,lorem.indexOf(". ")+2));}document.getElementById("output").value=out.join(". ");}
+const words=['lorem','ipsum','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum','class','att','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum'];
+function generate(){
+const w=document.getElementById('words').value||100;
+const s=document.getElementById('style').value;
+let text='';
+if(s==='standard'){
+for(let i=0;i<w;i++){text+=words[i%words.length]+' ';}
+}
+else if(s==='classy'){
+const classy=['Lorem','ipsum','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum','class','att','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum','class','att','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum'];
+for(let i=0;i<w;i++){text+=classy[i%classy.length]+' ';}
+}
+else{
+for(let i=0;i<w;i++){text+=words[Math.floor(Math.random()*words.length)]+' ';}
+}
+document.getElementById('output').textContent=text.trim();
+}
+document.getElementById('generate').addEventListener('click',generate);
+document.getElementById('copy').addEventListener('click',async()=>{
+const text=document.getElementById('output').textContent;
+try{await navigator.clipboard.writeText(text);alert('Copied!');}catch(e){alert('Copy failed');}});
+generate();
 </script>
 </body>
 </html>

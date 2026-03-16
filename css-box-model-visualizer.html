@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CSS Box Model Visualizer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;padding:20px}
+h1{color:#6366f1;margin-bottom:10px}
+a{color:#6366f1;text-decoration:none}
+.container{display:flex;gap:20px;flex-wrap:wrap}
+.controls{flex:1;min-width:250px}
+.visualizer{flex:2;min-width:300px}
+.box{position:relative;border:2px solid #6366f1;border-radius:4px;overflow:hidden}
+.content{background:#e4e4e4;color:#0a0a0a;padding:10px;font-weight:bold}
+.padding{background:#6366f1;color:#e4e4e4}
+.border{background:#4f46e5}
+.margin{background:#1e1e1e;border:1px dashed #6366f1}
+input,select{width:100%;padding:8px;margin:5px 0;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;border-radius:4px}
+button{width:100%;padding:10px;margin:5px 0;background:#6366f1;border:none;color:#e4e4e4;border-radius:4px;cursor:pointer;font-weight:bold}
+button:hover{background:#4f46e5}
+.stats{background:#1a1a1a;padding:10px;border-radius:4px;margin-top:10px;font-size:12px}
+</style>
+</head>
+<body>
+<h1>CSS Box Model Visualizer</h1>
+<div class="container">
+<div class="controls">
+<label>Content Width: <input type="number" id="contentW" value="100" min="10" max="200"></label>
+<label>Padding: <input type="number" id="padding" value="10" min="0" max="50"></label>
+<label>Border: <input type="number" id="border" value="5" min="0" max="50"></label>
+<label>Margin: <input type="number" id="margin" value="10" min="0" max="50"></label>
+<select id="colorScheme">
+<option value="default">Default</option>
+<option value="dark">Dark</option>
+</select>
+<button id="resetBtn">Reset</button>
+<div class="stats" id="stats"></div>
+</div>
+<div class="visualizer">
+<div class="margin" id="margin"></div>
+<div class="box" id="box">
+<div class="border" id="border"></div>
+<div class="padding" id="padding"></div>
+<div class="content" id="content">Content</div>
+</div>
+</div>
+</div>
+<script>
+const contentW=document.getElementById('contentW'),padding=document.getElementById('padding'),border=document.getElementById('border'),margin=document.getElementById('margin'),box=document.getElementById('box'),content=document.getElementById('content'),paddingEl=document.getElementById('padding'),borderEl=document.getElementById('border'),marginEl=document.getElementById('margin'),stats=document.getElementById('stats'),scheme=document.getElementById('colorScheme'),reset=document.getElementById('resetBtn');
+function update(){const cw=parseInt(contentW.value)||100,pd=parseInt(padding.value)||0,bd=parseInt(border.value)||0,mg=parseInt(margin.value)||0,total=cw+pd*2+bd*2+mg*2;content.style.width=`${cw}px`;paddingEl.style.width=`${pd}px`;borderEl.style.width=`${bd}px`;marginEl.style.width=`${mg}px`;stats.textContent=`Content:${cw}px | Padding:${pd*2}px | Border:${bd*2}px | Margin:${mg*2}px | Total:${total}px`;if(scheme.value==='dark'){content.style.background='#333';content.style.color='#e4e4e4';paddingEl.style.background='#444';borderEl.style.background='#555';marginEl.style.background='#1a1a1a'}else{content.style.background='#e4e4e4';content.style.color='#0a0a0a';paddingEl.style.background='#6366f1';borderEl.style.background='#4f46e5';marginEl.style.background='#1e1e1e'}}
+function reset(){contentW.value=100;padding.value=10;border.value=5;margin.value=10;update()}
+contentW.addEventListener('input',update);padding.addEventListener('input',update);border.addEventListener('input',update);margin.addEventListener('input',update);scheme.addEventListener('change',update);reset.addEventListener('click',reset);update();
+</script>
+</body>
+</html>
