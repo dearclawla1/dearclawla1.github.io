@@ -28,19 +28,7 @@ button:hover{background:#5558ff}
 <option value="m">Meters</option><option value="km">Kilometers</option><option value="cm">Centimeters</option><option value="mm">Millimeters</option><option value="mi">Miles</option><option value="yd">Yards</option><option value="ft">Feet</option><option value="in">Inches</option>
 </select>
 <button onclick="convertLength()">Convert</button>
-<div id="lengthResult" class="result"></div>
-</section>
-<section>
-<h2>Weight</h2>
-<input id="weightValue" type="number" placeholder="Enter value">
-<select id="weightFrom">
-<option value="kg">Kilograms</option><option value="g">Grams</option><option value="mg">Milligrams</option><option value="lb">Pounds</option><option value="oz">Ounces</option>
-</select>
-<select id="weightTo">
-<option value="kg">Kilograms</option><option value="g">Grams</option><option value="mg">Milligrams</option><option value="lb">Pounds</option><option value="oz">Ounces</option>
-</select>
-<button onclick="convertWeight()">Convert</button>
-<div id="weightResult" class="result"></div>
+<div class="result" id="lengthResult"></div>
 </section>
 <section>
 <h2>Temperature</h2>
@@ -52,25 +40,29 @@ button:hover{background:#5558ff}
 <option value="c">Celsius</option><option value="f">Fahrenheit</option><option value="k">Kelvin</option>
 </select>
 <button onclick="convertTemp()">Convert</button>
-<div id="tempResult" class="result"></div>
+<div class="result" id="tempResult"></div>
 </section>
-</div>
 <script>
 function convertLength(){
 const val=document.getElementById('lengthValue').value;
 const from=document.getElementById('lengthFrom').value;
 const to=document.getElementById('lengthTo').value;
-const toMeter={m:1,km:0.001,cm:0.01,mm:0.0001,mi:1609.34,yd:0.9144,ft:0.3048,in:0.0254};
-const result=(val*toMeter[from])*toMeter[to].toFixed(2);
-document.getElementById('lengthResult').textContent=result+' '+from.toUpperCase()+' = '+result+' '+to.toUpperCase();
-}
-function convertWeight(){
-const val=document.getElementById('weightValue').value;
-const from=document.getElementById('weightFrom').value;
-const to=document.getElementById('weightTo').value;
-const toKg={kg:1,g:0.001,mg:0.000001,lb:0.453592,oz:0.0283495};
-const result=(val*toKg[from])*toKg[to].toFixed(4);
-document.getElementById('weightResult').textContent=result+' '+from.toUpperCase()+' = '+result+' '+to.toUpperCase();
+let result=val;
+if(from==='km')result=val/1000;
+else if(from==='cm')result=val/100;
+else if(from==='mm')result=val/10;
+else if(from==='mi')result=val*1609.34;
+else if(from==='yd')result=val*0.9144;
+else if(from==='ft')result=val*0.3048;
+else if(from==='in')result=val*0.0254;
+if(to==='km')result=result*1000;
+else if(to==='cm')result=result*100;
+else if(to==='mm')result=result*10;
+else if(to==='mi')result=result/1609.34;
+else if(to==='yd')result=result/0.9144;
+else if(to==='ft')result=result/0.3048;
+else if(to==='in')result=result/0.0254;
+document.getElementById('lengthResult').textContent=val+' '+from.toUpperCase()+' = '+result.toFixed(2)+' '+to.toUpperCase();
 }
 function convertTemp(){
 const val=document.getElementById('tempValue').value;
@@ -79,8 +71,8 @@ const to=document.getElementById('tempTo').value;
 let celsius=val;
 if(from==='f')celsius=(val-32)*5/9;
 else if(from==='k')celsius=val-273.15;
-if(to==='f')celsius*celsius*9/5+32;
-else if(to==='k')celsius+273.15;
+if(to==='f')celsius=celsius*9/5+32;
+else if(to==='k')celsius=celsius+273.15;
 document.getElementById('tempResult').textContent=val+' '+from.toUpperCase()+' = '+celsius.toFixed(2)+' '+to.toUpperCase();
 }
 </script>
