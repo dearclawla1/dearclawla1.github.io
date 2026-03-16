@@ -21,79 +21,126 @@ button:active{transform:translateY(0)}
 .output-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #222}
 .output-title{color:#6366f1;font-weight:600;font-size:1.1rem}
 .output-actions{display:flex;gap:8px}
-.action-btn{background:#222;color:#e4e4e4;border:1px solid #333;cursor:pointer;font-weight:500}
-.action-btn.primary{background:#6366f1;color:#fff}
-.action-btn:hover{background:#4f4f4f}
-.action-btn.primary:hover{background:#5558ff}
-#url{font-family:inherit}
+.action-btn{background:#222;color:#e4e4e4;border:1px solid #333;padding:6px 10px;font-size:0.85rem;cursor:pointer}
+.action-btn:hover{background:#333}
+.action-btn.primary{background:#6366f1;color:#fff;border-color:#6366f1}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tag{background:#1a1a1a;color:#888;padding:4px 8px;border-radius:4px;font-size:0.8rem;border:1px solid #333}
+.tag.highlight{background:#1e2a3a;color:#6366f1;border-color:#6366f1}
+.tag.error{background:#2a1a1a;color:#ff6b6b;border-color:#ff6b6b}
+hierarchy{margin-top:15px;padding:15px;background:#151515;border-radius:6px;border-left:3px solid #6366f1}
+hierarchy-item{display:flex;align-items:center;gap:8px;margin:4px 0;padding:4px 0}
+hierarchy-tag{background:#222;color:#e4e4e4;padding:2px 8px;border-radius:4px;font-size:0.85rem;font-weight:500}
+hierarchy-arrow{color:#6366f1;font-size:0.8rem}
+.stats{display:flex;gap:15px;margin-top:15px;flex-wrap:wrap}
+.stat{background:#151515;padding:10px 15px;border-radius:6px;border:1px solid #222}
+.stat-label{color:#888;font-size:0.85rem}
+.stat-value{color:#e4e4e4;font-weight:600;font-size:1rem}
+.back-link{display:inline-block;margin-top:15px;color:#6366f1;text-decoration:none;font-size:0.9rem}
+.back-link:hover{text-decoration:underline}
+@media(max-width:768px){
+body{padding:15px}
+h1{font-size:1.5rem}
+#url{max-width:100%}
+}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Semantic Structure Analyzer</h1>
-<div class="subtitle">Analyze HTML semantic structure and identify best practices</div>
-<input type="text" id="url" placeholder="Paste HTML content here...">
-<button class="action-btn primary" onclick="analyze()">Analyze</button>
-<button class="action-btn" onclick="copyToClipboard()">Copy</button>
-<div id="output"></div>
+<p class="subtitle">Visualize logical hierarchy and content flow of web pages</p>
+<input type="text" id="url" placeholder="Enter URL or HTML content (supports both)" autocomplete="off">
+<button onclick="analyze()">Analyze</button>
+<div id="output">Enter content above and click Analyze to see semantic structure...</div>
+<a href="index.html" class="back-link">Back to Home</a>
 </div>
 <script>
 let currentAnalysis = null;
 
 function analyze(){
 const url = document.getElementById('url').value;
-if(!url.trim()){
-document.getElementById('output').innerHTML = 'Please enter HTML content to analyze.';
+const out = document.getElementById('output');
+if(!url){
+out.textContent = 'Please enter content...';
 return;
 }
 
-try{
-const parser = new DOMParser();
-const doc = parser.parseFromString(url, 'text/html');
-const tags = Array.from(doc.querySelectorAll('*')).map(el => el.tagName.toLowerCase());
+const isUrl = /https?:\/\//.test(url);
+let html = url;
+
+if(isUrl){
+fetch(url)
+.then(res => res.text())
+.then(content => {
+html = content;
+analyzeContent(html);
+})
+.catch(err => {
+out.textContent = `Error fetching URL: ${err.message}\n\nPlease check the URL and try again.`;
+});
+}else{
+analyzeContent(html);
+}
+}
+
+function analyzeContent(html){
+const out = document.getElementById('output');
+const tags = html.match(/<([a-z][a-z0-9]*)/gi) || [];
 const tagCounts = {};
-tags.forEach(tag => {
+tags.forEach(t => {
+const tag = t.match(/<([a-z][a-z0-9]*)/i)[1].toUpperCase();
 tagCounts[tag] = (tagCounts[tag] || 0) + 1;
 });
 
-const semanticTags = ['header', 'nav', 'main', 'article', 'section', 'aside', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'table', 'form', 'button', 'a'];
+const semanticTags = ['HEADER','NAV','MAIN','SECTION','ARTICLE','ASIDE','FOOTER'];
 const foundSemantic = semanticTags.filter(tag => tagCounts[tag] > 0);
 const missingSemantic = semanticTags.filter(tag => tagCounts[tag] === 0);
 
-const wordCount = url.split(/\s+/).filter(w => w.length > 0).length;
-const charCount = url.length;
+const hierarchy = tags.map(t => {
+const tag = t.match(/<([a-z][a-z0-9]*)/i)[1].toUpperCase();
+return tag;
+}).join(' → ');
 
-const hierarchy = doc.querySelector('html') ? 'HTML structure detected' : 'No HTML root';
+const textContent = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+const wordCount = textContent.split(' ').length;
+const charCount = textContent.length;
 
 const output = `
-dY"` SEMANTIC FLOW:
+=== Semantic Structure Analysis ===
+
+📊 TAG CLOUD:
+${Object.entries(tagCounts).map(([tag, count]) => {
+const isSemantic = semanticTags.includes(tag);
+return `<span class="tag ${isSemantic ? 'highlight' : ''}">${tag} (${count})</span>`;
+}).join('')}
+
+${missingSemantic.length > 0 ? `\n⚠️ Missing Semantic Elements: ${missingSemantic.join(', ')}` : ''}
+
+📑 SEMANTIC FLOW:
 ${hierarchy || 'No tags detected'}
 
-dY"? CONTENT METRICS:
+📝 CONTENT METRICS:
 <div class="stats">
 <div class="stat"><span class="stat-label">Words:</span><span class="stat-value">${wordCount}</span></div>
 <div class="stat"><span class="stat-label">Characters:</span><span class="stat-value">${charCount}</span></div>
 </div>
 
-dYZ_ KEY SECTIONS FOUND:
-${foundSemantic.length > 0 ? `�o. ${foundSemantic.join(', ')}` : '�s��,? No major semantic elements detected'}
+🎯 KEY SECTIONS FOUND:
+${foundSemantic.length > 0 ? `✅ ${foundSemantic.join(', ')}` : '⚠️ No major semantic elements detected'}
 
-dY'� RECOMMENDATIONS:
+💡 RECOMMENDATIONS:
 ${missingSemantic.length > 0 ? `Consider adding: ${missingSemantic.slice(0, 3).join(', ')}` : 'Structure looks good!'}
 `;
 
-document.getElementById('output').innerHTML = output;
+out.innerHTML = output;
 currentAnalysis = {tags, tagCounts, semanticTags, foundSemantic, missingSemantic};
-} catch(e){
-document.getElementById('output').innerHTML = 'Error parsing HTML: ' + e.message;
-}
 }
 
 function copyToClipboard(){
 if(currentAnalysis){
 const text = document.getElementById('output').textContent;
 navigator.clipboard.writeText(text).then(() => {
-const btn = document.querySelector('.action-btn');
+const btn = document.querySelector('.action-btn.primary');
 const originalText = btn.textContent;
 btn.textContent = 'Copied!';
 setTimeout(() => btn.textContent = originalText, 2000);
@@ -102,7 +149,7 @@ setTimeout(() => btn.textContent = originalText, 2000);
 }
 
 document.addEventListener('keydown', (e) => {
-if(e.ctrlKey && e.key === 'Enter'){
+if(e.ctrlKey && e.key === 'Enter){
 analyze();
 }
 if(e.ctrlKey && e.key === 'c' && currentAnalysis){
