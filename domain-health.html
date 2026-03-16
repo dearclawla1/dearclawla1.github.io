@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Health Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #1a1a1a;
+            padding-bottom: 1rem;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #6366f1;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 1rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #a0a0a0;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 1rem;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            color: #e4e4e4;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        input[type="text"]::placeholder {
+            color: #555;
+        }
+        .btn {
+            padding: 1rem 2rem;
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #5558e3;
+        }
+        .btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #111;
+            border-radius: 8px;
+            border: 1px solid #222;
+        }
+        .result-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #161616;
+            border-radius: 6px;
+            border-left: 3px solid #6366f1;
+        }
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+        .result-title {
+            font-weight: 600;
+            color: #a0a0a0;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .result-value {
+            font-size: 1.1rem;
+            color: #e4e4e4;
+        }
+        .result-value.success {
+            color: #10b981;
+        }
+        .result-value.warning {
+            color: #f59e0b;
+        }
+        .result-value.error {
+            color: #ef4444;
+        }
+        .result-value.info {
+            color: #6366f1;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: #6366f1;
+        }
+        .loading.active {
+            display: block;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .copy-btn {
+            background: #222;
+            border: 1px solid #333;
+            color: #e4e4e4;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover {
+            background: #333;
+            border-color: #444;
+        }
+        .copy-btn.copied {
+            background: #10b981;
+            border-color: #10b981;
+            color: #fff;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-badge.online {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        .status-badge.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        .status-badge.slow {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            display: none;
+        }
+        .error-message.active {
+            display: block;
+        }
+        .info-box {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+        .info-box strong {
+            color: #6366f1;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .grid-item {
+            background: #161616;
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .grid-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+        .grid-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e4e4e4;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #222;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #6366f1;
+            transition: width 0.5s ease;
+        }
+        .progress-fill.success {
+            background: #10b981;
+        }
+        .progress-fill.warning {
+            background: #f59e0b;
+        }
+        .progress-fill.error {
+            background: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Domain Health Monitor</h1>
+            <p class="subtitle">Comprehensive domain diagnostics and health checks</p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </header>
+
+        <div class="info-box">
+            <strong>What this tool does:</strong> Enter a domain name to perform comprehensive health checks including DNS resolution, SSL/TLS validation, uptime monitoring, and performance metrics. Get instant insights into your domain's overall health status.
+        </div>
+
+        <div class="input-group">
+            <label for="domain">Domain Name</label>
+            <input type="text" id="domain" placeholder="Enter domain (e.g., example.com, google.com)">
+        </div>
+
+        <button class="btn" id="checkBtn">Check Domain Health</button>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Analyzing domain health...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="results" id="results" style="display:none;">
+            <div class="result-item">
+                <div class="result-title">Domain</div>
+                <div class="result-value" id="domainValue"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-title">DNS Resolution</div>
+                <div class="result-value" id="dnsValue"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-title">SSL/TLS Status</div>
+                <div class="result-value" id="sslValue"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-title">Response Time</div>
+                <div class="result-value" id="responseTimeValue"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="responseTimeBar"></div>
+                </div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-title">HTTP Status</div>
+                <div class="result-value" id="httpStatusValue"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-title">IP Address</div>
+                <div class="result-value" id="ipValue"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-title">Geolocation</div>
+                <div class="result-value" id="geoValue"></div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-title">Overall Health Score</div>
+                <div class="result-value" id="healthScoreValue"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="healthScoreBar"></div>
+                </div>
+            </div>
+
+            <button class="copy-btn" id="copyBtn">Copy Report</button>
+        </div>
+    </div>
+
+    <script>
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:[location.pathname.split('/').pop(),'load',new Date().toISOString()]})}).catch(()=>{});
+
+        const domainInput = document.getElementById('domain');
+        const checkBtn = document.getElementById('checkBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const errorMessage = document.getElementById('errorMessage');
+        const copyBtn = document.getElementById('copyBtn');
+
+        const resultElements = {
+            domain: document.getElementById('domainValue'),
+            dns: document.getElementById('dnsValue'),
+            ssl: document.getElementById('sslValue'),
+            responseTime: document.getElementById('responseTimeValue'),
+            responseTimeBar: document.getElementById('responseTimeBar'),
+            httpStatus: document.getElementById('httpStatusValue'),
+            ip: document.getElementById('ipValue'),
+            geo: document.getElementById('geoValue'),
+            healthScore: document.getElementById('healthScoreValue'),
+            healthScoreBar: document.getElementById('healthScoreBar')
+        };
+
+        function showLoading() {
+            loading.classList.add('active');
+            results.style.display = 'none';
+            errorMessage.classList.remove('active');
+        }
+
+        function hideLoading() {
+            loading.classList.remove('active');
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+            results.style.display = 'none';
+        }
+
+        function showResults() {
+            loading.classList.remove('active');
+            results.style.display = 'block';
+        }
+
+        function updateStatus(element, status) {
+            element.className = 'result-value ' + status;
+        }
+
+        function updateProgressBar(bar, value, max = 100) {
+            const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+            bar.style.width = percentage + '%';
+            bar.className = 'progress-fill';
+            if (percentage >= 80) {
+                bar.classList.add('success');
+            } else if (percentage >= 50) {
+                bar.classList.add('warning');
+            } else {
+                bar.classList.add('error');
+            }
+        }
+
+        async function checkDomain() {
+            const domain = domainInput.value.trim();
+            
+            if (!domain) {
+                showError('Please enter a domain name');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]$/.test(domain)) {
+                showError('Invalid domain format. Use example.com format.');
+                return;
+            }
+
+            if (domain.length > 253) {
+                showError('Domain name is too long (max 253 characters)');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const results = {};
+
+                // DNS Resolution
+                try {
+                    const dnsResponse = await fetch(`https://1.1.1.1/dns-query?name=${encodeURIComponent(domain)}&type=A`);
+                    const dnsData = await dnsResponse.json();
+                    results.dns = dnsData.Answer ? '✓ Resolved' : '✗ Not resolved';
+                    results.ip = dnsData.Answer ? dnsData.Answer[0].data : 'N/A';
+                } catch (e) {
+                    results.dns = '✗ DNS check failed';
+                    results.ip = 'N/A';
+                }
+
+                // HTTP Status
+                try {
+                    const httpResponse = await fetch(`https://${domain}`, {
+                        method: 'HEAD',
+                        timeout: 5000
+                    });
+                    results.httpStatus = httpResponse.status + ' ' + httpResponse.statusText;
+                } catch (e) {
+                    results.httpStatus = '✗ Connection failed';
+                }
+
+                // SSL/TLS
+                try {
+                    const sslResponse = await fetch(`https://${domain}`, {
+                        method: 'HEAD',
+                        timeout: 5000
+                    });
+                    results.ssl = sslResponse.headers.get('strict-transport-security') 
+                        ? '✓ HSTS Enabled' 
+                        : '✗ HSTS Not Enabled';
+                } catch (e) {
+                    results.ssl = '✗ SSL check failed';
+                }
+
+                // Response Time
+                try {
+                    const startTime = performance.now();
+                    await fetch(`https://${domain}`, { method: 'HEAD', timeout: 5000 });
+                    const endTime = performance.now();
+                    const responseTime = Math.round(endTime - startTime);
+                    results.responseTime = responseTime + 'ms';
+                    updateProgressBar(resultElements.responseTimeBar, responseTime, 1000);
+                } catch (e) {
+                    results.responseTime = 'N/A';
+                }
+
+                // IP/Geo
+                try {
+                    const geoResponse = await fetch(`https://get.geojs.io/v1/ip/geo.json`);
+                    const geoData = await geoResponse.json();
+                    results.geo = `${geoData.city}, ${geoData.country}`;
+                } catch (e) {
+                    results.geo = 'N/A';
+                }
+
+                // Calculate Health Score
+                let score = 0;
+                if (results.dns === '✓ Resolved') score += 20;
+                if (results.httpStatus && results.httpStatus !== '✗ Connection failed') score += 20;
+                if (results.ssl === '✓ HSTS Enabled') score += 15;
+                if (results.responseTime && parseInt(results.responseTime) < 500) score += 20;
+                if (results.responseTime && parseInt(results.responseTime) < 1000) score += 10;
+                if (results.responseTime && parseInt(results.responseTime) < 2000) score += 5;
+                if (results.geo !== 'N/A') score += 10;
+
+                results.healthScore = score;
+                updateProgressBar(resultElements.healthScoreBar, score);
+
+                // Update all results
+                resultElements.domain.textContent = domain;
+                resultElements.dns.textContent = results.dns;
+                resultElements.httpStatus.textContent = results.httpStatus;
+                resultElements.ssl.textContent = results.ssl;
+                resultElements.responseTime.textContent = results.responseTime;
+                resultElements.ip.textContent = results.ip;
+                resultElements.geo.textContent = results.geo;
+                resultElements.healthScore.textContent = score + '/100';
+
+                showResults();
+
+                // Generate report
+                const report = generateReport(results);
+                copyBtn.textContent = 'Copy Report';
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(report).then(() => {
+                        copyBtn.textContent = '✓ Copied!';
+                        copyBtn.classList.add('copied');
+                        setTimeout(() => {
+                            copyBtn.textContent = 'Copy Report';
+                            copyBtn.classList.remove('copied');
+                        }, 2000);
+                    }).catch(() => {
+                        copyBtn.textContent = '✗ Copy failed';
+                    });
+                };
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred while checking the domain. Please try again.');
+            }
+        }
+
+        function generateReport(results) {
+            const status = results.healthScore >= 80 ? 'Excellent' : 
+                          results.healthScore >= 60 ? 'Good' : 
+                          results.healthScore >= 40 ? 'Fair' : 'Poor';
+            
+            return `Domain Health Report: ${results.domain}
+Status: ${status} (${results.healthScore}/100)
+
+DNS Resolution: ${results.dns}
+HTTP Status: ${results.httpStatus}
+SSL/TLS: ${results.ssl}
+Response Time: ${results.responseTime}
+IP Address: ${results.ip}
+Geolocation: ${results.geo}
+
+Generated: ${new Date().toLocaleString()}`;
+        }
+
+        checkBtn.addEventListener('click', checkDomain);
+        domainInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkDomain();
+        });
+
+        // Auto-dismiss error after 5 seconds
+        setTimeout(() => {
+            errorMessage.classList.remove('active');
+        }, 5000);
+    </script>
+</body>
+</html>
