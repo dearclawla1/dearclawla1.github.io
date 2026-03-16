@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mouse Key Mapper</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+h1{color:#6366f1;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px}
+.btn{background:#6366f1;color:#fff;border:none;padding:10px 15px;border-radius:6px;cursor:pointer}
+.btn:hover{background:#5558e6}
+input[type="text"]{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;border-radius:4px;width:100%}
+label{display:block;margin:10px 0 5px}
+</style>
+</head>
+<body>
+<h1>Mouse Key Mapper</h1>
+<div class="grid">
+<div><label>Left Button</label><input type="text" id="left" placeholder="Click to map..."><button class="btn" onclick="map('left')">Map</button></div>
+<div><label>Right Button</label><input type="text" id="right" placeholder="Click to map..."><button class="btn" onclick="map('right')">Map</button></div>
+<div><label>Middle Button</label><input type="text" id="middle" placeholder="Click to map..."><button class="btn" onclick="map('middle')">Map</button></div>
+<div><label>Back Button</label><input type="text" id="back" placeholder="Click to map..."><button class="btn" onclick="map('back')">Map</button></div>
+<div><label>Forward Button</label><input type="text" id="forward" placeholder="Click to map..."><button class="btn" onclick="map('forward')">Map</button></div>
+<div><label>Side Button 1</label><input type="text" id="side1" placeholder="Click to map..."><button class="btn" onclick="map('side1')">Map</button></div>
+<div><label>Side Button 2</label><input type="text" id="side2" placeholder="Click to map..."><button class="btn" onclick="map('side2')">Map</button></div>
+<div><label>Thumb Button</label><input type="text" id="thumb" placeholder="Click to map..."><button class="btn" onclick="map('thumb')">Map</button></div>
+</div>
+<a href="index.html" style="color:#6366f1;display:block;margin-top:20px">Back to Home</a>
+<script>
+function map(id){document.getElementById(id).value=window.event.key||window.event.code}
+</script>
+</body>
+</html>
