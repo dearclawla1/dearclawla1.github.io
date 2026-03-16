@@ -39,20 +39,20 @@ interface ClientMessage {
   move: { x: number; y: number; facing: { x: number; y: number } };
   attack: { facing: { x: number; y: number }; weapon: string; damage: number };
   projectile: { proj: ProjectileState };
-  hit-player: { targetId: string; damage: number };
+  "hit-player": { targetId: string; damage: number };
   chat: { text: string };
   ping: {};
 }
 
 interface ServerMessage {
   state: { players: PlayerState[]; you: PlayerState };
-  player-join: { player: PlayerState };
-  player-leave: { id: string };
-  player-move: { id: string; x: number; y: number; facing: { x: number; y: number } };
-  player-attack: { id: string; facing: { x: number; y: number }; weapon: string };
+  "player-join": { player: PlayerState };
+  "player-leave": { id: string };
+  "player-move": { id: string; x: number; y: number; facing: { x: number; y: number } };
+  "player-attack": { id: string; facing: { x: number; y: number }; weapon: string };
   projectile: { proj: ProjectileState };
-  player-damage: { id: string; damage: number; hp: number };
-  player-death: { id: string; killerId: string };
+  "player-damage": { id: string; damage: number; hp: number };
+  "player-death": { id: string; killerId: string };
   chat: { id: string; name: string; text: string };
   pong: { serverTime: number; playerCount: number };
 }
@@ -117,6 +117,7 @@ export default class GameRoom implements Server {
 
   handlers: Record<string, (conn: Connection, payload: any) => void> = {
     join: (conn, player) => {
+      const ctx = this.getCtx(conn);
       const playerState = {
         ...player,
         zone: ctx.roomId,
@@ -244,17 +245,23 @@ export default class GameRoom implements Server {
     },
 
     ping: (conn, {}) => {
-      this.sendPong(conn);
+      const pong = {
+        serverTime: Date.now(),
+        playerCount: this.players.size,
+      };
+
+      this.broadcastExcept({
+        type: "pong",
+        ...pong,
+      }, conn);
     },
   };
 
-  sendPong(conn: Connection): void {
-    const playerCount = this.players.size;
-    this.broadcastExcept({
-      type: "pong",
-      serverTime: Date.now(),
-      playerCount,
-    }, conn);
+  getCtx(conn: Connection): ConnectionContext {
+    return {
+      connection: conn,
+      roomId: "game-room",
+    };
   }
 
   broadcast(msg: ServerMessage): void {
@@ -271,13 +278,11 @@ export default class GameRoom implements Server {
     }
   }
 
-  send(msg: ServerMessage, conn: Connection): void {
-    conn.send(msg);
+  sendPong(conn: Connection): void {
+    const pong = {
+      serverTime: Date.now(),
+      playerCount: this.players.size,
+    };
+    conn.send({ type: "pong", ...pong });
   }
-}
-
-// ============================================================
-// SERVER CONTEXT
-// ============================================================
-
-const ctx = {} as ConnectionContext;
+};
