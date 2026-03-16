@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>API Response Visualizer</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+h1{color:#6366f1;margin-bottom:15px}
+input,select,button{background:#222;color:#e4e4e4;border:1px solid #444;padding:8px;margin:5px 0;cursor:pointer}
+button:hover{background:#6366f1;color:#0a0a0a}
+textarea{background:#111;color:#e4e4e4;border:1px solid #444;width:100%;min-height:200px;font-family:monospace}
+#output{background:#111;padding:15px;border:1px solid #444;margin-top:15px;white-space:pre-wrap}
+a{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<h1>API Response Visualizer</h1>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<p>Paste JSON response below and select format:</p>
+<select id="format"><option value="pretty">Pretty</option><option value="minify">Minified</option></select>
+<button onclick="visualize()">Visualize</button>
+<textarea id="input" placeholder='{ "status": 200, "data": { "id": 1, "name": "Test" } }'></textarea>
+<div id="output"></div>
+<script>
+function visualize(){
+var json=document.getElementById('input').value,fmt=document.getElementById('format').value;
+try{var obj=JSON.parse(json);var out=fmt==='pretty'?JSON.stringify(obj,null,2):JSON.stringify(obj);
+document.getElementById('output').innerText=out;
+}catch(e){document.getElementById('output').innerText='Error: '+e.message}
+}
+visualize();
+</script>
+</body>
+</html>
