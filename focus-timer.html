@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Focus Timer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.container{max-width:400px;width:100%}
+h1{text-align:center;margin-bottom:20px;font-size:1.8rem}
+input,select{width:100%;padding:12px;margin:8px 0;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#e4e4e4;font-size:1rem}
+button{width:100%;padding:12px;margin:8px 0;background:#6366f1;border:none;border-radius:6px;color:#fff;font-size:1rem;cursor:pointer;transition:background .2s}
+button:hover{background:#5558e3}
+.timer{font-size:3rem;text-align:center;margin:20px 0;font-weight:bold}
+.controls{display:flex;gap:10px}
+.info{font-size:0.9rem;color:#888;text-align:center;margin-top:15px}
+a{display:block;text-align:center;margin-top:15px;font-size:0.9rem}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Focus Timer</h1>
+<input type="number" id="minutes" placeholder="Minutes" min="1" max="120" value="25">
+<select id="mode">
+<option value="focus">Focus</option>
+<option value="short">Short Break</option>
+<option value="long">Long Break</option>
+</select>
+<div class="timer" id="display">00:00</div>
+<div class="controls">
+<button id="start">Start</button>
+<button id="pause">Pause</button>
+<button id="reset">Reset</button>
+</div>
+<div class="info" id="status">Ready</div>
+<a href="https://github.com" target="_blank">View on GitHub</a>
+</div>
+<script>
+const display = document.getElementById('display');
+const minutesInput = document.getElementById('minutes');
+const modeInput = document.getElementById('mode');
+const startBtn = document.getElementById('start');
+const pauseBtn = document.getElementById('pause');
+const resetBtn = document.getElementById('reset');
+const status = document.getElementById('status');
+
+let totalSeconds = 0;
+let isRunning = false;
+let interval = null;
+
+function updateDisplay() {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+function startTimer() {
+    const mins = parseInt(minutesInput.value) || 25;
+    totalSeconds = mins * 60;
+    updateDisplay();
+    isRunning = true;
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    interval = setInterval(() => {
+        if (totalSeconds > 0) {
+            totalSeconds--;
+            updateDisplay();
+        } else {
+            isRunning = false;
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            status.textContent = "Timer Complete!";
+        }
+    }, 1000);
+    status.textContent = "Running...";
+}
+
+function pauseTimer() {
+    isRunning = false;
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    status.textContent = "Paused";
+}
+
+function resetTimer() {
+    clearInterval(interval);
+    interval = null;
+    isRunning = false;
+    totalSeconds = 0;
+    updateDisplay();
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    status.textContent = "Ready";
+}
+
+startBtn.addEventListener('click', startTimer);
+pauseBtn.addEventListener('click', pauseTimer);
+resetBtn.addEventListener('click', resetTimer);
+</script>
+</body>
+</html>
