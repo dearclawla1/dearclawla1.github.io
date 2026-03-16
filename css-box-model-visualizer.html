@@ -29,29 +29,97 @@ button:hover{background:#4f46e5}
 <div class="controls">
 <label>Content Width: <input type="number" id="contentW" value="100" min="10" max="200"></label>
 <label>Padding: <input type="number" id="padding" value="10" min="0" max="50"></label>
-<label>Border: <input type="number" id="border" value="5" min="0" max="50"></label>
-<label>Margin: <input type="number" id="margin" value="10" min="0" max="50"></label>
-<select id="colorScheme">
-<option value="default">Default</option>
-<option value="dark">Dark</option>
-</select>
-<button id="resetBtn">Reset</button>
-<div class="stats" id="stats"></div>
+<label>Border Width: <input type="number" id="borderW" value="5" min="0" max="30"></label>
+<label>Margin: <input type="number" id="margin" value="15" min="0" max="50"></label>
+<button id="resetBtn">Reset Values</button>
+<button id="exportBtn">Export CSS</button>
 </div>
 <div class="visualizer">
-<div class="margin" id="margin"></div>
-<div class="box" id="box">
-<div class="border" id="border"></div>
-<div class="padding" id="padding"></div>
-<div class="content" id="content">Content</div>
+<div class="box">
+<div class="margin" id="marginBox"></div>
+<div class="border" id="borderBox"></div>
+<div class="padding" id="paddingBox"></div>
+<div class="content" id="contentBox">Content</div>
+</div>
+<div class="stats">
+<div>Total Width: <span id="totalWidth">130</span>px</div>
+<div>Content: <span id="contentWidth">100</span>px</div>
+<div>Padding: <span id="paddingTotal">20</span>px</div>
+<div>Border: <span id="borderTotal">10</span>px</div>
+<div>Margin: <span id="marginTotal">30</span>px</div>
 </div>
 </div>
 </div>
 <script>
-const contentW=document.getElementById('contentW'),paddingInput=document.getElementById('padding'),borderInput=document.getElementById('border'),marginInput=document.getElementById('margin'),box=document.getElementById('box'),contentEl=document.getElementById('content'),paddingEl=document.getElementById('padding'),borderEl=document.getElementById('border'),marginEl=document.getElementById('margin'),stats=document.getElementById('stats'),scheme=document.getElementById('colorScheme'),resetBtn=document.getElementById('resetBtn');
-function update(){const cw=parseInt(contentW.value)||100,pd=parseInt(paddingInput.value)||0,bd=parseInt(borderInput.value)||0,mg=parseInt(marginInput.value)||0,total=cw+pd*2+bd*2+mg*2;contentEl.style.width=`${cw}px`;paddingEl.style.width=`${pd}px`;borderEl.style.width=`${bd}px`;marginEl.style.width=`${mg}px`;stats.textContent=`Content:${cw}px | Padding:${pd*2}px | Border:${bd*2}px | Margin:${mg*2}px | Total:${total}px`;if(scheme.value==='dark'){contentEl.style.background='#333';contentEl.style.color='#e4e4e4';paddingEl.style.background='#444';borderEl.style.background='#555';marginEl.style.background='#1a1a1a'}else{contentEl.style.background='#e4e4e4';contentEl.style.color='#0a0a0a';paddingEl.style.background='#6366f1';borderEl.style.background='#4f46e5';marginEl.style.background='#1e1e1e'}}
-function resetForm(){contentW.value=100;paddingInput.value=10;borderInput.value=5;marginInput.value=10;update()}
-contentW.addEventListener('input',update);paddingInput.addEventListener('input',update);borderInput.addEventListener('input',update);marginInput.addEventListener('input',update);scheme.addEventListener('change',update);resetBtn.addEventListener('click',resetForm);update();
+(function(){
+const inputs = {
+contentW: document.getElementById('contentW'),
+padding: document.getElementById('padding'),
+borderW: document.getElementById('borderW'),
+margin: document.getElementById('margin')
+};
+const displays = {
+totalWidth: document.getElementById('totalWidth'),
+contentWidth: document.getElementById('contentWidth'),
+paddingTotal: document.getElementById('paddingTotal'),
+borderTotal: document.getElementById('borderTotal'),
+marginTotal: document.getElementById('marginTotal')
+};
+const boxes = {
+margin: document.getElementById('marginBox'),
+border: document.getElementById('borderBox'),
+padding: document.getElementById('paddingBox'),
+content: document.getElementById('contentBox')
+};
+function update(){
+const cw = parseInt(inputs.contentW.value) || 100;
+const pad = parseInt(inputs.padding.value) || 10;
+const bord = parseInt(inputs.borderW.value) || 5;
+const marg = parseInt(inputs.margin.value) || 15;
+const totalW = marg + bord + cw + pad + bord + marg;
+boxes.margin.style.width = (marg * 2 + cw + pad * 2 + bord * 2) + 'px';
+boxes.border.style.width = (cw + pad * 2) + 'px';
+boxes.padding.style.width = cw + 'px';
+boxes.content.style.width = cw + 'px';
+displays.totalWidth.textContent = totalW;
+displays.contentWidth.textContent = cw;
+displays.paddingTotal.textContent = (pad * 2).toString();
+displays.borderTotal.textContent = (bord * 2).toString();
+displays.marginTotal.textContent = (marg * 2).toString();
+}
+Object.keys(inputs).forEach(id => {
+inputs[id].addEventListener('input', update);
+});
+document.getElementById('resetBtn').addEventListener('click', () => {
+inputs.contentW.value = 100;
+inputs.padding.value = 10;
+inputs.borderW.value = 5;
+inputs.margin.value = 15;
+update();
+});
+document.getElementById('exportBtn').addEventListener('click', () => {
+const cw = parseInt(inputs.contentW.value) || 100;
+const pad = parseInt(inputs.padding.value) || 10;
+const bord = parseInt(inputs.borderW.value) || 5;
+const marg = parseInt(inputs.margin.value) || 15;
+const css = `.box{
+  width: ${cw}px;
+  padding: ${pad}px;
+  border: ${bord}px solid #4f46e5;
+  margin: ${marg}px;
+  box-sizing: border-box;
+}
+`;
+const blob = new Blob([css], {type: 'text/css'});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'box-model.css';
+a.click();
+URL.revokeObjectURL(url);
+});
+update();
+})();
 </script>
 </body>
 </html>
