@@ -2,34 +2,149 @@
 <html>
 <head>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
-input,button{margin:5px;padding:8px 12px;border:1px solid #6366f1;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
-button:hover{background:#6366f1;color:#0a0a0a}
-#status{font-size:18px;margin:15px 0;padding:10px;border-radius:4px;background:#1a1a1a}
-#output{min-height:100px;padding:10px;border-radius:4px;background:#1a1a1a;font-family:monospace}
-a{color:#6366f1}
+*{box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:'Fira Code',monospace;margin:0;padding:20px;min-height:100vh;display:flex;flex-direction:column}
+.container{max-width:900px;margin:0 auto;width:100%}
+h1{font-size:24px;margin:0 0 15px 0;display:flex;align-items:center;gap:10px}
+h1 a{color:#6366f1;text-decoration:none;font-size:16px}
+input{width:100%;padding:12px 15px;border:2px solid #6366f1;border-radius:6px;background:#1a1a1a;color:#e4e4e4;font-size:14px;margin-bottom:10px;outline:none;transition:border-color 0.2s}
+input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.2)}
+button{padding:12px 20px;border:2px solid #6366f1;border-radius:6px;background:#6366f1;color:#0a0a0a;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;margin-right:10px}
+button:hover{background:#5558e6;transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+#status{font-size:16px;margin:15px 0;padding:12px;border-radius:6px;background:#1a1a1a;border-left:4px solid #6366f1;min-height:46px;display:flex;align-items:center;gap:10px}
+#output{min-height:150px;padding:15px;border-radius:6px;background:#1a1a1a;font-family:inherit;font-size:14px;line-height:1.6;margin-top:10px;white-space:pre-wrap;word-break:break-word;overflow-y:auto;max-height:400px}
+#output .command{color:#6366f1;font-weight:600;margin-top:10px}
+#output .output-text{color:#e4e4e4;margin-left:10px}
+#output .error{color:#ef4444}
+#output .info{color:#60a5fa}
+#output .success{color:#22c55e}
+.copy-btn{padding:8px 12px;border:1px solid #6366f1;border-radius:4px;background:#1a1a1a;color:#e4e4e4;font-size:12px;cursor:pointer;transition:all 0.2s}
+.copy-btn:hover{background:#6366f1;color:#0a0a0a}
+.copy-btn:active{transform:scale(0.98)}
+.history{margin-top:15px;padding-top:15px;border-top:1px solid #333;font-size:12px;color:#888}
+.history-item{padding:8px 0;border-bottom:1px solid #333}
+.history-item:last-child{border-bottom:none}
+.history-item span{color:#6366f1}
+.history-item .time{color:#666;margin-left:10px}
 </style>
 </head>
 <body>
-<h1>CLI Status Monitor</h1>
+<div class="container">
+<h1>
+CLI Status Monitor
 <a href="index.html" style="color:#6366f1">Back to Home</a>
-<br><br>
-<input type="text" id="cmd" placeholder="Enter command (e.g., dir, ls, cat file.txt)">
+</h1>
+<input type="text" id="cmd" placeholder="Enter command (e.g., dir, ls, cat file.txt, help)" autocomplete="off">
 <button onclick="run()">Execute</button>
+<button class="copy-btn" onclick="copyOutput()">Copy Output</button>
 <div id="status">Ready</div>
 <div id="output"></div>
+<div class="history" id="history"></div>
+</div>
 <script>
+const cmdInput=document.getElementById('cmd');
+const statusEl=document.getElementById('status');
+const outputEl=document.getElementById('output');
+const historyEl=document.getElementById('history');
+
+// Simulated command responses
+const commandResponses={
+dir:['Directory listing:','C:\\Users\\dearl\\Documents','.  ..  notes.txt  project.zip','.  4 items'],
+ls:['Directory listing:','.  ..  assets  config  src','.  4 items'],
+cat:['File content:','This is a simulated file preview','.  [Line 1]','.  [Line 2]','.  [Line 3]'],
+help:['Available commands:','.  dir - List directory contents','.  ls - Alternative to dir','.  cat - View file contents','.  clear - Clear terminal','.  help - Show this help'],
+clear:[],
+echo:['Output:','Hello from CLI Status Monitor!'],
+date:['Current time:',new Date().toLocaleString()],
+pwd:['Current directory:','C:\\Users\\dearl\\Documents'],
+whoami:['User:','dearl'],
+hostname:['Machine:','DEARL-PC'],
+ls:['Directory listing:','.  ..  assets  config  src','.  4 items'],
+help:['Available commands:','.  dir - List directory contents','.  ls - Alternative to dir','.  cat - View file contents','.  clear - Clear terminal','.  help - Show this help'],
+clear:[],
+echo:['Output:','Hello from CLI Status Monitor!'],
+date:['Current time:',new Date().toLocaleString()],
+pwd:['Current directory:','C:\\Users\\dearl\\Documents'],
+whoami:['User:','dearl'],
+hostname:['Machine:','DEARL-PC']
+};
+
 function run(){
-const cmd=document.getElementById('cmd').value;
-const status=document.getElementById('status');
-const output=document.getElementById('output');
-if(!cmd){status.textContent='Error: No command entered';return}
-status.textContent='Running: '+cmd;
-output.textContent='Output: '+cmd.toUpperCase();
-output.textContent+='[Simulated CLI output for '+cmd+']';
-output.textContent+='[This is a browser preview of CLI activity]';
-output.textContent+='[Type commands to see simulated status]';
+const cmd=cmdInput.value.trim().toLowerCase();
+if(!cmd){
+statusEl.textContent='Error: No command entered';
+statusEl.className='error';
+return}
+statusEl.textContent='Running: '+cmd;
+statusEl.className='info';
+
+// Add command to output
+const commandLine=document.createElement('div');
+commandLine.className='command';
+commandLine.textContent='> '+cmd;
+outputEl.appendChild(commandLine);
+
+// Simulate processing
+setTimeout(()=>{
+const response=commandResponses[cmd]||['Command not found: '+cmd,'Type \'help\' for available commands'];
+const outputLine=document.createElement('div');
+outputLine.className='output-text';
+response.forEach(line=>{
+const text=document.createTextNode(line);
+outputLine.appendChild(text);
+outputLine.appendChild(document.createTextNode('\n'));
+});
+outputEl.appendChild(outputLine);
+
+// Update status
+statusEl.textContent='Completed: '+cmd;
+statusEl.className='success';
+
+// Add to history
+const time=new Date();
+const timeStr=time.toLocaleTimeString();
+const historyItem=document.createElement('div');
+historyItem.className='history-item';
+historyItem.innerHTML='<span>'+cmd+'</span><span class="time">('+timeStr+')</span>';
+historyEl.appendChild(historyItem);
+
+// Scroll to bottom
+outputEl.scrollTop=outputEl.scrollHeight;
+
+// Clear input
+cmdInput.value='';
+},500);
 }
+
+function copyOutput(){
+const outputText=outputEl.innerText;
+navigator.clipboard.writeText(outputText).then(()=>{
+const btn=document.querySelector('.copy-btn');
+btn.textContent='Copied!';
+setTimeout(()=>{
+btn.textContent='Copy Output';
+},1500);
+}).catch(err=>{
+statusEl.textContent='Error copying to clipboard';
+statusEl.className='error';
+});
+}
+
+// Keyboard shortcut
+cmdInput.addEventListener('keypress',e=>{
+if(e.key==='Enter'){
+run();
+}
+});
+
+// Initialize with welcome message
+setTimeout(()=>{
+const welcome=document.createElement('div');
+welcome.className='output-text';
+welcome.innerHTML='Welcome to CLI Status Monitor<br>Type commands to see simulated output<br>Use <span style="color:#6366f1">Enter</span> or <span style="color:#6366f1">Execute</span> button to run commands';
+outputEl.appendChild(welcome);
+},100);
 </script>
 </body>
 </html>
