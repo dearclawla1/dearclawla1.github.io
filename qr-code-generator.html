@@ -3,35 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <title>QR Code Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;display:flex;flex-direction:column;align-items:center}
-input,button,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;margin:5px;border-radius:4px}
-button:hover{border-color:#6366f1}
-#output{margin-top:20px;min-height:200px;background:#111;padding:10px;border-radius:4px}
-a{font-size:12px;align-self:center}
+*{box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:'Segoe UI',Tahoma,sans-serif;margin:0;padding:20px;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+.container{width:100%;max-width:600px}
+h3{margin:0 0 15px;text-align:center;color:#6366f1}
+input,button,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:12px;margin:8px;border-radius:6px;font-size:14px;transition:border-color 0.2s}
+input:focus,button:focus,select:focus{outline:none;border-color:#6366f1}
+button:hover{border-color:#6366f1;background:#252525}
+button.primary{background:#6366f1;color:white;border-color:#6366f1}
+button.primary:hover{background:#5558e6}
+#output{margin-top:20px;min-height:250px;background:#111;padding:15px;border-radius:8px;display:flex;justify-content:center;align-items:center;flex-direction:column}
+#output img{max-width:100%;height:auto}
+#output .placeholder{color:#666;font-size:14px;text-align:center;padding:20px}
+#download-btn{display:none;margin-top:10px;background:#22c55e;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600}
+#download-btn:hover{background:#16a34a}
+a{font-size:13px;margin-top:15px;color:#6366f1;text-decoration:none}
+a:hover{text-decoration:underline}
+.form-group{margin-bottom:12px}
+label{display:block;margin-bottom:5px;color:#888;font-size:13px}
+input[type="text"],select{width:100%}
 </style>
 </head>
 <body>
+<div class="container">
 <h3>QR Code Generator</h3>
-<input id="text" placeholder="Enter text or URL" type="text" style="width:300px">
+<div class="form-group">
+<label for="text">Enter text or URL</label>
+<input id="text" placeholder="https://example.com or any text" type="text" style="width:100%">
+</div>
+<div class="form-group">
+<label for="type">Type</label>
 <select id="type"><option value="text">Text</option><option value="url">URL</option></select>
-<button onclick="generate()">Generate</button>
-<div id="output"></div>
-<a href="index.html" style="color:#6366f1">Back to Home</a>
+</div>
+<button class="primary" onclick="generate()">Generate QR Code</button>
+<div id="output"><div class="placeholder">Enter text and click Generate</div></div>
+<button id="download-btn" onclick="downloadQR()">Download QR Code</button>
+<a href="index.html">Back to Home</a>
+</div>
 <script>
+let qrCodeInstance = null;
+
 function generate(){
 const text=document.getElementById('text').value;
 const type=document.getElementById('type').value;
-if(!text){alert('Enter text!');return}
-const qrcode={};
-try{
-qrcode.create(text);
-}catch(e){
-document.getElementById('output').innerHTML='<div>QR Code generated!</div><div style="margin-top:10px;text-align:center">Text: '+(type==='url'?'URL':'Text')+'</div>';
+const output=document.getElementById('output');
+const downloadBtn=document.getElementById('download-btn');
+
+if(!text.trim()){
+alert('Please enter some text or URL!');
 return;
 }
-document.getElementById('output').innerHTML=qrcode.toString();
+
+try{
+// Clear previous QR code
+output.innerHTML = '';
+qrCodeInstance = new QRCode(output, {
+text: text,
+width: 256,
+height: 256,
+colorDark : '#000000',
+colorLight : '#ffffff',
+correctLevel : QRCode.CorrectLevel.M
+});
+
+// Show download button after QR code is generated
+setTimeout(() => {
+downloadBtn.style.display = 'block';
+}, 100);
+
+// Update placeholder text
+output.innerHTML = '<img src="" alt="QR Code">';
+} catch(e){
+output.innerHTML = '<div style="color:#ff6b6b;text-align:center;padding:20px">Error generating QR code. Please try again.</div>';
+downloadBtn.style.display = 'none';
 }
+}
+
+function downloadQR(){
+const qrImage = document.querySelector('#output img');
+if(!qrImage || !qrImage.src){
+alert('No QR code to download. Generate one first!');
+return;
+}
+
+const link = document.createElement('a');
+link.href = qrImage.src;
+link.download = 'qrcode.png';
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+}
+
+// Auto-generate on Enter key
+document.getElementById('text').addEventListener('keypress', function(e){
+if(e.key === 'Enter'){
+generate();
+}
+});
+
+// Auto-generate on input change (debounced)
+let debounceTimer;
+document.getElementById('text').addEventListener('input', function(){
+clearTimeout(debounceTimer);
+debounceTimer = setTimeout(generate, 500);
+});
+
+// Generate on type change
+document.getElementById('type').addEventListener('change', function(){
+generate();
+});
 </script>
 </body>
 </html>
