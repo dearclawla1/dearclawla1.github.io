@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>JSON Path Visualizer</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
+input,button,select{margin:5px 0;font-family:inherit;}
+textarea{width:100%;height:150px;font-family:inherit;}
+#output{background:#111;padding:10px;margin-top:10px;min-height:100px;}
+path{color:#6366f1;font-weight:bold;}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h2>JSON Path Visualizer</h2>
+<input type="text" id="jsonInput" placeholder="Enter JSON">
+<button onclick="parseJSON()">Parse</button>
+<input type="text" id="pathInput" placeholder="Enter path (e.g. users[0].name)">
+<button onclick="evaluatePath()">Evaluate</button>
+<textarea id="output"></textarea>
+<script>
+function parseJSON(){const e=document.getElementById("jsonInput").value;try{JSON.parse(e)&&document.getElementById("output").value="Parsed: "+JSON.stringify(JSON.parse(e),null,2)}catch(e){document.getElementById("output").value="Error: "+e.message}}
+function evaluatePath(){const e=document.getElementById("jsonInput").value,n=document.getElementById("pathInput").value;try{const o=JSON.parse(e),r=n.split(".");let t=o,a=0;for(let i=0;i<r.length;i++)if(r[i].startsWith("[")){const s=r[i].substring(1).split("]");if(s[0]!=""&&a<s[0]){const n=+s[0];t=t[s[0]]}}else t=t[r[i]],a++;t&&(document.getElementById("output").value="Result: "+JSON.stringify(t)):(document.getElementById("output").value="Error: Path not found"))}catch(e){document.getElementById("output").value="Parse Error: "+e.message}}
+</script>
+</body>
+</html>
