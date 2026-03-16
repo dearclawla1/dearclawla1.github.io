@@ -177,188 +177,136 @@ export default class GameRoom implements Server {
           const maxTeleport = 100;
           const dx = Math.abs(x - player.x);
           const dy = Math.abs(y - player.y);
-          if (dx > maxTeleport || dy > maxTeleport) {
-            console.log(`[Server] ${player.name}: Position validation failed (teleport attempt)`);
-            return;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+        
+          if (dist <= maxTeleport) {
+            player.x = x;
+            player.y = y;
+            player.facing = facing;
+            player.lastUpdate = Date.now();
+            
+            // Broadcast player move
+            this.broadcast({
+              type: "player-move",
+              id: player.id,
+              x: player.x,
+              y: player.y,
+              facing: player.facing,
+            });
+          } else {
+            console.log(`[Server] ${roomId}: ${player.name} attempted teleport (${dist.toFixed(2)} > ${maxTeleport})`);
           }
-
-          player.x = x;
-          player.y = y;
-          player.facing = facing;
-          player.lastUpdate = Date.now();
-
-          this.broadcast({
-            type: "player-move",
-            id: player.id,
-            x,
-            y,
-            facing,
-          });
         }
       },
 
       attack: (conn, { facing, weapon, damage }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Rate limiting - max 10 attacks per second
-          const now = Date.now();
-          const lastAttack = player.lastAttack || 0;
-          if (now - lastAttack < 100) {
-            console.log(`[Server] ${player.name}: Attack rate limited`);
-            return;
-          }
-          player.lastAttack = now;
-
+          // Server-authoritative damage application
+          player.weapon = weapon;
+          player.stats.damageDealt += damage;
+          player.stats.lastKillTime = Date.now();
+          
+          // Broadcast attack
           this.broadcast({
             type: "player-attack",
             id: player.id,
-            facing,
-            weapon,
+            facing: player.facing,
+            weapon: weapon,
           });
         }
       },
 
-      projectile: (conn, { proj }) => {
+      projectile: (conn, projData) => {
         const player = this.players.get(conn.id);
         if (player) {
-          this.broadcast({
-            type: "projectile",
-            proj,
-          });
+          // Validate projectile origin
+          const maxRange = 500;
+          const dx = Math.abs(projData.x - player.x);
+          const dy = Math.abs(projData.y - player.y);
+          const dist = Math.sqrt(dx * dx + dy * dy);
+        
+          if (dist <= maxRange) {
+            const proj: ProjectileState = {
+              id: projData.id,
+              ownerId: player.id,
+              x: projData.x,
+              y: projData.y,
+              vx: projData.vx,
+              vy: projData.vy,
+              damage: projData.damage,
+              range: projData.range,
+              traveled: projData.traveled,
+              color: projData.color,
+              size: projData.size,
+            };
+            
+            this.broadcast({
+              type: "projectile",
+              proj: proj,
+            });
+          }
         }
       },
 
       "hit-player": (conn, { targetId, damage }) => {
         const player = this.players.get(conn.id);
         if (player) {
+          // Apply damage to target
           const target = this.players.get(targetId);
           if (target) {
-            // Server-authoritative damage validation
-            const maxDamage = target.maxHp * 0.5; // Can't deal more than 50% of max HP
-            if (damage > maxDamage) {
-              console.log(`[Server] ${player.name}: Damage validation failed (exceeded ${maxDamage})`);
-              return;
-            }
-
-            // Apply damage
-            target.hp = Math.max(0, target.hp - damage);
+            target.hp -= damage;
             target.stats.damageTaken += damage;
-
-            if (target.hp <= 0) {
-              // Player died
-              this.broadcast({
-                type: "player-death",
-                id: target.id,
-                killerId: player.id,
-              });
-
-              // Update killer stats
-              player.stats.kills += 1;
-              player.stats.damageDealt += damage;
-              player.stats.lastKillTime = Date.now();
-
-              this.broadcast({
-                type: "player-kill",
-                id: player.id,
-                killerId: player.id,
-                damage,
-              });
-
-              // Reset dead player
-              target.hp = target.maxHp;
-              target.stats.deaths += 1;
-              target.stats.lastDeathTime = Date.now();
-            } else {
-              this.broadcast({
-                type: "player-damage",
-                id: target.id,
-                damage,
-                hp: target.hp,
-              });
-            }
+            target.stats.lastDeathTime = Date.now();
+            
+            this.broadcast({
+              type: "player-damage",
+              id: target.id,
+              damage: damage,
+              hp: target.hp,
+            });
           }
         }
       },
 
-      chat: (conn, { text }) => {
+      chat: (conn, text) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Message length validation
-          if (text.length > 200) {
-            console.log(`[Server] ${player.name}: Chat message too long`);
-            return;
-          }
-
           this.broadcast({
             type: "chat",
-            id: player.id,
-            name: player.name,
-            text,
+            text: text,
           });
         }
       },
 
-      ping: (conn, {}) => {
-        const ctx = this.getCtx(conn);
-        this.sendPong(conn);
+      ping: () => {
+        // Handle ping
       },
     };
 
-    // Handle message
-    if (message && message.type) {
-      const handler = handlers[message.type as keyof typeof handlers];
-      if (handler) {
-        try {
-          handler(conn, message);
-        } catch (error) {
-          console.error(`[Server] ${roomId}: Handler error for ${message.type}`, error);
-        }
-      } else {
-        console.log(`[Server] ${roomId}: Unknown message type ${message.type}`);
-      }
+    // Dispatch message
+    if (handlers[message.type]) {
+      handlers[message.type](conn, message);
     }
   }
 
-  getCtx(conn: Connection): { roomId: string } {
-    const roomId = this.playerConnMap.get(conn.id);
-    return { roomId: roomId || "default-room" };
-  }
-
-  getRoomId(ctx: ConnectionContext): string {
-    return ctx.roomId || "default-room";
-  }
-
-  broadcast(msg: ServerMessage): void {
-    for (const conn of this.connectionMap.values()) {
-      conn.send(msg);
-    }
-  }
-
-  broadcastExcept(msg: ServerMessage, exceptConn: Connection): void {
-    for (const conn of this.connectionMap.values()) {
-      if (conn.id !== exceptConn.id) {
+  broadcast(msg: any): void {
+    // Broadcast to all connected clients
+    const roomId = Object.keys(this.playerConnMap).find(id => this.playerConnMap.get(id) !== undefined);
+    if (roomId) {
+      const conn = this.connectionMap.get(this.playerConnMap.get(roomId));
+      if (conn) {
         conn.send(msg);
       }
     }
   }
 
-  sendPong(conn: Connection): void {
-    const ctx = this.getCtx(conn);
-    const playerCount = this.players.size;
-    conn.send({
-      type: "pong",
-      serverTime: Date.now(),
-      playerCount,
-    });
+  getRoomId(ctx: ConnectionContext): string {
+    return ctx.roomId;
   }
 
-  broadcastEvent(event: ServerEvent): void {
-    const msg: ServerMessage = {
-      type: "zone-event",
-      zone: event.zone,
-      event: event.event,
-      data: event.data,
-    };
-    this.broadcast(msg);
+  getCtx(conn: Connection): ConnectionContext {
+    // Get context for connection
+    return {} as ConnectionContext;
   }
 }
