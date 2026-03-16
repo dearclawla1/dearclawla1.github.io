@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Clipboard History Manager</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
+input,button,select{margin:5px;padding:8px;border-radius:4px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;}
+button{background:#6366f1;color:#fff;border:none;cursor:pointer;}
+button:hover{background:#5558e6;}
+#history{background:#111;border:1px solid #333;margin-top:10px;padding:10px;min-height:100px;}
+#clipboard{background:#111;border:1px solid #333;margin-top:10px;padding:10px;min-height:100px;}
+a{color:#6366f1;}
+</style>
+</head>
+<body>
+<h1>Clipboard History Manager</h1>
+<div>
+<label>Enter text:</label><input id="text" type="text" placeholder="Type something...">
+<button onclick="addHistory()">Add to History</button>
+<button onclick="clearHistory()">Clear History</button>
+</div>
+<div id="history">History items will appear here...</div>
+<div>
+<label>Current Clipboard:</label><input id="clipboard" readonly placeholder="Paste to view...">
+<button onclick="clearClipboard()">Clear Clipboard</button>
+</div>
+<div id="clipboard">Clipboard items will appear here...</div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<script>
+let history=[];clipboardItems=[];
+function addHistory(){let t=document.getElementById('text').value;if(t){history.push(t);document.getElementById('history').innerHTML=history.map(i=>`<div><b>${i}</b></div>`).join('');document.getElementById('text').value='';}}
+function clearHistory(){history=[];document.getElementById('history').innerHTML='History cleared.';}
+function clearClipboard(){clipboardItems=[];document.getElementById('clipboard').innerHTML='Clipboard cleared.';}
+document.getElementById('clipboard').value=localStorage.getItem('clip')||'';
+if(localStorage.getItem('clipHistory')){clipboardItems=JSON.parse(localStorage.getItem('clipHistory'));document.getElementById('clipboard').innerHTML=clipboardItems.map(i=>`<div><b>${i}</b></div>`).join('');}
+window.onpaste=(e)=>{let t=e.clipboardData.getData('text');if(t){clipboardItems.push(t);localStorage.setItem('clipHistory',JSON.stringify(clipboardItems));document.getElementById('clipboard').innerHTML=clipboardItems.map(i=>`<div><b>${i}</b></div>`).join('');}}
+</script>
+</body>
+</html>
