@@ -4,53 +4,221 @@
 <meta charset="UTF-8">
 <title>Font Previewer</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;margin:0;padding:20px}
-.container{max-width:800px;margin:0 auto}
-h1{color:#6366f1;margin-bottom:20px}
-input,select,button{margin:5px 0;padding:8px 12px;border-radius:4px;border:none;font-size:14px}
-select{background:#1a1a1a;color:#e4e4e4;border:1px solid #333}
-button{background:#6366f1;color:#fff;cursor:pointer}
+*{box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui,-apple-system,sans-serif;margin:0;padding:20px;min-height:100vh}
+.container{max-width:900px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+h1{color:#6366f1;margin:0;font-size:28px}
+nav a{color:#6366f1;text-decoration:none;font-size:14px}
+nav a:hover{text-decoration:underline}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:15px}
+.control-group{display:flex;flex-direction:column;gap:5px}
+label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.5px}
+select,input{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px 12px;border-radius:6px;font-size:14px;transition:border-color 0.2s}
+select:focus,input:focus{outline:none;border-color:#6366f1}
+button{background:#6366f1;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:14px;cursor:pointer;transition:background 0.2s}
 button:hover{background:#5558e6}
-.preview{background:#1a1a1a;padding:15px;border-radius:8px;margin-top:15px;min-height:100px}
-label{display:block;margin:5px 0 2px}
+button:active{transform:scale(0.98)}
+.preview{background:#1a1a1a;padding:25px;border-radius:10px;margin-bottom:15px;min-height:150px;font-size:24px;line-height:1.4;word-wrap:break-word;position:relative;border:1px solid #333}
+.preview.large{font-size:48px}
+.preview.xlarge{font-size:64px}
+.preview.tiny{font-size:16px}
+.copy-btn{position:absolute;top:10px;right:10px;background:#333;color:#e4e4e4;padding:6px 12px;border-radius:4px;font-size:12px;cursor:pointer;border:1px solid #444}
+.copy-btn:hover{background:#444}
+.info{font-size:12px;color:#666;margin-top:10px;padding:10px;background:#111;border-radius:6px}
+.info span{color:#888}
 </style>
 </head>
 <body>
 <div class="container">
-<a href="index.html" style="color:#6366f1">Back to Home</a>
+<header>
 <h1>Font Previewer</h1>
-<label>Select Font</label>
-<select id="fontSelect"><option value="Arial">Arial</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Trebuchet MS">Trebuchet MS</option><option value="Impact">Impact</option><option value="Comic Sans MS">Comic Sans MS</option><option value="Palatino Linotype">Palatino Linotype</option><option value="Bookman Devil">Bookman Devil</option><option value="Lucida Console">Lucida Console</option><option value="Lucida Sans Unicode">Lucida Sans Unicode</option><option value="Monotype Corsiva">Monotype Corsiva</option><option value="Franklin Gothic Medium">Franklin Gothic Medium</option><option value="Arial Black">Arial Black</option><option value="Arial Narrow">Arial Narrow</option><option value="Garamond">Garamond</option><option value="Brush Script MT">Brush Script MT</option><option value="Papyrus">Papyrus</option><option value="Copperplate">Copperplate</option><option value="Didot">Didot</option><option value="Futura">Futura</option><option value="Helvetica">Helvetica</option><option value="Lucida Bright">Lucida Bright</option><option value="Lucida Calligraphy">Lucida Calligraphy</option><option value="Lucida Fax">Lucida Fax</option><option value="MS Sans Serif">MS Sans Serif</option><option value="MS Serif">MS Serif</option><option value="Palatino">Palatino</option><option value="Tahoma">Tahoma</option><option value="Times">Times</option><option value="Trebuchet">Trebuchet</option><option value="Verdana">Verdana</option></select>
-<label>Sample Text</label>
-<input type="text" id="sampleText" value="The quick brown fox jumps over the lazy dog.">
-<label>Size (px)</label>
-<input type="number" id="fontSize" value="24" min="8" max="120">
-<label>Weight</label>
-<select id="fontWeight"><option value="normal">Normal</option><option value="bold">Bold</option><option value="100">100</option><option value="200">200</option><option value="300">300</option><option value="400">400</option><option value="500">500</option><option value="600">600</option><option value="700">700</option><option value="800">800</option><option value="900">900</option></select>
-<label>Style</label>
-<select id="fontStyle"><option value="normal">Normal</option><option value="italic">Italic</option><option value="oblique">Oblique</option></select>
-<label>Text Align</label>
-<select id="textAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option><option value="justify">Justify</option></select>
-<button onclick="updatePreview()">Update Preview</button>
-<div class="preview" id="preview"></div>
+<nav><a href="index.html">Back to Home</a></nav>
+</header>
+
+<div class="controls">
+<div class="control-group">
+<label>Font Family</label>
+<select id="fontSelect">
+<option value="Arial">Arial</option>
+<option value="Times New Roman">Times New Roman</option>
+<option value="Courier New">Courier New</option>
+<option value="Georgia">Georgia</option>
+<option value="Verdana">Verdana</option>
+<option value="Trebuchet MS">Trebuchet MS</option>
+<option value="Impact">Impact</option>
+<option value="Comic Sans MS">Comic Sans MS</option>
+<option value="Palatino Linotype">Palatino Linotype</option>
+<option value="Bookman Devil">Bookman Devil</option>
+<option value="Lucida Console">Lucida Console</option>
+<option value="Lucida Sans Unicode">Lucida Sans Unicode</option>
+<option value="Monotype Corsiva">Monotype Corsiva</option>
+<option value="Franklin Gothic Medium">Franklin Gothic Medium</option>
+<option value="Garamond">Garamond</option>
+<option value="Helvetica">Helvetica</option>
+<option value="Arial Black">Arial Black</option>
+<option value="Brush Script MT">Brush Script MT</option>
+<option value="Copperplate Gothic Light">Copperplate Gothic Light</option>
+<option value="Futura">Futura</option>
+</select>
 </div>
+
+<div class="control-group">
+<label>Font Size</label>
+<select id="sizeSelect">
+<option value="normal">Normal</option>
+<option value="tiny">Tiny</option>
+<option value="large">Large</option>
+<option value="xlarge">X-Large</option>
+</select>
+</div>
+
+<div class="control-group">
+<label>Text Weight</label>
+<select id="weightSelect">
+<option value="normal">Normal</option>
+<option value="bold">Bold</option>
+<option value="100">100 (Thin)</option>
+<option value="200">200 (Extra Light)</option>
+<option value="300">300 (Light)</option>
+<option value="400">400 (Regular)</option>
+<option value="500">500 (Medium)</option>
+<option value="600">600 (Semi Bold)</option>
+<option value="700">700 (Bold)</option>
+<option value="800">800 (Extra Bold)</option>
+<option value="900">900 (Black)</option>
+</select>
+</div>
+
+<div class="control-group">
+<label>Text Style</label>
+<select id="styleSelect">
+<option value="normal">Normal</option>
+<option value="italic">Italic</option>
+<option value="oblique">Oblique</option>
+</select>
+</div>
+
+<div class="control-group">
+<label>Text Transform</label>
+<select id="transformSelect">
+<option value="none">None</option>
+<option value="uppercase">Uppercase</option>
+<option value="lowercase">Lowercase</option>
+<option value="capitalize">Capitalize</option>
+</select>
+</div>
+</div>
+
+<div class="preview" id="preview">
+<span class="copy-btn" id="copyBtn">Copy</span>
+<span id="previewText">The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump!</span>
+</div>
+
+<div class="info">
+<span>Font:</span><span id="fontInfo">Arial</span> | 
+<span>Size:</span><span id="sizeInfo">Normal</span> | 
+<span>Weight:</span><span id="weightInfo">Normal</span> | 
+<span>Style:</span><span id="styleInfo">Normal</span> | 
+<span>Transform:</span><span id="transformInfo">None</span>
+</div>
+
 <script>
-function updatePreview(){
-const font=document.getElementById('fontSelect').value;
-const text=document.getElementById('sampleText').value;
-const size=document.getElementById('fontSize').value;
-const weight=document.getElementById('fontWeight').value;
-const style=document.getElementById('fontStyle').value;
-const align=document.getElementById('textAlign').value;
-const preview=document.getElementById('preview');
-preview.style.fontFamily=font;
-preview.style.fontSize=size+'px';
-preview.style.fontWeight=weight;
-preview.style.fontStyle=style;
-preview.style.textAlign=align;
-preview.textContent=text;
+const preview = document.getElementById('preview');
+const fontSelect = document.getElementById('fontSelect');
+const sizeSelect = document.getElementById('sizeSelect');
+const weightSelect = document.getElementById('weightSelect');
+const styleSelect = document.getElementById('styleSelect');
+const transformSelect = document.getElementById('transformSelect');
+const previewText = document.getElementById('previewText');
+const fontInfo = document.getElementById('fontInfo');
+const sizeInfo = document.getElementById('sizeInfo');
+const weightInfo = document.getElementById('weightInfo');
+const styleInfo = document.getElementById('styleInfo');
+const transformInfo = document.getElementById('transformInfo');
+const copyBtn = document.getElementById('copyBtn');
+
+const previewFonts = {
+'Arial': 'Arial',
+'Times New Roman': 'Times New Roman',
+'Courier New': 'Courier New',
+'Georgia': 'Georgia',
+'Verdana': 'Verdana',
+'Trebuchet MS': 'Trebuchet, sans-serif',
+'Impact': 'Impact, Haettenschweiler',
+'Comic Sans MS': 'Comic Sans MS',
+'Palatino Linotype': 'Palatino Linotype, Book Antiqua',
+'Bookman Devil': 'Bookman Old Style',
+'Lucida Console': 'Lucida Console, Monaco, monospace',
+'Lucida Sans Unicode': 'Lucida Sans Unicode',
+'Monotype Corsiva': 'Corsiva',
+'Franklin Gothic Medium': 'Franklin Gothic Medium, Franklin Gothic',
+'Garamond': 'Garamond, Baskerville',
+'Helvetica': 'Helvetica, Arial, sans-serif',
+'Arial Black': 'Arial Black, Impact, sans-serif',
+'Brush Script MT': 'Brush Script MT, cursive',
+'Copperplate Gothic Light': 'Copperplate Gothic Light, Copperplate',
+'Futura': 'Futura, Arial, sans-serif'
+};
+
+function updatePreview() {
+const font = previewFonts[fontSelect.value] || fontSelect.value;
+const size = sizeSelect.value;
+const weight = weightSelect.value;
+const style = styleSelect.value;
+const transform = transformSelect.value;
+
+preview.className = 'preview';
+if (size === 'tiny') preview.classList.add('tiny');
+if (size === 'large') preview.classList.add('large');
+if (size === 'xlarge') preview.classList.add('xlarge');
+
+preview.style.fontFamily = font;
+preview.style.fontWeight = weight;
+preview.style.fontStyle = style;
+preview.style.textTransform = transform;
+
+fontInfo.textContent = font;
+sizeInfo.textContent = size.charAt(0).toUpperCase() + size.slice(1);
+weightInfo.textContent = weight === 'normal' ? 'Normal' : weight;
+styleInfo.textContent = style === 'normal' ? 'Normal' : style.charAt(0).toUpperCase() + style.slice(1);
+transformInfo.textContent = transform === 'none' ? 'None' : transform.charAt(0).toUpperCase() + transform.slice(1);
 }
+
+function copyToClipboard() {
+const text = previewText.textContent;
+navigator.clipboard.writeText(text).then(() => {
+const original = copyBtn.textContent;
+copyBtn.textContent = 'Copied!';
+copyBtn.style.background = '#4ade80';
+copyBtn.style.color = '#064d79';
+setTimeout(() => {
+copyBtn.textContent = original;
+copyBtn.style.background = '';
+copyBtn.style.color = '';
+}, 1500);
+}).catch(err => {
+console.error('Copy failed:', err);
+});
+}
+
+fontSelect.addEventListener('change', updatePreview);
+sizeSelect.addEventListener('change', updatePreview);
+weightSelect.addEventListener('change', updatePreview);
+styleSelect.addEventListener('change', updatePreview);
+transformSelect.addEventListener('change', updatePreview);
+copyBtn.addEventListener('click', copyToClipboard);
+
+// Keyboard shortcut: Ctrl/Cmd + C to copy
+document.addEventListener('keydown', (e) => {
+if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+e.preventDefault();
+copyToClipboard();
+}
+});
+
 updatePreview();
 </script>
+</div>
 </body>
 </html>
