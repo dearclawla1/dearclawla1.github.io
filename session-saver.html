@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Session Saver</title>
+<style>
+:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);padding:2rem;display:flex;flex-direction:column;align-items:center;gap:1rem}
+a{color:var(--primary)}
+h1{font-size:1.5rem;margin-bottom:1rem}
+.container{max-width:500px;width:100%}
+input,select,button{width:100%;padding:0.75rem;font-size:1rem;margin-bottom:0.75rem;border-radius:6px;border:1px solid #333;background:#1a1a1a;color:var(--text)}
+input:focus,select:focus{outline:2px solid var(--primary);border-color:transparent}
+button{cursor:pointer;font-weight:600;border:none}
+button:hover{background:#2a2a2a}
+#output{background:#1a1a1a;padding:1rem;border-radius:6px;border:1px solid #333;min-height:100px;font-family:monospace;font-size:0.85rem;white-space:pre-wrap;overflow:auto}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h1>Session Saver</h1>
+<div class="container">
+<label>Session Name:</label>
+<input type="text" id="sessionName" placeholder="my-session">
+<label>Store Type:</label>
+<select id="storeType">
+<option value="local">Local Storage</option>
+<option value="session">Session Storage</option>
+</select>
+<button id="saveBtn">Save Session</button>
+<button id="clearBtn">Clear Session</button>
+<div id="output">Session data will appear here...</div>
+</div>
+<script>
+const name=document.getElementById('sessionName');
+const type=document.getElementById('storeType');
+const output=document.getElementById('output');
+const saveBtn=document.getElementById('saveBtn');
+const clearBtn=document.getElementById('clearBtn');
+const getData=()=>({name:name.value,type:type.value,timestamp:Date.now(),data:{}});
+saveBtn.onclick=()=>{const s=getData();if(!name.value){output.textContent='Error: Enter a session name\n'}else{try{const store=type.value==='local'?localStorage:sessionStorage;store.setItem(s.name,s);output.textContent=`✓ Saved to ${type.value.toUpperCase()} storage\nSession: ${s.name}\nTimestamp: ${new Date(s.timestamp).toLocaleString()}\n\nClick "Clear Session" to remove.`}catch(e){output.textContent='Error: '+e.message}}};
+clearBtn.onclick=()=>{try{const store=type.value==='local'?localStorage:sessionStorage;store.removeItem(name.value);output.textContent='✓ Session cleared from storage.'}catch(e){output.textContent='Error: '+e.message}}};
+</script>
+</body>
+</html>
