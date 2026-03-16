@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Semantic Structure</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+h1{color:#6366f1;margin-bottom:20px}
+input,button{margin:5px 5px 5px 0;padding:8px 12px;border-radius:4px;border:1px solid #333}
+button{background:#6366f1;color:#fff;cursor:pointer}
+button:hover{background:#5558ff}
+#output{background:#111;padding:15px;border-radius:4px;margin-top:15px;min-height:100px;white-space:pre-wrap;font-family:monospace}
+a{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<h1>Semantic Structure</h1>
+<p>Visualize logical hierarchy and content flow of web pages</p>
+<input type="text" id="url" placeholder="Enter URL or HTML content" style="width:400px">
+<button onclick="analyze()">Analyze</button>
+<div id="output">Enter content above and click Analyze to see semantic structure...</div>
+<a href="index.html">Back to Home</a>
+<script>
+function analyze(){
+const url=document.getElementById('url').value;
+const out=document.getElementById('output');
+if(!url){out.textContent='Please enter content...';return}
+const html=/<[^>]+>/.test(url)?url:url;
+const tags=html.match(/<([a-z]+)/gi)||[];
+const hierarchy=tags.map(t=>{const tag=t.match(/<([a-z]+)/i)[1];return tag.toUpperCase();}).join(' → ');
+out.textContent=`Detected Semantic Flow:\n${hierarchy}\n\nKey Sections Found: ${tags.filter(t=>/<(header|nav|main|section|article|footer)>/.test(t)).length} major semantic elements`;
+}
+</script>
+</body>
+</html>
