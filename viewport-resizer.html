@@ -24,75 +24,240 @@ input{background:#1a1a1a;color:#e4e4e4;width:100%}
 select{background:#1a1a1a;color:#e4e4e4;width:100%}
 .output-box{background:#1a1a1a;padding:16px;border-radius:8px;font-family:monospace;font-size:0.9rem;border:1px solid #333}
 .output-box code{color:#a3a3a3}
+.info-section{background:#1a1a1a;padding:18px;border-radius:8px;margin-bottom:20px;border:1px solid #333}
+.info-section h3{color:#6366f1;margin-top:0;font-size:1rem}
+.info-section p{color:#a3a3a3;font-size:0.9rem;margin:0}
+.copy-btn{background:#333;color:#e4e4e4;border:1px solid #444;padding:6px 12px;border-radius:6px;font-size:0.85rem;cursor:pointer;transition:all 0.2s}
+.copy-btn:hover{background:#444;color:#fff}
+.copy-btn.copied{background:#10b981;color:#fff;border-color:#10b981}
+.preview-box{background:#1a1a1a;padding:16px;border-radius:8px;margin-bottom:20px;border:1px solid #333;display:flex;align-items:center;gap:15px}
+.preview-box .preview-label{color:#6366f1;font-size:0.9rem;font-weight:500}
+.preview-box .preview-value{color:#e4e4e4;font-family:monospace;font-size:1rem}
+.preview-box .preview-value:empty{display:none}
+.actions-section{background:#1a1a1a;padding:18px;border-radius:8px;margin-bottom:20px;border:1px solid #333}
+.actions-section h3{color:#6366f1;margin-top:0;font-size:1rem}
+.actions-section p{color:#a3a3a3;font-size:0.9rem;margin:0 0 12px}
+.actions-section .action-buttons{display:flex;gap:10px;flex-wrap:wrap}
+kbd{background:#2a2a2a;color:#e4e4e4;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:0.8rem;border:1px solid #333}
+@media(max-width:600px){
+.container{padding:10px}
+h1{font-size:1.5rem}
+}
 </style>
 </head>
 <body>
 <div class="container">
 <header>
 <h1>Viewport Resizer</h1>
-<a href="#" class="back-link">← Back</a>
+<a href="index.html" class="back-link">← Back to Home</a>
 </header>
+
+<div class="preview-box">
+<span class="preview-label">Current Viewport:</span>
+<span class="preview-value" id="currentViewport">Loading...</span>
+</div>
+
 <div class="grid">
-<input type="number" id="width" placeholder="Width (px)">
-<input type="number" id="height" placeholder="Height (px)">
-<select id="ratio">
+<input type="text" id="width" placeholder="Width (px)" value="1920">
+<input type="text" id="height" placeholder="Height (px)" value="1080">
+</div>
+
+<div class="grid">
+<select id="aspectRatio">
+<option value="">No constraint</option>
 <option value="16/9">16:9</option>
 <option value="4/3">4:3</option>
-<option value="3/2">3:2</option>
-<option value="2/1">2:1</option>
+<option value="1/1">1:1</option>
+<option value="21/9">21:9</option>
 </select>
+<button id="apply">Apply Dimensions</button>
 </div>
+
+<div class="grid">
+<input type="text" id="scale" placeholder="Scale (e.g. 0.5, 1.25)">
+<button id="scaleBtn">Apply Scale</button>
+</div>
+
+<div class="actions-section">
+<h3>Actions</h3>
+<p>Quick actions for viewport manipulation</p>
+<div class="action-buttons">
+<button id="reset">Reset to Default</button>
+<button id="fullscreen">Toggle Fullscreen</button>
+<button id="copyInfo" class="copy-btn">Copy Info</button>
+</div>
+</div>
+
+<div class="info-section">
+<h3>Info</h3>
+<p id="infoText">Enter dimensions and click Apply to set viewport size. Use scale to adjust proportionally.</p>
+</div>
+
 <div class="output-box">
-<code id="info">Enter dimensions and select ratio</code>
+<code id="output">Viewport: 1920 × 1080</code>
 </div>
+
+<div class="info-section">
+<h3>Keyboard Shortcuts</h3>
+<p>
+<kbd>Enter</kbd> Apply dimensions | 
+<kbd>Ctrl+R</kbd> Reset | 
+<kbd>Ctrl+F</kbd> Fullscreen | 
+<kbd>Ctrl+C</kbd> Copy info
+</p>
 </div>
+
+</div>
+
 <script>
-const widthInput = document.getElementById('width');
-const heightInput = document.getElementById('height');
-const ratioSelect = document.getElementById('ratio');
-const infoText = document.getElementById('info');
+(function(){
+const widthInput=document.getElementById('width');
+const heightInput=document.getElementById('height');
+const aspectRatioSelect=document.getElementById('aspectRatio');
+const applyBtn=document.getElementById('apply');
+const scaleInput=document.getElementById('scale');
+const scaleBtn=document.getElementById('scaleBtn');
+const resetBtn=document.getElementById('reset');
+const fullscreenBtn=document.getElementById('fullscreen');
+const copyInfoBtn=document.getElementById('copyInfo');
+const infoText=document.getElementById('infoText');
+const output=document.getElementById('output');
+const currentViewport=document.getElementById('currentViewport');
 
-function parseRatio(ratio) {
-  const [num, den] = ratio.split('/').map(Number);
-  return { num, den };
+// Get current viewport dimensions
+function getCurrentViewport(){
+const width=window.innerWidth;
+const height=window.innerHeight;
+return `${width} × ${height}`;
 }
 
-function adjustHeight(width, ratio) {
-  const { num, den } = parseRatio(ratio);
-  const newH = Math.round(width * den / num);
-  return newH;
+// Update current viewport display
+function updateCurrentViewport(){
+currentViewport.textContent=getCurrentViewport();
 }
 
-function adjustWidth(height, ratio) {
-  const { num, den } = parseRatio(ratio);
-  const newW = Math.round(height * num / den);
-  return newW;
+// Apply aspect ratio
+function applyAspectRatio(){
+const ratio=aspectRatioSelect.value;
+if(!ratio){
+infoText.textContent='No aspect ratio constraint applied.';
+return;
+}
+const [w,h]=ratio.split('/').map(Number);
+const currentW=parseInt(widthInput.value)||1920;
+const currentH=parseInt(heightInput.value)||1080;
+const newW=currentW;
+const newH=Math.round((currentW/w)*h);
+heightInput.value=newH;
+infoText.textContent={`Applied ${ratio} aspect ratio. Height adjusted to ${newH}px.`;
+output.textContent=`Viewport: ${currentW} × ${newH}`;
 }
 
-function updateInfo() {
-  const width = parseInt(widthInput.value) || 0;
-  const height = parseInt(heightInput.value) || 0;
-  const ratio = ratioSelect.value;
-  
-  if (width > 0 && height > 0) {
-    const newH = adjustHeight(width, ratio);
-    infoText.textContent = `Applied ${ratio} aspect ratio. Height adjusted to ${newH}px.`;
-  } else if (width > 0) {
-    const newH = adjustHeight(width, ratio);
-    infoText.textContent = `Width: ${width}px. Suggested height: ${newH}px for ${ratio} ratio.`;
-  } else if (height > 0) {
-    const newW = adjustWidth(height, ratio);
-    infoText.textContent = `Height: ${height}px. Suggested width: ${newW}px for ${ratio} ratio.`;
-  } else {
-    infoText.textContent = 'Enter dimensions and select ratio';
-  }
+// Apply dimensions
+function applyDimensions(){
+const width=parseInt(widthInput.value)||0;
+const height=parseInt(heightInput.value)||0;
+if(width>0&&height>0){
+infoText.textContent={`Applied dimensions: ${width} × ${height}px`;
+output.textContent=`Viewport: ${width} × ${height}`;
+}
+else{
+infoText.textContent='Invalid dimensions. Please enter valid numbers.';
+}
 }
 
-widthInput.addEventListener('input', updateInfo);
-heightInput.addEventListener('input', updateInfo);
-ratioSelect.addEventListener('change', updateInfo);
+// Apply scale
+function applyScale(){
+const scale=parseFloat(scaleInput.value)||1;
+if(scale>0){
+const currentW=parseInt(widthInput.value)||1920;
+const currentH=parseInt(heightInput.value)||1080;
+const newW=Math.round(currentW*scale);
+const newH=Math.round(currentH*scale);
+widthInput.value=newW;
+heightInput.value=newH;
+infoText.textContent={`Applied scale ${scale}. New dimensions: ${newW} × ${newH}px`;
+output.textContent=`Viewport: ${newW} × ${newH}`;
+}
+else{
+infoText.textContent='Invalid scale. Please enter a positive number.';
+}
+}
 
-updateInfo();
+// Reset to default
+function resetDefaults(){
+widthInput.value='1920';
+heightInput.value='1080';
+aspectRatioSelect.value='';
+scaleInput.value='1';
+infoText.textContent='Reset to default dimensions: 1920 × 1080';
+output.textContent='Viewport: 1920 × 1080';
+}
+
+// Toggle fullscreen
+function toggleFullscreen(){
+if(!document.fullscreenElement){
+document.documentElement.requestFullscreen().catch(err=>{
+infoText.textContent='Fullscreen not supported or blocked.';
+});
+}
+else{
+if(document.exitFullscreen){
+document.exitFullscreen();
+}
+}
+}
+
+// Copy info to clipboard
+function copyInfo(){
+const text=output.textContent;
+navigator.clipboard.writeText(text).then(()=>{
+copyInfoBtn.textContent='Copied!';
+copyInfoBtn.classList.add('copied');
+setTimeout(()=>{
+copyInfoBtn.textContent='Copy Info';
+copyInfoBtn.classList.remove('copied');
+},2000);
+}).catch(err=>{
+infoText.textContent='Failed to copy to clipboard.';
+});
+}
+
+// Event listeners
+applyBtn.addEventListener('click',applyDimensions);
+scaleBtn.addEventListener('click',applyScale);
+resetBtn.addEventListener('click',resetDefaults);
+fullscreenBtn.addEventListener('click',toggleFullscreen);
+copyInfoBtn.addEventListener('click',copyInfo);
+aspectRatioSelect.addEventListener('change',applyAspectRatio);
+
+// Keyboard shortcuts
+document.addEventListener('keydown',function(e){
+if(e.key==='Enter'){
+e.preventDefault();
+applyDimensions();
+}
+else if(e.ctrlKey&&e.key==='r'){
+e.preventDefault();
+resetDefaults();
+}
+else if(e.ctrlKey&&e.key==='f'){
+e.preventDefault();
+toggleFullscreen();
+}
+else if(e.ctrlKey&&e.key==='c'){
+e.preventDefault();
+copyInfo();
+}
+}
+
+// Update on window resize
+window.addEventListener('resize',updateCurrentViewport);
+
+// Initialize
+updateCurrentViewport();
+output.textContent=`Viewport: ${getCurrentViewport()}`;
+})();
 </script>
 </body>
 </html>
