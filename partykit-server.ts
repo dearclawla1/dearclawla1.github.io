@@ -4,6 +4,15 @@ import type { Party, Connection, Server, ConnectionContext } from "partykit/serv
 // TYPES
 // ============================================================
 
+interface PlayerStats {
+  kills: number;
+  deaths: number;
+  damageDealt: number;
+  damageTaken: number;
+  lastKillTime: number;
+  lastDeathTime: number;
+}
+
 interface PlayerState {
   id: string;
   name: string;
@@ -18,6 +27,7 @@ interface PlayerState {
   weapon: string;
   zone: string;
   lastUpdate: number;
+  stats: PlayerStats;
 }
 
 interface ProjectileState {
@@ -53,196 +63,269 @@ interface ServerMessage {
   projectile: { proj: ProjectileState };
   "player-damage": { id: string; damage: number; hp: number };
   "player-death": { id: string; killerId: string };
-  chat: { id: string; name: string; text: string };
-  pong: { serverTime: number; playerCount: number };
+  "player-kill": { id: string; killerId: string; damage: number };
+  "player-stats": { id: string; stats: PlayerStats };
+}
+
+interface ServerEvent {
+  type: "zone-event";
+  zone: string;
+  event: string;
+  data?: any;
 }
 
 // ============================================================
-// SERVER IMPLEMENTATION
+// SERVER CLASS
 // ============================================================
 
 export default class GameRoom implements Server {
-  players: Map<string, PlayerState> = new Map();
-  connectionMap: Map<string, Connection> = new Map();
-  playerConnMap: Map<string, Connection> = new Map();
+  private players = new Map<string, PlayerState>();
+  private connectionMap = new Map<string, Connection>();
+  private playerConnMap = new Map<string, string>();
 
-  onConnect(ctx: ConnectionContext): void {
-    const conn = ctx.connection;
+  constructor(roomId: string) {
+    // Room initialization
+  }
+
+  onConnect(conn: Connection, ctx: ConnectionContext): void {
     this.connectionMap.set(conn.id, conn);
+    const roomId = this.getRoomId(ctx);
+    this.playerConnMap.set(roomId, conn.id);
 
-    // FIX: Changed message type from "connect" to "state" to match client expectations
-    conn.send({
+    // Initialize player stats for new connections
+    const player = this.players.get(conn.id);
+    if (player) {
+      player.stats = player.stats || {
+        kills: 0,
+        deaths: 0,
+        damageDealt: 0,
+        damageTaken: 0,
+        lastKillTime: 0,
+        lastDeathTime: 0,
+      };
+    }
+
+    // Send full state to new player
+    this.broadcast({
       type: "state",
-      players: [],
-      you: null,
-      zone: ctx.roomId,
+      players: Array.from(this.players.values()),
+      you: player || null,
     });
   }
 
   onClose(conn: Connection): void {
     this.connectionMap.delete(conn.id);
-    for (const [id, conn] of this.playerConnMap) {
-      if (conn.id === conn.id) {
-        this.playerConnMap.delete(id);
-        this.broadcastExcept({
-          type: "player-leave",
-          id,
-        }, conn);
-        break;
-      }
+    const roomId = Object.keys(this.playerConnMap).find(id => this.playerConnMap.get(id) === conn.id);
+    if (roomId) {
+      this.playerConnMap.delete(roomId);
     }
+
+    // Broadcast player leave
+    this.broadcast({
+      type: "player-leave",
+      id: conn.id,
+    });
   }
 
-  onMessage(conn: Connection, msg: any): void {
-    try {
-      const parsed = this.parseMessage(msg);
-      if (!parsed) return;
+  onMessage(conn: Connection, message: any): void {
+    const roomId = this.getRoomId(this.getCtx(conn));
+    const player = this.players.get(conn.id);
 
-      const handler = this.handlers[parsed.type];
+    // Validate connection
+    if (!player) {
+      console.log(`[Server] ${roomId}: Unknown connection ${conn.id} received message`);
+      return;
+    }
+
+    const handlers = {
+      join: (conn, playerData) => {
+        const player = this.players.get(conn.id);
+        if (player) {
+          // Update existing player
+          player.name = playerData.name;
+          player.className = playerData.className;
+          player.level = playerData.level;
+          player.hp = playerData.hp;
+          player.maxHp = playerData.maxHp;
+          player.x = playerData.x;
+          player.y = playerData.y;
+          player.facing = playerData.facing;
+          player.color = playerData.color;
+          player.weapon = playerData.weapon;
+          player.zone = playerData.zone;
+          player.lastUpdate = Date.now();
+          player.stats = player.stats || {
+            kills: 0,
+            deaths: 0,
+            damageDealt: 0,
+            damageTaken: 0,
+            lastKillTime: 0,
+            lastDeathTime: 0,
+          };
+          this.broadcast({
+            type: "state",
+            players: Array.from(this.players.values()),
+            you: player,
+          });
+        }
+      },
+
+      move: (conn, { x, y, facing }) => {
+        const player = this.players.get(conn.id);
+        if (player) {
+          // Position validation - prevent teleporting
+          const maxTeleport = 100;
+          const dx = Math.abs(x - player.x);
+          const dy = Math.abs(y - player.y);
+          if (dx > maxTeleport || dy > maxTeleport) {
+            console.log(`[Server] ${player.name}: Position validation failed (teleport attempt)`);
+            return;
+          }
+
+          player.x = x;
+          player.y = y;
+          player.facing = facing;
+          player.lastUpdate = Date.now();
+
+          this.broadcast({
+            type: "player-move",
+            id: player.id,
+            x,
+            y,
+            facing,
+          });
+        }
+      },
+
+      attack: (conn, { facing, weapon, damage }) => {
+        const player = this.players.get(conn.id);
+        if (player) {
+          // Rate limiting - max 10 attacks per second
+          const now = Date.now();
+          const lastAttack = player.lastAttack || 0;
+          if (now - lastAttack < 100) {
+            console.log(`[Server] ${player.name}: Attack rate limited`);
+            return;
+          }
+          player.lastAttack = now;
+
+          this.broadcast({
+            type: "player-attack",
+            id: player.id,
+            facing,
+            weapon,
+          });
+        }
+      },
+
+      projectile: (conn, { proj }) => {
+        const player = this.players.get(conn.id);
+        if (player) {
+          this.broadcast({
+            type: "projectile",
+            proj,
+          });
+        }
+      },
+
+      "hit-player": (conn, { targetId, damage }) => {
+        const player = this.players.get(conn.id);
+        if (player) {
+          const target = this.players.get(targetId);
+          if (target) {
+            // Server-authoritative damage validation
+            const maxDamage = target.maxHp * 0.5; // Can't deal more than 50% of max HP
+            if (damage > maxDamage) {
+              console.log(`[Server] ${player.name}: Damage validation failed (exceeded ${maxDamage})`);
+              return;
+            }
+
+            // Apply damage
+            target.hp = Math.max(0, target.hp - damage);
+            target.stats.damageTaken += damage;
+
+            if (target.hp <= 0) {
+              // Player died
+              this.broadcast({
+                type: "player-death",
+                id: target.id,
+                killerId: player.id,
+              });
+
+              // Update killer stats
+              player.stats.kills += 1;
+              player.stats.damageDealt += damage;
+              player.stats.lastKillTime = Date.now();
+
+              this.broadcast({
+                type: "player-kill",
+                id: player.id,
+                killerId: player.id,
+                damage,
+              });
+
+              // Reset dead player
+              target.hp = target.maxHp;
+              target.stats.deaths += 1;
+              target.stats.lastDeathTime = Date.now();
+            } else {
+              this.broadcast({
+                type: "player-damage",
+                id: target.id,
+                damage,
+                hp: target.hp,
+              });
+            }
+          }
+        }
+      },
+
+      chat: (conn, { text }) => {
+        const player = this.players.get(conn.id);
+        if (player) {
+          // Message length validation
+          if (text.length > 200) {
+            console.log(`[Server] ${player.name}: Chat message too long`);
+            return;
+          }
+
+          this.broadcast({
+            type: "chat",
+            id: player.id,
+            name: player.name,
+            text,
+          });
+        }
+      },
+
+      ping: (conn, {}) => {
+        const ctx = this.getCtx(conn);
+        this.sendPong(conn);
+      },
+    };
+
+    // Handle message
+    if (message && message.type) {
+      const handler = handlers[message.type as keyof typeof handlers];
       if (handler) {
-        handler(conn, parsed.payload);
-      }
-    } catch (err) {
-      console.error("Error handling message:", err);
-    }
-  }
-
-  parseMessage(msg: any): { type: keyof ClientMessage; payload: any } | null {
-    if (!msg) return null;
-    const type = Object.keys(msg)[0] as keyof ClientMessage;
-    if (!type) return null;
-    try {
-      return { type, payload: msg[type] };
-    } catch {
-      return null;
-    }
-  }
-
-  handlers: Record<string, (conn: Connection, payload: any) => void> = {
-    join: (conn, player) => {
-      const ctx = this.getCtx(conn);
-      const playerState = {
-        ...player,
-        zone: ctx.roomId,
-        lastUpdate: Date.now(),
-      };
-
-      this.players.set(player.id, playerState);
-      this.playerConnMap.set(player.id, conn);
-      this.connectionMap.set(conn.id, conn);
-
-      this.broadcast({
-        type: "state",
-        players: Array.from(this.players.values()),
-        you: playerState,
-      });
-
-      this.broadcastExcept({
-        type: "player-join",
-        player: playerState,
-      }, conn);
-
-      this.sendPong(conn);
-    },
-
-    move: (conn, { x, y, facing }) => {
-      const player = this.players.get(conn.id);
-      if (!player) return;
-
-      // Validate position bounds (prevent teleporting)
-      const maxBound = 10000;
-      if (x < -maxBound || x > maxBound || y < -maxBound || y > maxBound) {
-        console.warn("Invalid position detected:", { x, y });
-        return;
-      }
-
-      player.x = x;
-      player.y = y;
-      player.facing = facing;
-      player.lastUpdate = Date.now();
-
-      this.broadcast({
-        type: "player-move",
-        id: player.id,
-        x,
-        y,
-        facing,
-      });
-    },
-
-    attack: (conn, { facing, weapon, damage }) => {
-      const player = this.players.get(conn.id);
-      if (!player) return;
-
-      this.broadcast({
-        type: "player-attack",
-        id: player.id,
-        facing,
-        weapon,
-      });
-    },
-
-    projectile: (conn, { proj }) => {
-      const player = this.players.get(conn.id);
-      if (!player) return;
-
-      // Validate projectile properties
-      if (proj.damage < 0 || proj.range < 0) {
-        console.warn("Invalid projectile detected:", { proj });
-        return;
-      }
-
-      this.broadcast({
-        type: "projectile",
-        proj,
-      });
-    },
-
-    "hit-player": (conn, { targetId, damage }) => {
-      const player = this.players.get(conn.id);
-      if (!player) return;
-
-      const target = this.players.get(targetId);
-      if (!target) return;
-
-      target.hp -= damage;
-      if (target.hp <= 0) {
-        this.broadcast({
-          type: "player-death",
-          id: target.id,
-          killerId: player.id,
-        });
+        try {
+          handler(conn, message);
+        } catch (error) {
+          console.error(`[Server] ${roomId}: Handler error for ${message.type}`, error);
+        }
       } else {
-        this.broadcast({
-          type: "player-damage",
-          id: target.id,
-          damage,
-          hp: target.hp,
-        });
+        console.log(`[Server] ${roomId}: Unknown message type ${message.type}`);
       }
-    },
-
-    chat: (conn, { text }) => {
-      const player = this.players.get(conn.id);
-      if (!player) return;
-
-      this.broadcast({
-        type: "chat",
-        id: player.id,
-        name: player.name,
-        text,
-      });
-    },
-
-    ping: (conn, {}) => {
-      const ctx = this.getCtx(conn);
-      this.sendPong(conn);
-    },
-  };
+    }
+  }
 
   getCtx(conn: Connection): { roomId: string } {
-    // Simplified context retrieval
-    return { roomId: "default-room" };
+    const roomId = this.playerConnMap.get(conn.id);
+    return { roomId: roomId || "default-room" };
+  }
+
+  getRoomId(ctx: ConnectionContext): string {
+    return ctx.roomId || "default-room";
   }
 
   broadcast(msg: ServerMessage): void {
@@ -267,5 +350,15 @@ export default class GameRoom implements Server {
       serverTime: Date.now(),
       playerCount,
     });
+  }
+
+  broadcastEvent(event: ServerEvent): void {
+    const msg: ServerMessage = {
+      type: "zone-event",
+      zone: event.zone,
+      event: event.event,
+      data: event.data,
+    };
+    this.broadcast(msg);
   }
 }
