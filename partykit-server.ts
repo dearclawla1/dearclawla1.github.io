@@ -182,13 +182,28 @@ export default class GameRoom implements Server {
       attack: (conn, { facing, weapon, damage }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          player.weapon = weapon;
-          player.lastUpdate = Date.now();
+          // Calculate attack position
+          const attackX = player.x + facing.x * 50;
+          const attackY = player.y + facing.y * 50;
+          
+          // Create projectile
+          const projectile: ProjectileState = {
+            id: `proj-${Date.now()}`,
+            ownerId: conn.id,
+            x: player.x,
+            y: player.y,
+            vx: facing.x * 10,
+            vy: facing.y * 10,
+            damage: damage,
+            range: 200,
+            traveled: 0,
+            color: "#ff0000",
+            size: 5,
+          };
+          
           this.broadcast({
-            type: "player-attack",
-            id: conn.id,
-            facing: facing,
-            weapon: weapon,
+            type: "projectile",
+            proj: projectile,
           });
         }
       },
@@ -196,22 +211,60 @@ export default class GameRoom implements Server {
       projectile: (conn, projData) => {
         const player = this.players.get(conn.id);
         if (player) {
+          const projectile: ProjectileState = {
+            id: projData.id,
+            ownerId: projData.ownerId,
+            x: projData.x,
+            y: projData.y,
+            vx: projData.vx,
+            vy: projData.vy,
+            damage: projData.damage,
+            range: projData.range,
+            traveled: projData.traveled,
+            color: projData.color,
+            size: projData.size,
+          };
+          
           this.broadcast({
             type: "projectile",
-            proj: projData,
+            proj: projectile,
           });
         }
       },
 
       "hit-player": (conn, { targetId, damage }) => {
-        const player = this.players.get(conn.id);
-        if (player) {
-          this.broadcast({
-            type: "player-damage",
-            id: targetId,
-            damage: damage,
-            hp: player.hp - damage,
-          });
+        const target = this.players.get(targetId);
+        if (target) {
+          const player = this.players.get(conn.id);
+          if (player) {
+            target.hp -= damage;
+            target.lastUpdate = Date.now();
+            
+            // Check death
+            if (target.hp <= 0) {
+              target.hp = 0;
+              this.broadcast({
+                type: "player-death",
+                id: targetId,
+                killerId: conn.id,
+              });
+              
+              // Update killer stats
+              player.stats.kills++;
+              player.stats.lastKillTime = Date.now();
+            } else {
+              // Update damage stats
+              player.stats.damageDealt += damage;
+              target.stats.damageTaken += damage;
+            }
+            
+            this.broadcast({
+              type: "player-damage",
+              id: targetId,
+              damage: damage,
+              hp: target.hp,
+            });
+          }
         }
       },
 
@@ -221,46 +274,34 @@ export default class GameRoom implements Server {
           this.broadcast({
             type: "chat",
             text: text,
+            from: player.name,
           });
         }
       },
 
       ping: (conn, {}) => {
-        const player = this.players.get(conn.id);
-        if (player) {
-          this.broadcast({
-            type: "ping",
-          });
-        }
+        // Handle ping from client - FIX: Added ping handler
+        this.broadcast({
+          type: "ping",
+          pong: Date.now(),
+        });
       },
     };
 
-    // Handle message based on type
-    if (message.type === "join") {
-      handlers.join(conn, message.player);
-    } else if (message.type === "move") {
-      handlers.move(conn, message);
-    } else if (message.type === "attack") {
-      handlers.attack(conn, message);
-    } else if (message.type === "projectile") {
-      handlers.projectile(conn, message);
-    } else if (message.type === "hit-player") {
-      handlers["hit-player"](conn, message);
-    } else if (message.type === "chat") {
-      handlers.chat(conn, message);
-    } else if (message.type === "ping") {
-      handlers.ping(conn, message);
+    // Dispatch message
+    if (handlers[message.type]) {
+      handlers[message.type](conn, message);
     } else {
       console.log(`[Server] ${roomId}: Unknown message type ${message.type}`);
     }
   }
 
-  broadcast(msg: any): void {
-    const roomId = Object.keys(this.playerConnMap).find(id => this.playerConnMap.get(id) !== undefined);
+  broadcast(message: any): void {
+    const roomId = Object.keys(this.playerConnMap).find(id => this.playerConnMap.get(id) !== null);
     if (roomId) {
       const conn = this.connectionMap.get(this.playerConnMap.get(roomId));
       if (conn) {
-        conn.send(msg);
+        conn.send(message);
       }
     }
   }
@@ -270,7 +311,8 @@ export default class GameRoom implements Server {
   }
 
   getCtx(conn: Connection): ConnectionContext {
-    // Implementation to get context
-    return {} as ConnectionContext;
+    return {
+      roomId: "default",
+    };
   }
 }
