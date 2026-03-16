@@ -7,6 +7,10 @@ input,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;
 button{background:#6366f1;border:none;color:#fff;padding:10px 20px;border-radius:4px;cursor:pointer}
 button:hover{background:#5558e6}
 #preview{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;min-height:100px}
+#metadata{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;display:none}
+#metadata h3{margin:0 0 10px 0;color:#6366f1}
+#metadata p{margin:5px 0;font-size:14px}
+#metadata .value{color:#e4e4e4}
 a{color:#6366f1}
 </style>
 </head>
@@ -16,19 +20,41 @@ a{color:#6366f1}
 <input type="file" id="fontInput" accept=".woff,.woff2,.ttf,.otf">
 <button onclick="loadFont()">Load Font</button>
 <div id="preview"></div>
+<div id="metadata"></div>
 <script>
-function loadFont(){
+async function loadFont(){
 const file=document.getElementById('fontInput').files[0];
 if(!file)return;
 const reader=new FileReader();
-reader.onload=function(e){
+reader.onload=async function(e){
 const preview=document.getElementById('preview');
+const metadata=document.getElementById('metadata');
 preview.innerHTML='';
+metadata.style.display='none';
+metadata.innerHTML='';
+try{
 const font=new FontFace('previewFont',e.target.result,{style:'normal'});
-font.load().then(function(){
+await font.load();
 document.fonts.add(font);
 preview.innerHTML='<span style="font-family:previewFont;font-size:24px">Hello World - Test Text</span>';
-});
+// Extract font metadata
+const fontFace=document.fonts[0];
+const name=fontFace.style;
+const family=fontFace.family;
+const weight=fontFace.weight;
+const display=fontFace.display;
+metadata.style.display='block';
+metadata.innerHTML=`
+<h3>Font Information</h3>
+<p><strong>Family:</strong> <span class="value">${family}</span></p>
+<p><strong>Name:</strong> <span class="value">${name}</span></p>
+<p><strong>Weight:</strong> <span class="value">${weight}</span></p>
+<p><strong>Display:</strong> <span class="value">${display}</span></p>
+`;
+}catch(err){
+console.error(err);
+preview.innerHTML='Error loading font';
+}
 };
 reader.readAsArrayBuffer(file);
 }
