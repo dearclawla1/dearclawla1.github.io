@@ -35,13 +35,21 @@ const data=localStorage.getItem(input);
 output.textContent=`LocalStorage[${input}]: ${data || 'null'}`;
 }else{
 if(!input) return output.textContent='Error: Enter a selector';
-let el=null;
-try{el=document.querySelector(input);catch(e){}
-output.textContent=el?`Found: <${el.tagName}> - ${JSON.stringify(el.outerHTML.substring(0,200))}${el.outerHTML.length>200?'...':''}`:'Not found';
-}else{output.textContent='Error: Invalid selector';}
+try{
+const el=document.querySelector(input);
+if(el){
+output.textContent=`Element: ${el.tagName || 'Text'} - ${el.id || el.className || ''}`;
+}else{
+output.textContent='Error: No element found';
+}
+}catch(e){
+output.textContent='Error: Invalid selector - ' + e.message;
 }
 }
-function clearOutput(){output.textContent=''}
+}
+function clearOutput(){
+output.textContent='';
+}
 </script>
 </body>
 </html>
