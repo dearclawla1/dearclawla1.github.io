@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+input,button,select{padding:8px 12px;margin:5px;border:1px solid #6366f1;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
+button{cursor:pointer}
+a{color:#6366f1}
+#output{background:#1a1a1a;padding:10px;border-radius:4px;margin-top:10px;min-height:50px;border:1px solid #6366f1}
+</style>
+</head>
+<body>
+<h2>Siftly Clone - Bookmark Organizer</h2>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<br><br>
+<input id="url" placeholder="Bookmark URL (e.g., https://x.com/...)" style="width:300px">
+<select id="category"><option value="news">News</option><option value="tech">Tech</option><option value="design">Design</option><option value="social">Social</option></select>
+<button onclick="addBookmark()">Add Bookmark</button>
+<button onclick="clearAll()">Clear All</button>
+<div id="output"></div>
+<script>
+let bookmarks=[]
+function addBookmark(){
+const url=document.getElementById('url').value
+const cat=document.getElementById('category').value
+if(!url){alert('Enter URL');return}
+bookmarks.push({url,cat})
+render()
+document.getElementById('url').value=''
+}
+function render(){
+const out=document.getElementById('output')
+out.innerHTML=bookmarks.map((b,i)=>`<div style="padding:5px;border-bottom:1px solid #333"><strong>${b.cat.toUpperCase()}</strong>: <a href="${b.url}" target="_blank">${b.url}</a> <button onclick="remove(${i})" style="background:#6366f1;margin-left:5px">X</button></div>`).join('')||'<div style="padding:5px;color:#666">No bookmarks yet</div>'
+}
+function remove(i){bookmarks.splice(i,1);render()}
+function clearAll(){bookmarks=[];render()}
+</script>
+</body>
+</html>
