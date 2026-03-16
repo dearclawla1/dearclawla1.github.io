@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tool Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .header h1 {
+            font-size: 2rem;
+            color: #6366f1;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #888;
+            font-size: 1rem;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .input-group {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 6px;
+            color: #e4e4e4;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .input-group input::placeholder {
+            color: #555;
+        }
+        .input-group select {
+            cursor: pointer;
+        }
+        .input-group .hint {
+            display: block;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .output-section {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .output-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #6366f1;
+        }
+        .output-content {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 100px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover {
+            background: #5558e3;
+        }
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+        .copy-btn.copied {
+            background: #10b981;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #6366f1;
+        }
+        .stat-card .label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        .category-ai { background: #6366f1; color: #fff; }
+        .category-web { background: #10b981; color: #fff; }
+        .category-data { background: #f59e0b; color: #fff; }
+        .category-other { background: #6b7280; color: #fff; }
+        .tool-list {
+            list-style: none;
+        }
+        .tool-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+        .tool-item .name {
+            flex: 1;
+            font-weight: 500;
+        }
+        .tool-item .category {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .tool-item .usage {
+            font-size: 0.8rem;
+            color: #10b981;
+        }
+        .tool-item .last-used {
+            font-size: 0.75rem;
+            color: #555;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #555;
+        }
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        .empty-state p {
+            margin-bottom: 10px;
+        }
+        .error-message {
+            background: #7f1d1d;
+            border: 1px solid #991b1b;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+        .input-group .error-message {
+            margin-top: 8px;
+        }
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .tool-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .tool-item .category, .tool-item .usage, .tool-item .last-used {
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Tool Tracker</h1>
+            <p>Track and categorize AI tools you use in your browser with usage analytics</p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </div>
+
+        <div class="input-group">
+            <label for="toolName">Tool Name</label>
+            <input type="text" id="toolName" placeholder="e.g., ChatGPT, Claude, Midjourney, Perplexity">
+            <span class="hint">Enter the name of the AI tool you want to track</span>
+        </div>
+
+        <div class="input-group">
+            <label for="category">Category</label>
+            <select id="category">
+                <option value="ai">AI Model (LLM, Image Gen, etc.)</option>
+                <option value="web">Web Browser Extension</option>
+                <option value="data">Data Processing Tool</option>
+                <option value="other">Other</option>
+            </select>
+            <span class="hint">Select the category that best fits this tool</span>
+        </div>
+
+        <div class="input-group">
+            <label for="url">Tool URL</label>
+            <input type="url" id="url" placeholder="https://chat.openai.com or https://claude.ai">
+            <span class="hint">Enter the website URL where you access this tool</span>
+        </div>
+
+        <div class="input-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" placeholder="Brief description of what this tool does">
+            <span class="hint">Add a short description (optional)</span>
+        </div>
+
+        <div class="input-group">
+            <label for="usageCount">Usage Count</label>
+            <input type="number" id="usageCount" placeholder="0" min="0">
+            <span class="hint">How many times you've used this tool</span>
+        </div>
+
+        <div class="input-group">
+            <label for="lastUsed">Last Used Date</label>
+            <input type="date" id="lastUsed">
+            <span class="hint">When you last used this tool</span>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="output-section">
+            <h2>Tool Entry</h2>
+            <div class="output-content" id="outputContent">
+                <!-- Output will be generated here -->
+            </div>
+            <button class="copy-btn" id="copyBtn" onclick="copyOutput()">
+                <span>📋</span> Copy to Clipboard
+            </button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="value" id="totalTools">0</div>
+                <div class="label">Total Tools</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="totalUsage">0</div>
+                <div class="label">Total Usage Count</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="categories">4</div>
+                <div class="label">Categories</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="lastDate">-</div>
+                <div class="label">Last Activity</div>
+            </div>
+        </div>
+
+        <div class="output-section" style="margin-top: 20px;">
+            <h2>Tool List</h2>
+            <div id="toolList">
+                <div class="empty-state">
+                    <div class="icon">📝</div>
+                    <p>No tools added yet</p>
+                    <p>Add a tool above to see it here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store tools in session storage
+        let tools = JSON.parse(localStorage.getItem('aiTools')) || [];
+
+        // Initialize last used date to today
+        document.getElementById('lastUsed').value = new Date().toISOString().split('T')[0];
+
+        // Update output when any input changes
+        function updateOutput() {
+            const toolName = document.getElementById('toolName').value.trim();
+            const category = document.getElementById('category').value;
+            const url = document.getElementById('url').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const usageCount = parseInt(document.getElementById('usageCount').value) || 0;
+            const lastUsed = document.getElementById('lastUsed').value;
+
+            // Validate inputs
+            if (!toolName) {
+                showError('Please enter a tool name');
+                return;
+            }
+            if (!url) {
+                showError('Please enter a tool URL');
+                return;
+            }
+
+            hideError();
+
+            // Build tool entry
+            const categoryLabels = {
+                ai: 'AI Model',
+                web: 'Web Extension',
+                data: 'Data Tool',
+                other: 'Other'
+            };
+
+            const categoryBadges = {
+                ai: '<span class="category-badge category-ai">AI Model</span>',
+                web: '<span class="category-badge category-web">Web Extension</span>',
+                data: '<span class="category-badge category-data">Data Tool</span>',
+                other: '<span class="category-badge category-other">Other</span>'
+            };
+
+            const formattedUrl = url.replace(/(https?:\/\/)/, '');
+            const formattedLastUsed = lastUsed || 'Not set';
+
+            const entry = `[Tool Name] ${toolName}
+[Category] ${categoryLabels[category]}
+[URL] ${formattedUrl}
+[Description] ${description || 'None'}
+[Usage Count] ${usageCount}
+[Last Used] ${formattedLastUsed}
+`;
+
+            document.getElementById('outputContent').textContent = entry;
+
+            // Update stats
+            updateStats();
+
+            // Add to tool list
+            addToToolList(toolName, categoryLabels[category], formattedUrl, usageCount, formattedLastUsed);
+        }
+
+        // Update stats display
+        function updateStats() {
+            const totalTools = tools.length;
+            const totalUsage = tools.reduce((sum, t) => sum + (parseInt(t.usage) || 0), 0);
+            const categories = new Set(tools.map(t => t.category)).size;
+            const lastDate = tools
+                .filter(t => t.lastUsed)
+                .map(t => t.lastUsed)
+                .sort()
+                .pop() || '-';
+
+            document.getElementById('totalTools').textContent = totalTools;
+            document.getElementById('totalUsage').textContent = totalUsage;
+            document.getElementById('categories').textContent = categories;
+            document.getElementById('lastDate').textContent = lastDate;
+        }
+
+        // Add tool to list
+        function addToToolList(name, category, url, usage, lastUsed) {
+            const toolList = document.getElementById('toolList');
+            const toolItem = document.createElement('div');
+            toolItem.className = 'tool-item';
+            toolItem.innerHTML = `
+                <div class="name">${name}</div>
+                <div class="category">${category}</div>
+                <div class="usage">Usage: ${usage}</div>
+                <div class="last-used">Last: ${lastUsed}</div>
+            `;
+            toolList.insertBefore(toolItem, toolList.firstChild);
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        // Hide error message
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        // Copy output to clipboard
+        function copyOutput() {
+            const output = document.getElementById('outputContent').textContent;
+            navigator.clipboard.writeText(output).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.classList.add('copied');
+                btn.querySelector('span').textContent = '✅';
+                btn.textContent = 'Copied to Clipboard!';
+
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.querySelector('span').textContent = '📋';
+                    btn.textContent = 'Copy to Clipboard';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showError('Failed to copy to clipboard');
+            });
+        }
+
+        // Save tools to localStorage
+        function saveTools() {
+            localStorage.setItem('aiTools', JSON.stringify(tools));
+            updateStats();
+        }
+
+        // Add new tool
+        function addTool() {
+            const toolName = document.getElementById('toolName').value.trim();
+            const category = document.getElementById('category').value;
+            const url = document.getElementById('url').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const usageCount = parseInt(document.getElementById('usageCount').value) || 0;
+            const lastUsed = document.getElementById('lastUsed').value;
+
+            if (!toolName || !url) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            const newTool = {
+                name: toolName,
+                category: category,
+                url: url,
+                description: description,
+                usage: usageCount,
+                lastUsed: lastUsed
+            };
+
+            tools.push(newTool);
+            saveTools();
+
+            // Clear inputs
+            document.getElementById('toolName').value = '';
+            document.getElementById('url').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('usageCount').value = '0';
+            document.getElementById('lastUsed').value = new Date().toISOString().split('T')[0];
+
+            // Update output
+            updateOutput();
+        }
+
+        // Delete tool
+        function deleteTool(index) {
+            tools.splice(index, 1);
+            saveTools();
+            updateOutput();
+        }
+
+        // Event listeners
+        document.getElementById('toolName').addEventListener('input', updateOutput);
+        document.getElementById('category').addEventListener('change', updateOutput);
+        document.getElementById('url').addEventListener('input', updateOutput);
+        document.getElementById('description').addEventListener('input', updateOutput);
+        document.getElementById('usageCount').addEventListener('input', updateOutput);
+        document.getElementById('lastUsed').addEventListener('input', updateOutput);
+
+        // Add tool button
+        const addBtn = document.createElement('button');
+        addBtn.className = 'copy-btn';
+        addBtn.style.marginTop = '15px';
+        addBtn.style.width = '100%';
+        addBtn.textContent = '➕ Add Tool to Tracker';
+        addBtn.onclick = addTool;
+        document.querySelector('.header').parentElement.appendChild(addBtn);
+
+        // Initialize
+        updateOutput();
+    </script>
+</body>
+</html>
