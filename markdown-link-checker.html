@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Markdown Link Checker</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+h1{color:#6366f1;margin-bottom:10px}
+input,button,select{margin:5px 0;padding:8px;border-radius:4px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4}
+input,button,select:hover{border-color:#6366f1}
+button{background:#6366f1;color:#0a0a0a;font-weight:bold}
+button:hover{background:#4f46e5}
+#result{margin-top:15px;padding:10px;background:#1a1a1a;border-radius:4px;min-height:50px}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h1>Markdown Link Checker</h1>
+<input type="text" id="markdownInput" placeholder="Paste Markdown here...">
+<button onclick="checkLinks()">Check Links</button>
+<select id="linkType">
+<option value="all">All Links</option>
+<option value="http">HTTP Links</option>
+<option value="https">HTTPS Links</option>
+<option value="relative">Relative Links</option>
+</select>
+<div id="result">Enter Markdown and click Check Links...</div>
+<script>
+function checkLinks(){
+const text=document.getElementById("markdownInput").value;
+const type=document.getElementById("linkType").value;
+const result=document.getElementById("result");
+const regex=/\[([^]]*)\]\(([^)]*)\)/g;
+const matches=[];
+let m;
+while((m=regex.exec(text))!==null){
+matches.push(m[2]);
+}
+const filtered=type==="all"?matches:matches.filter(l=>{
+if(type==="http")return l.toLowerCase().startsWith("http://");
+if(type==="https")return l.toLowerCase().startsWith("https://");
+if(type==="relative")return !l.toLowerCase().startsWith("http://");
+return true;
+});
+if(filtered.length===0){
+result.textContent="No links found matching the selected type.";
+return;
+}
+result.innerHTML=filtered.map(l=>`<a href="${l}" target="_blank">${l}</a><br>`).join("");
+result.innerHTML+=`Found ${filtered.length} link${filtered.length!==1?"s":""}.`;
+}
+</script>
+</body>
+</html>
