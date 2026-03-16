@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Font Previewer</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;margin:0;padding:20px}
+.container{max-width:800px;margin:0 auto}
+h1{color:#6366f1;margin-bottom:20px}
+input,select,button{margin:5px 0;padding:8px 12px;border-radius:4px;border:none;font-size:14px}
+select{background:#1a1a1a;color:#e4e4e4;border:1px solid #333}
+button{background:#6366f1;color:#fff;cursor:pointer}
+button:hover{background:#5558e6}
+.preview{background:#1a1a1a;padding:15px;border-radius:8px;margin-top:15px;min-height:100px}
+label{display:block;margin:5px 0 2px}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h1>Font Previewer</h1>
+<label>Select Font</label>
+<select id="fontSelect"><option value="Arial">Arial</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Trebuchet MS">Trebuchet MS</option><option value="Impact">Impact</option><option value="Comic Sans MS">Comic Sans MS</option><option value="Palatino Linotype">Palatino Linotype</option><option value="Bookman Devil">Bookman Devil</option><option value="Lucida Console">Lucida Console</option><option value="Lucida Sans Unicode">Lucida Sans Unicode</option><option value="Monotype Corsiva">Monotype Corsiva</option><option value="Franklin Gothic Medium">Franklin Gothic Medium</option><option value="Arial Black">Arial Black</option><option value="Arial Narrow">Arial Narrow</option><option value="Garamond">Garamond</option><option value="Brush Script MT">Brush Script MT</option><option value="Papyrus">Papyrus</option><option value="Copperplate">Copperplate</option><option value="Didot">Didot</option><option value="Futura">Futura</option><option value="Helvetica">Helvetica</option><option value="Lucida Bright">Lucida Bright</option><option value="Lucida Calligraphy">Lucida Calligraphy</option><option value="Lucida Fax">Lucida Fax</option><option value="MS Sans Serif">MS Sans Serif</option><option value="MS Serif">MS Serif</option><option value="Palatino">Palatino</option><option value="Tahoma">Tahoma</option><option value="Times">Times</option><option value="Trebuchet">Trebuchet</option><option value="Verdana">Verdana</option></select>
+<label>Sample Text</label>
+<input type="text" id="sampleText" value="The quick brown fox jumps over the lazy dog.">
+<label>Size (px)</label>
+<input type="number" id="fontSize" value="24" min="8" max="120">
+<label>Weight</label>
+<select id="fontWeight"><option value="normal">Normal</option><option value="bold">Bold</option><option value="100">100</option><option value="200">200</option><option value="300">300</option><option value="400">400</option><option value="500">500</option><option value="600">600</option><option value="700">700</option><option value="800">800</option><option value="900">900</option></select>
+<label>Style</label>
+<select id="fontStyle"><option value="normal">Normal</option><option value="italic">Italic</option><option value="oblique">Oblique</option></select>
+<label>Text Align</label>
+<select id="textAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option><option value="justify">Justify</option></select>
+<button onclick="updatePreview()">Update Preview</button>
+<div class="preview" id="preview"></div>
+</div>
+<script>
+function updatePreview(){
+const font=document.getElementById('fontSelect').value;
+const text=document.getElementById('sampleText').value;
+const size=document.getElementById('fontSize').value;
+const weight=document.getElementById('fontWeight').value;
+const style=document.getElementById('fontStyle').value;
+const align=document.getElementById('textAlign').value;
+const preview=document.getElementById('preview');
+preview.style.fontFamily=font;
+preview.style.fontSize=size+'px';
+preview.style.fontWeight=weight;
+preview.style.fontStyle=style;
+preview.style.textAlign=align;
+preview.textContent=text;
+}
+updatePreview();
+</script>
+</body>
+</html>
