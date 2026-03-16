@@ -8,20 +8,28 @@ button{background:#6366f1;color:#0a0a0a;cursor:pointer}
 textarea{background:#1a1a1a;color:#e4e4e4;border:1px solid #6366f1;width:100%;height:100px;padding:8px;box-sizing:border-box}
 #result{background:#1a1a1a;padding:10px;margin-top:10px;border-radius:4px;min-height:50px;font-size:12px}
 a{color:#6366f1}
+#stopwords{background:#1a1a1a;color:#e4e4e4;border:1px solid #6366f1;width:100%;height:40px;padding:8px;box-sizing:border-box;font-size:12px}
 </style>
 </head>
 <body>
 <h2>Word Frequency Analyzer</h2>
 <a href="index.html" style="color:#6366f1">Back to Home</a>
 <textarea id="input" placeholder="Enter text here..."></textarea>
+<textarea id="stopwords" placeholder="Enter stop words to filter (one per line, e.g., the, and, is, in, on)"></textarea>
 <button onclick="analyze()">Analyze</button>
 <div id="result"></div>
 <script>
 function analyze(){
 const text=document.getElementById('input').value.toLowerCase();
+const stopwordsText=document.getElementById('stopwords').value.toLowerCase();
 const words=text.match(/\b\w+\b/g)||[];
+const stopWords=new Set(stopwordsText.split('\n').filter(w=>w.trim()));
 const freq={};
-for(const w of words)freq[w]=(freq[w]||0)+1;
+for(const w of words){
+if(!stopWords.has(w)){
+freq[w]=(freq[w]||0)+1;
+}
+}
 const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
 let out="";
 for(const [w,c] of sorted.slice(0,10)){
