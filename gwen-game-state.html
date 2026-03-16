@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game State Manager - Gwen's AI Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #6366f1;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 1rem;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            border-color: #6366f1;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+        .card h3 {
+            color: #6366f1;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+        .card p {
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .card .tag {
+            display: inline-block;
+            background: #1a1a1a;
+            color: #6366f1;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .output-area {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 200px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-x: auto;
+        }
+        .output-label {
+            color: #6366f1;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        .input-group label {
+            display: block;
+            color: #888;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .input-group input,
+        .input-group textarea,
+        .input-group select {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: #e4e4e4;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus,
+        .input-group textarea:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .input-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5558e6;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #333;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        .status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        .status.online { background: #22c55e; }
+        .status.offline { background: #ef4444; }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .key-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .key-tag {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .key-tag:hover {
+            border-color: #6366f1;
+            background: #222;
+        }
+        .key-tag.active {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.2);
+        }
+        .copy-btn {
+            background: #333;
+            border: 1px solid #444;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
+        }
+        .copy-btn:hover {
+            background: #444;
+            transform: none;
+        }
+        .error {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .success {
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #111;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .stat-value {
+            color: #6366f1;
+            font-weight: bold;
+        }
+        .stat-label {
+            color: #888;
+        }
+        .canvas-preview {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 8px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-family: monospace;
+            color: #6366f1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .modal-title {
+            color: #6366f1;
+            font-size: 1.2rem;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .modal-close:hover {
+            color: #e4e4e4;
+        }
+        .modal-body {
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #222;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        footer a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Game State Manager</h1>
+            <p class="subtitle">Manage game state with KV storage - create, list, read, delete game data</p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </header>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-value" id="stats-keys">0</span>
+                <span class="stat-label">Keys Stored</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="stats-size">0 KB</span>
+                <span class="stat-label">Total Size</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="stats-last">-</span>
+                <span class="stat-label">Last Update</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Create New State</h3>
+                <p>Create a new game state entry with custom key and data</p>
+                <div class="input-group">
+                    <label for="state-key">State Key</label>
+                    <input type="text" id="state-key" placeholder="e.g., player_stats, inventory, level_data">
+                </div>
+                <div class="input-group">
+                    <label for="state-data">State Data (JSON)</label>
+                    <textarea id="state-data" placeholder='{"score": 100, "level": 1, "items": ["sword", "shield"]}'></textarea>
+                </div>
+                <button id="btn-create">Create State</button>
+                <div id="create-status"></div>
+            </div>
+
+            <div class="card">
+                <h3>Read Existing State</h3>
+                <p>Read data from an existing state key</p>
+                <div class="input-group">
+                    <label for="read-key">State Key</label>
+                    <input type="text" id="read-key" placeholder="Enter a key to read">
+                </div>
+                <button id="btn-read">Read State</button>
+                <button id="btn-list-keys" style="margin-top: 0.5rem;">List All Keys</button>
+                <div class="key-list" id="key-list"></div>
+                <div id="read-status"></div>
+            </div>
+
+            <div class="card">
+                <h3>Update State</h3>
+                <p>Update an existing state with new data</p>
+                <div class="input-group">
+                    <label for="update-key">State Key</label>
+                    <input type="text" id="update-key" placeholder="Enter a key to update">
+                </div>
+                <div class="input-group">
+                    <label for="update-data">New Data (JSON)</label>
+                    <textarea id="update-data" placeholder='{"score": 200, "level": 2}'></textarea>
+                </div>
+                <button id="btn-update">Update State</button>
+                <div id="update-status"></div>
+            </div>
+
+            <div class="card">
+                <h3>Delete State</h3>
+                <p>Delete a state entry permanently</p>
+                <div class="input-group">
+                    <label for="delete-key">State Key</label>
+                    <input type="text" id="delete-key" placeholder="Enter a key to delete">
+                </div>
+                <button id="btn-delete">Delete State</button>
+                <div id="delete-status"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Output Area</h3>
+            <span class="output-label">Response Data</span>
+            <div class="output-area" id="output"></div>
+            <button class="copy-btn" id="btn-copy">Copy to Clipboard</button>
+        </div>
+
+        <footer>
+            <p>Gwen's AI Lab &bull; Built autonomously by <a href="https://github.com/dearclawla1">Gwen</a> using Qwen 3.5-9B &bull; 2026</p>
+            <p style="margin-top:.5rem;font-size:.8rem">Every tool is built and maintained by an AI agent running locally on consumer hardware.</p>
+        </footer>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="modal-title">State Details</span>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://gwen-api.dearclawla1.workers.dev';
+        const NAMESPACE = 'game_state';
+        let allKeys = [];
+        let currentKey = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllKeys();
+            setupEventListeners();
+            updateStats();
+            trackUsage();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('btn-create').addEventListener('click', handleCreate);
+            document.getElementById('btn-read').addEventListener('click', handleRead);
+            document.getElementById('btn-list-keys').addEventListener('click', handleListKeys);
+            document.getElementById('btn-update').addEventListener('click', handleUpdate);
+            document.getElementById('btn-delete').addEventListener('click', handleDelete);
+            document.getElementById('btn-copy').addEventListener('click', handleCopy);
+            document.getElementById('modal-close').addEventListener('click', closeModal);
+            document.getElementById('modal').addEventListener('click', (e) => {
+                if (e.target.id === 'modal') closeModal();
+            });
+
+            // Allow Enter key to submit forms
+            ['state-key', 'state-data', 'read-key', 'update-key', 'update-data', 'delete-key'].forEach(id => {
+                document.getElementById(id)?.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        const btn = document.getElementById(id.replace('-key', '-btn')) || 
+                                   document.getElementById(id.replace('-data', '-btn'));
+                        if (btn) btn.click();
+                    }
+                });
+            });
+        }
+
+        async function loadAllKeys() {
+            try {
+                const res = await fetch(`${API_BASE}/api/store/${NAMESPACE}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    allKeys = Array.isArray(data) ? data : [];
+                    renderKeyList();
+                }
+            } catch (err) {
+                console.error('Failed to load keys:', err);
+            }
+        }
+
+        function renderKeyList() {
+            const container = document.getElementById('key-list');
+            container.innerHTML = allKeys.map(key => 
+                `<span class="key-tag ${currentKey === key ? 'active' : ''}" 
+                       data-key="${key}" 
+                       onclick="selectKey('${key}')">${escapeHtml(key)}</span>`
+            ).join('');
+        }
+
+        function selectKey(key) {
+            currentKey = key;
+            renderKeyList();
+        }
+
+        async function handleCreate() {
+            const key = document.getElementById('state-key').value.trim();
+            const data = document.getElementById('state-data').value.trim();
+
+            if (!key) {
+                showStatus('create-status', 'Please enter a key', 'error');
+                return;
+            }
+            if (!data) {
+                showStatus('create-status', 'Please enter data', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/store/${NAMESPACE}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, data })
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    showOutput(JSON.stringify(result, null, 2));
+                    showStatus('create-status', 'State created successfully!', 'success');
+                    document.getElementById('state-key').value = '';
+                    document.getElementById('state-data').value = '';
+                    await loadAllKeys();
+                    updateStats();
+                } else {
+                    throw new Error('Failed to create state');
+                }
+            } catch (err) {
+                showStatus('create-status', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function handleRead() {
+            const key = document.getElementById('read-key').value.trim() || currentKey;
+
+            if (!key) {
+                showStatus('read-status', 'Please enter a key or select from list', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/store/${NAMESPACE}/${encodeURIComponent(key)}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    showOutput(JSON.stringify(result, null, 2));
+                    showStatus('read-status', 'State read successfully!', 'success');
+                    selectKey(key);
+                } else {
+                    throw new Error('Failed to read state');
+                }
+            } catch (err) {
+                showStatus('read-status', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function handleUpdate() {
+            const key = document.getElementById('update-key').value.trim() || currentKey;
+            const data = document.getElementById('update-data').value.trim();
+
+            if (!key) {
+                showStatus('update-status', 'Please enter a key or select from list', 'error');
+                return;
+            }
+            if (!data) {
+                showStatus('update-status', 'Please enter new data', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/store/${NAMESPACE}/${encodeURIComponent(key)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data })
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    showOutput(JSON.stringify(result, null, 2));
+                    showStatus('update-status', 'State updated successfully!', 'success');
+                    document.getElementById('update-data').value = '';
+                    await loadAllKeys();
+                    updateStats();
+                } else {
+                    throw new Error('Failed to update state');
+                }
+            } catch (err) {
+                showStatus('update-status', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function handleDelete() {
+            const key = document.getElementById('delete-key').value.trim() || currentKey;
+
+            if (!key) {
+                showStatus('delete-status', 'Please enter a key or select from list', 'error');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete state "${escapeHtml(key)}"?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/store/${NAMESPACE}/${encodeURIComponent(key)}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (res.ok) {
+                    showOutput('State deleted successfully');
+                    showStatus('delete-status', 'State deleted successfully!', 'success');
+                    document.getElementById('delete-key').value = '';
+                    await loadAllKeys();
+                    updateStats();
+                } else {
+                    throw new Error('Failed to delete state');
+                }
+            } catch (err) {
+                showStatus('delete-status', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function handleListKeys() {
+            await loadAllKeys();
+            renderKeyList();
+            showOutput(JSON.stringify(allKeys, null, 2));
+            showStatus('read-status', `Found ${allKeys.length} keys`, 'success');
+        }
+
+        function handleCopy() {
+            const output = document.getElementById('output');
+            const text = output.textContent;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('btn-copy');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                showStatus('read-status', 'Failed to copy: ' + err.message, 'error');
+            });
+        }
+
+        function showOutput(text) {
+            document.getElementById('output').textContent = text;
+        }
+
+        function showStatus(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<span class="${type}">${message}</span>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function updateStats() {
+            const totalSize = allKeys.reduce((sum, key) => {
+                return sum + (typeof key === 'string' ? key.length : 0);
+            }, 0);
+
+            document.getElementById('stats-keys').textContent = allKeys.length;
+            document.getElementById('stats-size').textContent = `${(totalSize / 1024).toFixed(2)} KB`;
+            document.getElementById('stats-last').textContent = 'N/A';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function trackUsage() {
+            try {
+                await fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+                        params: ['gwen-game-state.html', 'load', new Date().toISOString()]
+                    })
+                }).catch(() => {});
+            } catch (err) {
+                console.error('Failed to track usage:', err);
+            }
+        }
+    </script>
+</body>
+</html>
