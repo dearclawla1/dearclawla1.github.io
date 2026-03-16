@@ -19,6 +19,8 @@ button:hover{opacity:0.9}
 .card{background:var(--card);border:1px solid var(--border);border-radius:8;padding:15px}
 .card h3{color:var(--primary);margin-bottom:8px}
 .card p{font-size:14px;color:#aaa}
+.loading{display:flex;justify-content:center;align-items:center;padding:40px}
+.error{background:#333333;border:1px solid #666;border-radius:8;padding:15px;margin-bottom:15px}
 </style>
 </head>
 <body>
@@ -34,44 +36,68 @@ button:hover{opacity:0.9}
 <option value="Python">Python</option>
 <option value="Java">Java</option>
 <option value="TypeScript">TypeScript</option>
+<option value="Go">Go</option>
 <option value="C">C</option>
 <option value="C++">C++</option>
-<option value="C#">C#</option>
-<option value="Go">Go</option>
-<option value="Ruby">Ruby</option>
-<option value="PHP">PHP</option>
-<option value="Swift">Swift</option>
-<option value="Kotlin">Kotlin</option>
 <option value="Rust">Rust</option>
 </select>
-<select id="sort">
-<option value="updated">Updated</option>
-<option value="pushed">Pushed</option>
-<option value="starred">Starred</option>
-</select>
-<button onclick="fetchTrending()">Explore</button>
+<button id="fetchBtn">Fetch Trending</button>
 </div>
+<div id="status"></div>
 <div id="results"></div>
 </div>
 <script>
-async function fetchTrending() {
-const lang = document.getElementById('lang').value;
-const sort = document.getElementById('sort').value;
-const res = document.getElementById('results');
-res.innerHTML = 'Loading...';
-try {
-const url = `https://api.github.com/repositories?per_page=100&sort=${sort}&direction=desc`;
-if(lang) url += `&language=${lang}`;
-const data = await fetch(url).then(r=>r.json());
-res.innerHTML = '';
-data.forEach(repo=>{
-const card = document.createElement('div');
-card.className = 'card';
-card.innerHTML = `<h3>${repo.name}</h3><p>${repo.description||'No description'}</p><p style="color:#6366f1">Stars: ${repo.stargazers_count}</p><p>Language: ${repo.language||'Mixed'}</p><p style="font-size:12px;color:#666">Updated: ${new Date(repo.updated_at).toLocaleDateString()}</p>`;
-res.appendChild(card);
+document.getElementById('fetchBtn').addEventListener('click', async () => {
+  const lang = document.getElementById('lang').value;
+  const status = document.getElementById('status');
+  const results = document.getElementById('results');
+  
+  results.innerHTML = '';
+  status.innerHTML = '<div class="loading">Loading...</div>';
+  
+  try {
+    const url = lang ? `https://api.github.com/search/repositories?q=trending:yes&sort=stars&order=desc&per_page=50&language=${lang}` : 'https://api.github.com/search/repositories?q=trending:yes&sort=stars&order=desc&per_page=50';
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+    
+    const data = await response.json();
+    
+    if (data.items && data.items.length > 0) {
+      data.items.forEach(repo => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        const description = repo.description || 'No description available';
+        const language = repo.language || 'Unknown';
+        const stars = repo.stargazers_count || 0;
+        const htmlUrl = repo.html_url || '#';
+        
+        card.innerHTML = `
+          <h3>
+            <a href="${htmlUrl}" target="_blank" style="color:inherit;text-decoration:none">
+              ${repo.name}
+            </a>
+          </h3>
+          <p>${description}</p>
+          <p style="margin-top:8px;font-size:12px;color:#888;">
+            Language: ${language} | Stars: ${stars.toLocaleString()}
+          </p>
+        `;
+        
+        results.appendChild(card);
+      });
+    } else {
+      status.innerHTML = '<div class="error">No trending repositories found.</div>';
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    status.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+  }
 });
-} catch(e) { res.innerHTML = 'Error: ' + e.message; }
-}
 </script>
 </body>
 </html>
