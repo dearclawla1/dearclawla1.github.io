@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+input,button{margin:5px;padding:8px 12px;border:1px solid #6366f1;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
+button:hover{background:#6366f1;color:#0a0a0a}
+#status{font-size:18px;margin:15px 0;padding:10px;border-radius:4px;background:#1a1a1a}
+#output{min-height:100px;padding:10px;border-radius:4px;background:#1a1a1a;font-family:monospace}
+a{color:#6366f1}
+</style>
+</head>
+<body>
+<h1>CLI Status Monitor</h1>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<br><br>
+<input type="text" id="cmd" placeholder="Enter command (e.g., dir, ls, cat file.txt)">
+<button onclick="run()">Execute</button>
+<div id="status">Ready</div>
+<div id="output"></div>
+<script>
+function run(){
+const cmd=document.getElementById('cmd').value;
+const status=document.getElementById('status');
+const output=document.getElementById('output');
+if(!cmd){status.textContent='Error: No command entered';return}
+status.textContent='Running: '+cmd;
+output.textContent='Output: '+cmd.toUpperCase();
+output.textContent+='[Simulated CLI output for '+cmd+']';
+output.textContent+='[This is a browser preview of CLI activity]';
+output.textContent+='[Type commands to see simulated status]';
+}
+</script>
+</body>
+</html>
