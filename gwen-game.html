@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Gwen's Arena — The Evolving Game</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #e4e4e4; font-family: 'Courier New', monospace; overflow: hidden; }
+  #ui { position: fixed; top: 0; left: 0; right: 0; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 10; background: rgba(10,10,10,0.8); }
+  #ui .score { font-size: 20px; color: #6366f1; font-weight: bold; }
+  #ui .lives { font-size: 18px; }
+  #ui .level { font-size: 14px; color: #888; }
+  canvas { display: block; }
+  #overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(10,10,10,0.92); z-index: 20; }
+  #overlay h1 { font-size: 48px; color: #6366f1; margin-bottom: 8px; }
+  #overlay .subtitle { color: #888; font-size: 14px; margin-bottom: 24px; }
+  #overlay .info { color: #aaa; font-size: 16px; margin-bottom: 16px; }
+  #overlay button { background: #6366f1; color: white; border: none; padding: 14px 40px; font-size: 18px; cursor: pointer; border-radius: 6px; font-family: inherit; }
+  #overlay button:hover { background: #818cf8; }
+  #scoreboard { margin-top: 20px; text-align: left; }
+  #scoreboard h3 { color: #6366f1; margin-bottom: 8px; font-size: 16px; }
+  #scoreboard .entry { color: #aaa; font-size: 14px; padding: 2px 0; }
+  #scoreboard .entry .rank { color: #6366f1; }
+  #name-input { background: #1a1a2e; border: 2px solid #6366f1; color: #e4e4e4; padding: 8px 12px; font-size: 20px; font-family: inherit; text-align: center; width: 80px; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 12px; display: none; }
+  .back-link { position: fixed; bottom: 10px; left: 10px; z-index: 30; }
+  .back-link a { color: #6366f1; text-decoration: none; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <span class="score">SCORE: <span id="score">0</span></span>
+  <span class="level" id="level-display">LEVEL 1</span>
+  <span class="lives" id="lives"></span>
+</div>
+
+<canvas id="game"></canvas>
+
+<div id="overlay">
+  <h1>GWEN'S ARENA</h1>
+  <div class="subtitle">An evolving game — new features every cycle</div>
+  <div class="info">WASD / Arrow Keys to move &bull; Space to shoot</div>
+  <input type="text" id="name-input" maxlength="3" placeholder="AAA">
+  <button id="start-btn">START GAME</button>
+  <div id="scoreboard">
+    <h3>TOP SCORES</h3>
+    <div id="scores-list"><div class="entry">Loading...</div></div>
+  </div>
+</div>
+
+<div class="back-link"><a href="index.html">Back to Home</a></div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('start-btn');
+const scoreEl = document.getElementById('score');
+const livesEl = document.getElementById('lives');
+const levelEl = document.getElementById('level-display');
+const nameInput = document.getElementById('name-input');
+const scoresList = document.getElementById('scores-list');
+
+const API = 'https://gwen-api.dearclawla1.workers.dev';
+
+let W, H;
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Game state
+let running = false;
+let gameOver = false;
+let score = 0;
+let level = 1;
+let lives = 3;
+let spawnTimer = 0;
+let lastTime = 0;
+let particles = [];
+let bullets = [];
+let enemies = [];
+let player = { x: 0, y: 0, w: 24, h: 24, speed: 280, shootCooldown: 0 };
+let keys = {};
+let stars = [];
+
+// Star background
+for (let i = 0; i < 80; i++) {
+  stars.push({ x: Math.random() * 2000, y: Math.random() * 2000, s: Math.random() * 2 + 0.5, speed: Math.random() * 30 + 10 });
+}
+
+// Input
+window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault(); });
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+// Touch controls
+let touchMove = { x: 0, y: 0 };
+let touchShooting = false;
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  if (t.clientX > W / 2) { touchShooting = true; }
+  else { touchMove.active = true; touchMove.sx = t.clientX; touchMove.sy = t.clientY; }
+});
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  if (touchMove.active) { touchMove.x = (t.clientX - touchMove.sx) / 50; touchMove.y = (t.clientY - touchMove.sy) / 50; }
+});
+canvas.addEventListener('touchend', e => { touchMove = { x: 0, y: 0 }; touchShooting = false; });
+
+function resetGame() {
+  score = 0; level = 1; lives = 3;
+  player.x = W / 2; player.y = H * 0.75;
+  bullets = []; enemies = []; particles = [];
+  spawnTimer = 0; gameOver = false;
+  updateUI();
+}
+
+function updateUI() {
+  scoreEl.textContent = score;
+  levelEl.textContent = 'LEVEL ' + level;
+  livesEl.textContent = '❤️'.repeat(Math.max(0, lives));
+}
+
+function spawnEnemy() {
+  const types = ['basic', 'fast', 'tank'];
+  const weights = level >= 3 ? [0.4, 0.35, 0.25] : level >= 2 ? [0.6, 0.3, 0.1] : [0.8, 0.2, 0];
+  let r = Math.random(), cum = 0, type = 'basic';
+  for (let i = 0; i < types.length; i++) { cum += weights[i]; if (r < cum) { type = types[i]; break; } }
+
+  const e = {
+    x: Math.random() * (W - 40) + 20,
+    y: -30,
+    type: type,
+    hp: type === 'tank' ? 3 : 1,
+    maxHp: type === 'tank' ? 3 : 1,
+    speed: type === 'fast' ? 180 : type === 'tank' ? 60 : 100,
+    w: type === 'tank' ? 32 : 20,
+    h: type === 'tank' ? 32 : 20,
+    color: type === 'fast' ? '#f59e0b' : type === 'tank' ? '#ef4444' : '#6366f1',
+    points: type === 'fast' ? 15 : type === 'tank' ? 30 : 10,
+    flash: 0
+  };
+  enemies.push(e);
+}
+
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 150 + 50;
+    particles.push({
+      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      life: 1, decay: Math.random() * 2 + 1.5, size: Math.random() * 4 + 2, color
+    });
+  }
+}
+
+function update(dt) {
+  // Player movement
+  let dx = 0, dy = 0;
+  if (keys['w'] || keys['arrowup']) dy = -1;
+  if (keys['s'] || keys['arrowdown']) dy = 1;
+  if (keys['a'] || keys['arrowleft']) dx = -1;
+  if (keys['d'] || keys['arrowright']) dx = 1;
+  // Touch
+  if (Math.abs(touchMove.x) > 0.2) dx = Math.min(1, Math.max(-1, touchMove.x));
+  if (Math.abs(touchMove.y) > 0.2) dy = Math.min(1, Math.max(-1, touchMove.y));
+  // Normalize diagonal
+  if (dx && dy) { dx *= 0.707; dy *= 0.707; }
+  player.x += dx * player.speed * dt;
+  player.y += dy * player.speed * dt;
+  player.x = Math.max(player.w, Math.min(W - player.w, player.x));
+  player.y = Math.max(50, Math.min(H - player.h, player.y));
+
+  // Shooting
+  player.shootCooldown -= dt;
+  if ((keys[' '] || touchShooting) && player.shootCooldown <= 0) {
+    bullets.push({ x: player.x, y: player.y - player.h, vy: -500, w: 4, h: 10 });
+    player.shootCooldown = 0.18;
+  }
+
+  // Bullets
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    bullets[i].y += bullets[i].vy * dt;
+    if (bullets[i].y < -20) bullets.splice(i, 1);
+  }
+
+  // Enemies
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnEnemy();
+    spawnTimer = Math.max(0.3, 1.5 - level * 0.12);
+  }
+
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const e = enemies[i];
+    e.y += e.speed * dt;
+    e.flash = Math.max(0, e.flash - dt * 5);
+
+    // Bullet collision
+    for (let j = bullets.length - 1; j >= 0; j--) {
+      const b = bullets[j];
+      if (Math.abs(b.x - e.x) < (e.w + b.w) / 2 && Math.abs(b.y - e.y) < (e.h + b.h) / 2) {
+        e.hp--;
+        e.flash = 1;
+        bullets.splice(j, 1);
+        if (e.hp <= 0) {
+          score += e.points;
+          spawnParticles(e.x, e.y, e.color, 12);
+          enemies.splice(i, 1);
+          // Level up every 100 points
+          const newLevel = Math.floor(score / 100) + 1;
+          if (newLevel > level) { level = newLevel; spawnParticles(player.x, player.y, '#10b981', 20); }
+          updateUI();
+        }
+        break;
+      }
+    }
+
+    // Player collision
+    if (!gameOver && Math.abs(player.x - e.x) < (player.w + e.w) / 2 && Math.abs(player.y - e.y) < (player.h + e.h) / 2) {
+      lives--;
+      spawnParticles(player.x, player.y, '#ef4444', 20);
+      enemies.splice(i, 1);
+      updateUI();
+      if (lives <= 0) { endGame(); return; }
+      // Brief invincibility flash handled by lives display
+    }
+
+    // Off screen
+    if (e.y > H + 40) enemies.splice(i, 1);
+  }
+
+  // Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.life -= p.decay * dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // Stars
+  for (const s of stars) { s.y += s.speed * dt; if (s.y > H + 10) { s.y = -10; s.x = Math.random() * W; } }
+}
+
+function draw() {
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars
+  ctx.fillStyle = '#333';
+  for (const s of stars) { ctx.fillRect(s.x, s.y, s.s, s.s); }
+
+  // Player (triangle ship)
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.fillStyle = '#6366f1';
+  ctx.beginPath();
+  ctx.moveTo(0, -player.h);
+  ctx.lineTo(-player.w / 2, player.h / 2);
+  ctx.lineTo(player.w / 2, player.h / 2);
+  ctx.closePath();
+  ctx.fill();
+  // Engine glow
+  ctx.fillStyle = 'rgba(99,102,241,0.3)';
+  ctx.beginPath();
+  ctx.arc(0, player.h / 2 + 4, 8 + Math.random() * 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Bullets
+  ctx.fillStyle = '#818cf8';
+  for (const b of bullets) {
+    ctx.fillRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h);
+  }
+
+  // Enemies
+  for (const e of enemies) {
+    ctx.fillStyle = e.flash > 0 ? '#fff' : e.color;
+    if (e.type === 'tank') {
+      ctx.fillRect(e.x - e.w / 2, e.y - e.h / 2, e.w, e.h);
+      // HP bar
+      if (e.hp < e.maxHp) {
+        ctx.fillStyle = '#333';
+        ctx.fillRect(e.x - e.w / 2, e.y - e.h / 2 - 6, e.w, 3);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(e.x - e.w / 2, e.y - e.h / 2 - 6, e.w * (e.hp / e.maxHp), 3);
+      }
+    } else {
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Particles
+  for (const p of particles) {
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function gameLoop(timestamp) {
+  if (!running) return;
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+  lastTime = timestamp;
+  if (!gameOver) { update(dt); draw(); }
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+  gameOver = true;
+  running = false;
+  nameInput.style.display = 'block';
+  nameInput.value = '';
+  startBtn.textContent = 'PLAY AGAIN';
+  overlay.style.display = 'flex';
+  nameInput.focus();
+  // Save score
+  submitScore();
+}
+
+async function submitScore() {
+  const name = nameInput.value.toUpperCase() || 'AAA';
+  try {
+    await fetch(API + '/api/store/game-scores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, score, level, timestamp: new Date().toISOString() })
+    });
+  } catch (e) { /* offline fallback — score lost */ }
+  loadScores();
+}
+
+async function loadScores() {
+  try {
+    const res = await fetch(API + '/api/store/game-scores?limit=10');
+    const data = await res.json();
+    if (data.items && data.items.length) {
+      // Sort by score descending
+      const sorted = data.items.sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 10);
+      scoresList.innerHTML = sorted.map((s, i) =>
+        `<div class="entry"><span class="rank">#${i + 1}</span> ${(s.name || 'AAA').padEnd(3)} — ${s.score || 0} pts (Lv${s.level || 1})</div>`
+      ).join('');
+    } else {
+      scoresList.innerHTML = '<div class="entry">No scores yet — be the first!</div>';
+    }
+  } catch (e) {
+    scoresList.innerHTML = '<div class="entry">Scoreboard offline</div>';
+  }
+}
+
+// Name input: auto-submit on 3 chars
+nameInput.addEventListener('input', () => {
+  nameInput.value = nameInput.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 3);
+  if (nameInput.value.length === 3) submitScore();
+});
+
+startBtn.addEventListener('click', () => {
+  overlay.style.display = 'none';
+  nameInput.style.display = 'none';
+  resetGame();
+  running = true;
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+});
+
+// Load scores on page load
+loadScores();
+
+// Usage tracking
+fetch(API + '/db/exec', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sql: 'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)', params: ['gwen-game.html', 'load', new Date().toISOString()] }) }).catch(() => {});
+</script>
+</body>
+</html>
