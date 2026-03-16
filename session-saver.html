@@ -4,43 +4,158 @@
 <meta charset="UTF-8">
 <title>Session Saver</title>
 <style>
-:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1}
+:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1;--secondary:#1a1a1a;--border:#333}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);padding:2rem;display:flex;flex-direction:column;align-items:center;gap:1rem}
 a{color:var(--primary)}
 h1{font-size:1.5rem;margin-bottom:1rem}
-.container{max-width:500px;width:100%}
-input,select,button{width:100%;padding:0.75rem;font-size:1rem;margin-bottom:0.75rem;border-radius:6px;border:1px solid #333;background:#1a1a1a;color:var(--text)}
+.container{max-width:600px;width:100%}
+input,select,button{width:100%;padding:0.75rem;font-size:1rem;margin-bottom:0.75rem;border-radius:6px;border:1px solid var(--border);background:var(--secondary);color:var(--text);transition:all 0.2s}
 input:focus,select:focus{outline:2px solid var(--primary);border-color:transparent}
 button{cursor:pointer;font-weight:600;border:none}
 button:hover{background:#2a2a2a}
-#output{background:#1a1a1a;padding:1rem;border-radius:6px;border:1px solid #333;min-height:100px;font-family:monospace;font-size:0.85rem;white-space:pre-wrap;overflow:auto}
+button:active{transform:scale(0.98)}
+#output{background:var(--secondary);padding:1rem;border-radius:6px;border:1px solid var(--border);min-height:150px;font-family:monospace;font-size:0.85rem;white-space:pre-wrap;overflow:auto}
+#copyBtn{background:var(--primary);color:#0a0a0a;margin-top:-0.5rem}
+#copyBtn:hover{background:#5558e6}
+#clearBtn{background:#ef4444;color:#fff}
+#clearBtn:hover{background:#dc2626}
+#saveBtn{background:#10b981;color:#fff}
+#saveBtn:hover{background:#059669}
+.badge{display:inline-block;padding:0.25rem 0.5rem;font-size:0.75rem;background:#333;border-radius:4px;margin-left:0.5rem}
 </style>
 </head>
 <body>
 <a href="index.html" style="color:#6366f1">Back to Home</a>
-<h1>Session Saver</h1>
+<h1>Session Saver <span class="badge">v2.0</span></h1>
 <div class="container">
 <label>Session Name:</label>
-<input type="text" id="sessionName" placeholder="my-session">
+<input type="text" id="sessionName" placeholder="my-session" autocomplete="off">
 <label>Store Type:</label>
 <select id="storeType">
 <option value="local">Local Storage</option>
 <option value="session">Session Storage</option>
 </select>
+<div style="display:flex;gap:0.5rem">
 <button id="saveBtn">Save Session</button>
 <button id="clearBtn">Clear Session</button>
+</div>
+<button id="copyBtn">Copy to Clipboard</button>
 <div id="output">Session data will appear here...</div>
 </div>
 <script>
-const name=document.getElementById('sessionName');
-const type=document.getElementById('storeType');
-const output=document.getElementById('output');
-const saveBtn=document.getElementById('saveBtn');
-const clearBtn=document.getElementById('clearBtn');
-const getData=()=>({name:name.value,type:type.value,timestamp:Date.now(),data:{}});
-saveBtn.onclick=()=>{const s=getData();if(!name.value){output.textContent='Error: Enter a session name\n'}else{try{const store=type.value==='local'?localStorage:sessionStorage;store.setItem(s.name,s);output.textContent=`✓ Saved to ${type.value.toUpperCase()} storage\nSession: ${s.name}\nTimestamp: ${new Date(s.timestamp).toLocaleString()}\n\nClick "Clear Session" to remove.`}catch(e){output.textContent='Error: '+e.message}}};
-clearBtn.onclick=()=>{try{const store=type.value==='local'?localStorage:sessionStorage;store.removeItem(name.value);output.textContent='✓ Session cleared from storage.'}catch(e){output.textContent='Error: '+e.message}}};
+const sessionNameInput = document.getElementById('sessionName');
+const storeTypeSelect = document.getElementById('storeType');
+const saveBtn = document.getElementById('saveBtn');
+const clearBtn = document.getElementById('clearBtn');
+const copyBtn = document.getElementById('copyBtn');
+const output = document.getElementById('output');
+
+// Load existing session on page load
+window.addEventListener('DOMContentLoaded', () => {
+    const storedName = localStorage.getItem('sessionSaverName') || sessionStorage.getItem('sessionSaverName');
+    if (storedName) {
+        sessionNameInput.value = storedName;
+        output.textContent = `Session: ${storedName}\n\nType: ${storedName ? 'Loaded' : 'New'}`;
+    }
+});
+
+// Save session
+saveBtn.addEventListener('click', () => {
+    const name = sessionNameInput.value.trim();
+    const type = storeTypeSelect.value;
+    const data = {
+        name: name,
+        timestamp: new Date().toISOString(),
+        storeType: type,
+        content: output.textContent
+    };
+    
+    if (type === 'local') {
+        localStorage.setItem('sessionSaverName', name);
+        localStorage.setItem('sessionSaverData', JSON.stringify(data));
+    } else {
+        sessionStorage.setItem('sessionSaverName', name);
+        sessionStorage.setItem('sessionSaverData', JSON.stringify(data));
+    }
+    
+    output.textContent = `✓ Saved to ${type} Storage!\n\nSession: ${name}\nType: ${type}\nTimestamp: ${data.timestamp}`;
+});
+
+// Clear session
+clearBtn.addEventListener('click', () => {
+    const type = storeTypeSelect.value;
+    if (type === 'local') {
+        localStorage.removeItem('sessionSaverName');
+        localStorage.removeItem('sessionSaverData');
+    } else {
+        sessionStorage.removeItem('sessionSaverName');
+        sessionStorage.removeItem('sessionSaverData');
+    }
+    sessionNameInput.value = '';
+    output.textContent = 'Session cleared. Enter new data and save.';
+});
+
+// Copy to clipboard
+copyBtn.addEventListener('click', async () => {
+    const text = output.textContent;
+    try {
+        await navigator.clipboard.writeText(text);
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '✓ Copied!';
+        setTimeout(() => {
+            copyBtn.textContent = originalText;
+        }, 2000);
+    } catch (err) {
+        output.textContent = 'Error copying to clipboard. Please try manually.';
+    }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + S to save
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveBtn.click();
+    }
+    // Ctrl/Cmd + C to copy
+    if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        e.preventDefault();
+        copyBtn.click();
+    }
+    // Ctrl/Cmd + Enter to clear
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        clearBtn.click();
+    }
+});
+
+// Auto-save on input change (debounced)
+let saveTimeout;
+sessionNameInput.addEventListener('input', () => {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        const name = sessionNameInput.value.trim();
+        const type = storeTypeSelect.value;
+        const data = {
+            name: name,
+            timestamp: new Date().toISOString(),
+            storeType: type,
+            content: output.textContent
+        };
+        
+        if (type === 'local') {
+            localStorage.setItem('sessionSaverName', name);
+            localStorage.setItem('sessionSaverData', JSON.stringify(data));
+        } else {
+            sessionStorage.setItem('sessionSaverName', name);
+            sessionStorage.setItem('sessionSaverData', JSON.stringify(data));
+        }
+    }, 500);
+});
+
+// Show keyboard shortcuts hint
+output.textContent += `\n\n💡 Keyboard Shortcuts:\nCtrl+S: Save | Ctrl+C: Copy | Ctrl+Enter: Clear`;
 </script>
 </body>
 </html>
