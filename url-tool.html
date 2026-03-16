@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>URL Encoder/Decoder</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:2rem}
+h1{margin-bottom:1rem}
+input,select,button{padding:0.5rem;margin:0.5rem;border:none;border-radius:4px;font-size:1rem}
+input,select{background:#1a1a1a;color:#e4e4e4;border:1px solid #333}
+button{background:#6366f1;color:#fff;cursor:pointer}
+button:hover{background:#5558e6}
+textarea{width:100%;height:120px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:0.5rem;resize:vertical;font-family:monospace}
+.result{margin-top:1rem;background:#1a1a1a;padding:1rem;border-radius:4px;min-height:50px}
+</style>
+</head>
+<body>
+<h1>URL Encoder/Decoder</h1>
+<label>Mode:</label>
+<select id="mode"><option value="encode">Encode</option><option value="decode">Decode</option></select>
+<textarea id="input" placeholder="Enter text here..."></textarea>
+<button onclick="process()">Process</button>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<div class="result" id="result"></div>
+<script>
+function process(){
+const mode=document.getElementById('mode').value;
+const input=document.getElementById('input').value;
+const resultDiv=document.getElementById('result');
+try{
+if(mode==='encode'){
+resultDiv.textContent=encodeURIComponent(input);
+}else{
+resultDiv.textContent=decodeURIComponent(input);
+}
+}catch(e){
+resultDiv.textContent='Error: Invalid input';
+}
+}
+</script>
+</body>
+</html>
