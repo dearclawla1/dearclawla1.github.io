@@ -2,11 +2,22 @@
 <html>
 <head>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+body{background:#0a0a0a;color:#e4e44e4;font-family:monospace;margin:0;padding:20px}
 input,button,select{background:#1a1a1a;border:1px solid #3a3a3a;color:#e4e4e4;padding:8px;margin:5px}
 button{background:#6366f1;border:none;color:#fff}
 #result{background:#1a1a1a;padding:10px;margin:10px;border-left:3px solid #6366f1}
 a{color:#6366f1}
+#loading{display:none}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid #6366f1;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.error{border-left-color:#ef4444}
+.success{border-left-color:#10b981}
+#headers{background:#1a1a1a;border:1px solid #3a3a3a;padding:8px;margin:5px;font-size:12px}
+#request-body{background:#1a1a1a;border:1px solid #3a3a3a;padding:8px;margin:5px;font-size:12px}
+#status{background:#1a1a1a;border:1px solid #3a3a3a;padding:8px;margin:5px;font-weight:bold}
+#meta{background:#1a1a1a;border:1px solid #3a3a3a;padding:8px;margin:5px;font-size:11px;color:#888}
+#error-msg{background:#1a1a1a;border:1px solid #ef4444;padding:8px;margin:5px;font-size:12px;color:#ef4444}
+#loading-msg{background:#1a1a1a;border:1px solid #6366f1;padding:8px;margin:5px;font-size:12px;color:#6366f1;display:none}
 </style>
 </head>
 <body>
@@ -19,20 +30,114 @@ a{color:#6366f1}
 <option value="PUT">PUT</option>
 <option value="DELETE">DELETE</option>
 </select>
-<button onclick="test()">Test</button>
+<textarea id="body" placeholder="POST/PUT body (JSON)" style="background:#1a1a1a;border:1px solid #3a3a3a;color:#e4e4e4;padding:8px;margin:5px"></textarea>
+<button id="test-btn">Test API</button>
+<div id="loading"><div class="spinner"></div></div>
+<div id="loading-msg">Loading...</div>
+<div id="error-msg"></div>
 <div id="result"></div>
+<div id="status"></div>
+<div id="headers"></div>
+<div id="request-body"></div>
+<div id="meta"></div>
 <script>
-function test(){
-let url=document.getElementById('url').value;
-let method=document.getElementById('method').value;
-let result=document.getElementById('result');
-if(!url){result.innerText='Please enter an API URL';return;}
-let icon='📡';
-result.innerHTML=`<p><strong>${method}</strong> ${url}</p><p>Connecting... ${icon}</p>`;
-setTimeout(()=>{
-result.innerHTML=`<p>Status: <strong>200 OK</strong></p><p>Response: <code>${method} Request Successful</code></p>`;
-},1000);
-}
+document.getElementById('test-btn').addEventListener('click', async function() {
+    const url = document.getElementById('url').value.trim();
+    const method = document.getElementById('method').value;
+    const body = document.getElementById('body').value;
+    const resultDiv = document.getElementById('result');
+    const statusDiv = document.getElementById('status');
+    const headersDiv = document.getElementById('headers');
+    const requestBodyDiv = document.getElementById('request-body');
+    const metaDiv = document.getElementById('meta');
+    const errorDiv = document.getElementById('error-msg');
+    const loadingDiv = document.getElementById('loading');
+    const loadingMsg = document.getElementById('loading-msg');
+    
+    if (!url) {
+        errorDiv.textContent = 'Error: Please enter a valid API URL';
+        errorDiv.classList.add('error');
+        return;
+    }
+    
+    errorDiv.textContent = '';
+    errorDiv.classList.remove('error');
+    loadingDiv.style.display = 'block';
+    loadingMsg.style.display = 'block';
+    resultDiv.textContent = '';
+    statusDiv.textContent = '';
+    headersDiv.textContent = '';
+    requestBodyDiv.textContent = '';
+    
+    let response = null;
+    let error = null;
+    
+    try {
+        const options = {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+        
+        if (method !== 'GET' && body) {
+            try {
+                const parsedBody = JSON.parse(body);
+                options.body = JSON.stringify(parsedBody);
+            } catch (e) {
+                options.body = body;
+            }
+        }
+        
+        response = await fetch(url, options);
+        
+        loadingMsg.style.display = 'none';
+        
+        const statusText = response.status + ' ' + response.statusText;
+        statusDiv.textContent = statusText;
+        statusDiv.className = response.ok ? 'success' : 'error';
+        
+        const headers = {};
+        response.headers.forEach((value, key) => {
+            headers[key] = value;
+        });
+        headersDiv.textContent = Object.entries(headers).map(([k, v]) => k + ': ' + v).join('\\n');
+        
+        const contentType = response.headers.get('content-type') || '';
+        const isJson = contentType.includes('application/json');
+        
+        let data;
+        try {
+            data = isJson ? await response.json() : await response.text();
+        } catch (e) {
+            data = await response.text();
+        }
+        
+        resultDiv.textContent = data;
+        
+        if (requestBodyDiv) {
+            requestBodyDiv.textContent = body || '(no body)';
+        }
+        
+        if (metaDiv) {
+            metaDiv.textContent = 'Response Time: ' + response.headers.get('x-response-time') + 'ms';
+        }
+        
+        if (!response.ok) {
+            errorDiv.textContent = 'Warning: API returned status ' + response.status;
+            errorDiv.classList.add('error');
+        }
+        
+    } catch (err) {
+        loadingMsg.style.display = 'none';
+        errorDiv.textContent = 'Error: ' + err.message;
+        errorDiv.classList.add('error');
+        statusDiv.textContent = 'Request Failed';
+        statusDiv.className = 'error';
+    }
+    
+    loadingDiv.style.display = 'none';
+});
 </script>
 </body>
 </html>

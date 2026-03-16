@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Translator - Convert Between Programming Languages</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --text: #e4e4e4;
+      --accent: #6366f1;
+      --accent-hover: #5558e5;
+      --border: #333;
+      --input-bg: #1a1a1a;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+    .subtitle {
+      color: #888;
+      font-size: 1rem;
+    }
+    .nav-link {
+      display: inline-block;
+      margin-top: 15px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .nav-link:hover { text-decoration: underline; }
+    .card {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    textarea, input[type="text"], select {
+      width: 100%;
+      padding: 12px 15px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+    textarea:focus, input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    .language-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .lang-btn {
+      padding: 10px 20px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .lang-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+    .btn-secondary {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent);
+    }
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    .btn-success:hover {
+      opacity: 0.9;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .output-section {
+      display: none;
+    }
+    .output-section.visible {
+      display: block;
+    }
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .output-label {
+      font-weight: 600;
+    }
+    .copy-btn {
+      padding: 8px 15px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .copy-btn:hover {
+      border-color: var(--accent);
+    }
+    .output-box {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      min-height: 150px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .output-box.success {
+      border-color: var(--success);
+    }
+    .output-box.error {
+      border-color: var(--error);
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    .loading.visible {
+      display: block;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    .status.success {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+    .status.error {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--error);
+    }
+    .status.loading {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--accent);
+    }
+    .examples {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border);
+    }
+    .examples h4 {
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: #888;
+    }
+    .example-chip {
+      display: inline-block;
+      padding: 6px 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin: 3px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .example-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .info-box {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    .info-box strong {
+      color: var(--accent);
+    }
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--error);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      color: var(--error);
+      display: none;
+    }
+    .error-message.visible {
+      display: block;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 20px;
+      border-top: 1px solid var(--border);
+      color: #666;
+      font-size: 0.85rem;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5rem; }
+      .card { padding: 15px; }
+      .language-buttons { flex-direction: column; }
+      .lang-btn { width: 100%; text-align: center; }
+      .action-buttons { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Code Translator</h1>
+      <p class="subtitle">Convert text and code between programming languages instantly</p>
+      <a href="index.html" class="nav-link">Back to Home</a>
+    </header>
+
+    <div class="info-box">
+      <strong>How to use:</strong> Enter code or text in the input box, select source and target languages, then click "Translate". 
+      This tool uses free APIs to convert between languages, format code, and transform text.
+    </div>
+
+    <div class="card">
+      <div class="form-group">
+        <label for="input">Source Code / Text</label>
+        <textarea id="input" placeholder="Paste your code or text here...
+
+Examples:
+- Convert Python to JavaScript
+- Format JSON
+- Translate English to Spanish
+- Convert HTML to text
+- Parse CSV data
+- Generate SQL queries
+
+Type or paste your content above, then select languages and translate!"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Source Language</label>
+        <div class="language-buttons" id="sourceLangs">
+          <button class="lang-btn active" data-lang="auto" data-name="Auto Detect">Auto Detect</button>
+          <button class="lang-btn" data-lang="en" data-name="English">English</button>
+          <button class="lang-btn" data-lang="py" data-name="Python">Python</button>
+          <button class="lang-btn" data-lang="js" data-name="JavaScript">JavaScript</button>
+          <button class="lang-btn" data-lang="java" data-name="Java">Java</button>
+          <button class="lang-btn" data-lang="go" data-name="Go">Go</button>
+          <button class="lang-btn" data-lang="rs" data-name="Rust">Rust</button>
+          <button class="lang-btn" data-lang="cpp" data-name="C++">C++</button>
+          <button class="lang-btn" data-lang="c" data-name="C">C</button>
+          <button class="lang-btn" data-lang="php" data-name="PHP">PHP</button>
+          <button class="lang-btn" data-lang="rb" data-name="Ruby">Ruby</button>
+          <button class="lang-btn" data-lang="ts" data-name="TypeScript">TypeScript</button>
+          <button class="lang-btn" data-lang="json" data-name="JSON">JSON</button>
+          <button class="lang-btn" data-lang="xml" data-name="XML">XML</button>
+          <button class="lang-btn" data-lang="html" data-name="HTML">HTML</button>
+          <button class="lang-btn" data-lang="css" data-name="CSS">CSS</button>
+          <button class="lang-btn" data-lang="sql" data-name="SQL">SQL</button>
+          <button class="lang-btn" data-lang="csv" data-name="CSV">CSV</button>
+          <button class="lang-btn" data-lang="yaml" data-name="YAML">YAML</button>
+          <button class="lang-btn" data-lang="markdown" data-name="Markdown">Markdown</button>
+          <button class="lang-btn" data-lang="bash" data-name="Bash">Bash</button>
+          <button class="lang-btn" data-lang="perl" data-name="Perl">Perl</button>
+          <button class="lang-btn" data-lang="lua" data-name="Lua">Lua</button>
+          <button class="lang-btn" data-lang="swift" data-name="Swift">Swift</button>
+          <button class="lang-btn" data-lang="kotlin" data-name="Kotlin">Kotlin</button>
+          <button class="lang-btn" data-lang="scala" data-name="Scala">Scala</button>
+          <button class="lang-btn" data-lang="r" data-name="R">R</button>
+          <button class="lang-btn" data-lang="dart" data-name="Dart">Dart</button>
+          <button class="lang-btn" data-lang="scala" data-name="Scala">Scala</button>
+          <button class="lang-btn" data-lang="groovy" data-name="Groovy">Groovy</button>
+          <button class="lang-btn" data-lang="clojure" data-name="Clojure">Clojure</button>
+          <button class="lang-btn" data-lang="erlang" data-name="Erlang">Erlang</button>
+          <button class="lang-btn" data-lang="haskell" data-name="Haskell">Haskell</button>
+          <button class="lang-btn" data-lang="f#" data-name="F#">F#</button>
+          <button class="lang-btn" data-lang="elixir" data-name="Elixir">Elixir</button>
+          <button class="lang-btn" data-lang="ocaml" data-name="OCaml">OCaml</button>
+          <button class="lang-btn" data-lang="nim" data-name="Nim">Nim</button>
+          <button class="lang-btn" data-lang="v" data-name="V">V</button>
+          <button class="lang-btn" data-lang="zig" data-name="Zig">Zig</button>
+          <button class="lang-btn" data-lang="d" data-name="D">D</button>
+          <button class="lang-btn" data-lang="racket" data-name="Racket">Racket</button>
+          <button class="lang-btn" data-lang="coffeescript" data-name="CoffeeScript">CoffeeScript</button>
+          <button class="lang-btn" data-lang="pascal" data-name="Pascal">Pascal</button>
+          <button class="lang-btn" data-lang="fortran" data-name="Fortran">Fortran</button>
+          <button class="lang-btn" data-lang="asm" data-name="Assembly">Assembly</button>
+          <button class="lang-btn" data-lang="vbscript" data-name="VBScript">VBScript</button>
+          <button class="lang-btn" data-lang="tcl" data-name="TCL">TCL</button>
+          <button class="lang-btn" data-lang="awk" data-name="AWK">AWK</button>
+          <button class="lang-btn" data-lang="sed" data-name="Sed">Sed</button>
+          <button class="lang-btn" data-lang="makefile" data-name="Makefile">Makefile</button>
+          <button class="lang-btn" data-lang="dockerfile" data-name="Dockerfile">Dockerfile</button>
+          <button class="lang-btn" data-lang="nginx" data-name="Nginx">Nginx</button>
+          <button class="lang-btn" data-lang="apache" data-name="Apache">Apache</button>
+          <button class="lang-btn" data-lang="nginx" data-name="Nginx">Nginx</button>
+          <button class="lang-btn" data-lang="terraform" data-name="Terraform">Terraform</button>
+          <button class="lang-btn" data-lang="ansible" data-name="Ansible">Ansible</button>
+          <button class="lang-btn" data-lang="jenkins" data-name="Jenkins">Jenkins</button>
+          <button class="lang-btn" data-lang="git" data-name="Git">Git</button>
+          <button class="lang-btn" data-lang="yaml" data-name="YAML">YAML</button>
+          <button class="lang-btn" data-lang="toml" data-name="TOML">TOML</button>
+          <button class="lang-btn" data-lang="ini" data-name="INI">INI</button>
+          <button class="lang-btn" data-lang="properties" data-name="Properties">Properties</button>
+          <button class="lang-btn" data-lang="plist" data-name="Property List">Property List</button>
+          <button class="lang-btn" data-lang="reg" data-name="Registry">Registry</button>
+          <button class="lang-btn" data-lang="env" data-name="Environment">Environment</button>
+          <button class="lang-btn" data-name="Plain Text">Plain Text</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Target Language</label>
+        <div class="language-buttons" id="targetLangs">
+          <button class="lang-btn active" data-lang="auto" data-name="Auto Detect">Auto Detect</button>
+          <button class="lang-btn" data-lang="en" data-name="English">English</button>
+          <button class="lang-btn" data-lang="py" data-name="Python">Python</button>
+          <button class="lang-btn" data-lang="js" data-name="JavaScript">JavaScript</button>
+          <button class="lang-btn" data-lang="java" data-name="Java">Java</button>
+          <button class="lang-btn" data-lang="go" data-name="Go">Go</button>
+          <button class="lang-btn" data-lang="rs" data-name="Rust">Rust</button>
+          <button class="lang-btn" data-lang="cpp" data-name="C++">C++</button>
+          <button class="lang-btn" data-lang="c" data-name="C">C</button>
+          <button class="lang-btn" data-lang="php" data-name="PHP">PHP</button>
+          <button class="lang-btn" data-lang="rb" data-name="Ruby">Ruby</button>
+          <button class="lang-btn" data-lang="ts" data-name="TypeScript">TypeScript</button>
+          <button class="lang-btn" data-lang="json" data-name="JSON">JSON</button>
+          <button class="lang-btn" data-lang="xml" data-name="XML">XML</button>
+          <button class="lang-btn" data-lang="html" data-name="HTML">HTML</button>
+          <button class="lang-btn" data-lang="css" data-name="CSS">CSS</button>
+          <button class="lang-btn" data-lang="sql" data-name="SQL">SQL</button>
+          <button class="lang-btn" data-lang="csv" data-name="CSV">CSV</button>
+          <button class="lang-btn" data-lang="yaml" data-name="YAML">YAML</button>
+          <button class="lang-btn" data-lang="markdown" data-name="Markdown">Markdown</button>
+          <button class="lang-btn" data-lang="bash" data-name="Bash">Bash</button>
+          <button class="lang-btn" data-lang="perl" data-name="Perl">Perl</button>
+          <button class="lang-btn" data-lang="lua" data-name="Lua">Lua</button>
+          <button class="lang-btn" data-lang="swift" data-name="Swift">Swift</button>
+          <button class="lang-btn" data-lang="kotlin" data-name="Kotlin">Kotlin</button>
+          <button class="lang-btn" data-lang="scala" data-name="Scala">Scala</button>
+          <button class="lang-btn" data-lang="r" data-name="R">R</button>
+          <button class="lang-btn" data-lang="dart" data-name="Dart">Dart</button>
+          <button class="lang-btn" data-lang="groovy" data-name="Groovy">Groovy</button>
+          <button class="lang-btn" data-lang="clojure" data-name="Clojure">Clojure</button>
+          <button class="lang-btn" data-lang="erlang" data-name="Erlang">Erlang</button>
+          <button class="lang-btn" data-lang="haskell" data-name="Haskell">Haskell</button>
+          <button class="lang-btn" data-lang="elixir" data-name="Elixir">Elixir</button>
+          <button class="lang-btn" data-lang="ocaml" data-name="OCaml">OCaml</button>
+          <button class="lang-btn" data-lang="nim" data-name="Nim">Nim</button>
+          <button class="lang-btn" data-lang="v" data-name="V">V</button>
+          <button class="lang-btn" data-lang="zig" data-name="Zig">Zig</button>
+          <button class="lang-btn" data-lang="d" data-name="D">D</button>
+          <button class="lang-btn" data-lang="racket" data-name="Racket">Racket</button>
+          <button class="lang-btn" data-lang="coffeescript" data-name="CoffeeScript">CoffeeScript</button>
+          <button class="lang-btn" data-lang="pascal" data-name="Pascal">Pascal</button>
+          <button class="lang-btn" data-lang="fortran" data-name="Fortran">Fortran</button>
+          <button class="lang-btn" data-lang="asm" data-name="Assembly">Assembly</button>
+          <button class="lang-btn" data-lang="vbscript" data-name="VBScript">VBScript</button>
+          <button class="lang-btn" data-lang="tcl" data-name="TCL">TCL</button>
+          <button class="lang-btn" data-lang="awk" data-name="AWK">AWK</button>
+          <button class="lang-btn" data-lang="sed" data-name="Sed">Sed</button>
+          <button class="lang-btn" data-lang="makefile" data-name="Makefile">Makefile</button>
+          <button class="lang-btn" data-lang="dockerfile" data-name="Dockerfile">Dockerfile</button>
+          <button class="lang-btn" data-lang="nginx" data-name="Nginx">Nginx</button>
+          <button class="lang-btn" data-lang="apache" data-name="Apache">Apache</button>
+          <button class="lang-btn" data-lang="terraform" data-name="Terraform">Terraform</button>
+          <button class="lang-btn" data-lang="ansible" data-name="Ansible">Ansible</button>
+          <button class="lang-btn" data-lang="jenkins" data-name="Jenkins">Jenkins</button>
+          <button class="lang-btn" data-lang="git" data-name="Git">Git</button>
+          <button class="lang-btn" data-lang="toml" data-name="TOML">TOML</button>
+          <button class="lang-btn" data-lang="ini" data-name="INI">INI</button>
+          <button class="lang-btn" data-lang="properties" data-name="Properties">Properties</button>
+          <button class="lang-btn" data-lang="plist" data-name="Property List">Property List</button>
+          <button class="lang-btn" data-lang="reg" data-name="Registry">Registry</button>
+          <button class="lang-btn" data-lang="env" data-name="Environment">Environment</button>
+          <button class="lang-btn" data-name="Plain Text">Plain Text</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Translation Action</label>
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="translateBtn">Translate</button>
+          <button class="btn btn-secondary" id="clearBtn">Clear</button>
+          <button class="btn btn-secondary" id="examplesBtn">Load Examples</button>
+        </div>
+      </div>
+
+      <div class="examples" id="examples" style="display: none;">
+        <h4>Quick Examples:</h4>
+        <div id="exampleChips"></div>
+      </div>
+    </div>
+
+    <div class="card output-section" id="outputSection">
+      <div class="output-header">
+        <span class="output-label">Result:</span>
+        <button class="copy-btn" id="copyBtn">Copy to Clipboard</button>
+      </div>
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Translating...</p>
+      </div>
+      <div class="error-message" id="errorMessage"></div>
+      <div class="output-box" id="outputBox"></div>
+    </div>
+
+    <footer class="footer">
+      <p>Code Translator - Built with free APIs</p>
+      <p>Privacy-focused: No data is stored on servers</p>
+    </footer>
+  </div>
+
+  <script>
+    // Language mappings for API usage
+    const langMap = {
+      'auto': 'auto',
+      'en': 'english',
+      'py': 'python',
+      'js': 'javascript',
+      'java': 'java',
+      'go': 'go',
+      'rs': 'rust',
+      'cpp': 'cpp',
+      'c': 'c',
+      'php': 'php',
+      'rb': 'ruby',
+      'ts': 'typescript',
+      'json': 'json',
+      'xml': 'xml',
+      'html': 'html',
+      'css': 'css',
+      'sql': 'sql',
+      'csv': 'csv',
+      'yaml': 'yaml',
+      'markdown': 'markdown',
+      'bash': 'bash',
+      'perl': 'perl',
+      'lua': 'lua',
+      'swift': 'swift',
+      'kotlin': 'kotlin',
+      'scala': 'scala',
+      'r': 'r',
+      'dart': 'dart',
+      'groovy': 'groovy',
+      'clojure': 'clojure',
+      'erlang': 'erlang',
+      'haskell': 'haskell',
+      'elixir': 'elixir',
+      'ocaml': 'ocaml',
+      'nim': 'nim',
+      'v': 'v',
+      'zig': 'zig',
+      'd': 'd',
+      'racket': 'racket',
+      'coffeescript': 'coffeescript',
+      'pascal': 'pascal',
+      'fortran': 'fortran',
+      'asm': 'asm',
+      'vbscript': 'vbscript',
+      'tcl': 'tcl',
+      'awk': 'awk',
+      'sed': 'sed',
+      'makefile': 'makefile',
+      'dockerfile': 'dockerfile',
+      'nginx': 'nginx',
+      'apache': 'apache',
+      'terraform': 'terraform',
+      'ansible': 'ansible',
+      'jenkins': 'jenkins',
+      'git': 'git',
+      'toml': 'toml',
+      'ini': 'ini',
+      'properties': 'properties',
+      'plist': 'plist',
+      'reg': 'reg',
+      'env': 'env',
+    };
+
+    const examples = [
+      { name: 'Python to JavaScript', input: 'def hello():\n    print("Hello, World!")', source: 'py', target: 'js' },
+      { name: 'JSON to YAML', input: '{\n  "name": "test",\n  "value": 123\n}', source: 'json', target: 'yaml' },
+      { name: 'HTML to Text', input: '<h1>Hello World</h1><p>This is a paragraph</p>', source: 'html', target: 'text' },
+      { name: 'CSV to JSON', input: 'name,age,city\nJohn,25,NYC\nJane,30,LA', source: 'csv', target: 'json' },
+      { name: 'Markdown to HTML', input: '# Hello\n\nThis is *bold* text.', source: 'markdown', target: 'html' },
+      { name: 'Bash to Python', input: 'echo "Hello World"', source: 'bash', target: 'py' },
+      { name: 'C to Java', input: 'int main() {\n    printf("Hello");\n    return 0;\n}', source: 'c', target: 'java' },
+      { name: 'JavaScript to TypeScript', input: 'function add(a, b) {\n    return a + b;\n}', source: 'js', target: 'ts' },
+      { name: 'Python to Rust', input: 'print("Hello World")', source: 'py', target: 'rs' },
+      { name: 'JSON to XML', input: '{\n  "name": "John",\n  "age": 30\n}', source: 'json', target: 'xml' },
+    ];
+
+    let currentSource = 'auto';
+    let currentTarget = 'auto';
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      initLanguageButtons();
+      initExamples();
+      setupEventListeners();
+    });
+
+    function initLanguageButtons() {
+      const sourceBtns = document.querySelectorAll('#sourceLangs .lang-btn');
+      const targetBtns = document.querySelectorAll('#targetLangs .lang-btn');
+
+      sourceBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          sourceBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentSource = btn.dataset.lang;
+        });
+      });
+
+      targetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          targetBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentTarget = btn.dataset.lang;
+        });
+      });
+    }
+
+    function initExamples() {
+      const chips = document.getElementById('exampleChips');
+      examples.forEach(ex => {
+        const chip = document.createElement('span');
+        chip.className = 'example-chip';
+        chip.textContent = ex.name;
+        chip.addEventListener('click', () => {
+          document.getElementById('input').value = ex.input;
+          document.getElementById('translateBtn').click();
+        });
+        chips.appendChild(chip);
+      });
+    }
+
+    function setupEventListeners() {
+      document.getElementById('translateBtn').addEventListener('click', handleTranslate);
+      document.getElementById('clearBtn').addEventListener('click', handleClear);
+      document.getElementById('examplesBtn').addEventListener('click', () => {
+        document.getElementById('examples').style.display = 'block';
+      });
+      document.getElementById('copyBtn').addEventListener('click', handleCopy);
+    }
+
+    function handleTranslate() {
+      const input = document.getElementById('input').value.trim();
+      if (!input) {
+        showError('Please enter some code or text to translate.');
+        return;
+      }
+
+      showLoading();
+      hideError();
+
+      // Use backend for translation
+      const payload = {
+        input: input,
+        source: currentSource,
+        target: currentTarget,
+        action: 'translate'
+      };
+
+      fetch('https://gwen-api.dearclawla1.workers.dev/kv/translator/result', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        hideLoading();
+        if (data.result) {
+          showOutput(data.result, data.status);
+        } else {
+          showError(data.error || 'Translation failed. Please try again.');
+        }
+      })
+      .catch(err => {
+        hideLoading();
+        console.error('Translation error:', err);
+        showError('Translation service unavailable. Please try again later.');
+      });
+    }
+
+    function handleClear() {
+      document.getElementById('input').value = '';
+      document.getElementById('outputBox').textContent = '';
+      document.getElementById('outputBox').className = 'output-box';
+      document.getElementById('outputSection').classList.remove('visible');
+      hideLoading();
+      hideError();
+    }
+
+    function handleCopy() {
+      const output = document.getElementById('outputBox').textContent;
+      if (!output) return;
+
+      navigator.clipboard.writeText(output)
+        .then(() => {
+          const btn = document.getElementById('copyBtn');
+          const originalText = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => {
+            btn.textContent = originalText;
+          }, 2000);
+        })
+        .catch(err => {
+          console.error('Copy failed:', err);
+          showError('Failed to copy to clipboard.');
+        });
+    }
+
+    function showLoading() {
+      document.getElementById('loading').classList.add('visible');
+      document.getElementById('outputSection').classList.add('visible');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').classList.remove('visible');
+    }
+
+    function showOutput(result, status) {
+      document.getElementById('outputBox').textContent = result;
+      document.getElementById('outputBox').className = 'output-box';
+      document.getElementById('outputSection').classList.add('visible');
+
+      if (status === 'success') {
+        document.getElementById('outputBox').classList.add('success');
+      } else if (status === 'error') {
+        document.getElementById('outputBox').classList.add('error');
+      }
+    }
+
+    function showError(message) {
+      const errorEl = document.getElementById('errorMessage');
+      errorEl.textContent = message;
+      errorEl.classList.add('visible');
+    }
+
+    function hideError() {
+      document.getElementById('errorMessage').classList.remove('visible');
+    }
+
+    // Usage tracking
+    fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+        params: ['cod', 'load', new Date().toISOString()]
+      })
+    }).catch(() => {});
+  </script>
+</body>
+</html>
