@@ -19,7 +19,8 @@ if (data.message && data.message.includes("Not Found")) {
 div.innerHTML = `<div style="color:#ef4444">Error: Invalid GitHub URL format. Trending repos are fetched from the curated list at /repos/trending</div>`;
 return;
 }
-div.innerHTML = data.items.map(r => `<div style="border-bottom:1px solid #333;padding:0.5rem 0"><a href="${r.html_url}" target="_blank" style="color:#6366f1;text-decoration:none">${r.name}</a> - ${r.description || "No description"} (${r.stargazers_count.toLocaleString()} stars)</div>`).join("");
+div.innerHTML = data.items.map(r => `<div style="border-bottom:1px solid #333;padding:0.5rem 0"><a href="${r.html_url}" target="_blank" style="color:#6366f1;text-decoration:none">${r.name}</a> - ${r.description || "No description"}</div>`).join("");
+}
 </script>
 </body>
 </html>
