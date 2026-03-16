@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Path Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            border: 1px solid #1e1e2e;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        .panel {
+            background: #111116;
+            border: 1px solid #1e1e2e;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #c7d2fe;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .panel-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #6366f1;
+            border-radius: 2px;
+        }
+        textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 300px;
+            background: #0d0d12;
+            border: 1px solid #1e1e2e;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            color: #e4e4e4;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        textarea:focus {
+            border-color: #6366f1;
+        }
+        textarea::placeholder {
+            color: #4b5563;
+        }
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 15px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .output-area {
+            background: #0d0d12;
+            border: 1px solid #1e1e2e;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 300px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #e4e4e4;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .output-title {
+            color: #c7d2fe;
+            font-size: 1.1rem;
+        }
+        .copy-btn {
+            padding: 8px 16px;
+            background: #1e1e2e;
+            border: 1px solid #374151;
+            color: #e4e4e4;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover {
+            background: #374151;
+        }
+        .copy-btn.copied {
+            background: #059669;
+            border-color: #059669;
+        }
+        .path-input {
+            width: 100%;
+            min-height: 50px;
+            background: #0d0d12;
+            border: 1px solid #1e1e2e;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            color: #e4e4e4;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        .path-input:focus {
+            border-color: #6366f1;
+        }
+        .path-input::placeholder {
+            color: #4b5563;
+        }
+        .results-container {
+            margin-top: 15px;
+        }
+        .result-item {
+            background: #111116;
+            border: 1px solid #1e1e2e;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .result-item:hover {
+            border-color: #374151;
+        }
+        .result-path {
+            color: #6366f1;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+        .result-value {
+            color: #e4e4e4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .result-type {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #1e1e2e;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+        .error-message {
+            background: #7f1d1d;
+            border: 1px solid #991b1b;
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #6366f1;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            background: #111116;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .stat-item strong {
+            color: #c7d2fe;
+        }
+        .help-text {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 8px;
+            padding: 10px;
+            background: #0d0d12;
+            border-radius: 6px;
+        }
+        .help-text code {
+            background: #1e1e2e;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: #1e1e2e;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .tab:hover {
+            background: #374151;
+        }
+        .tab.active {
+            background: #111116;
+            color: #e4e4e4;
+            border-bottom: 2px solid #6366f1;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .examples {
+            margin-top: 15px;
+            padding: 15px;
+            background: #0d0d12;
+            border-radius: 8px;
+        }
+        .examples h4 {
+            color: #c7d2fe;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        .example-item {
+            background: #111116;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .example-item:hover {
+            background: #1e1e2e;
+            color: #e4e4e4;
+        }
+        .example-item::before {
+            content: '▶ ';
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .example-item:hover::before {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>JSON Path Explorer</h1>
+            <p>Parse JSON and explore paths to extract values. Enter JSON data, specify a path (dot notation, bracket notation, or wildcard), and see the extracted results.</p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-title">Input JSON</div>
+                <textarea id="jsonInput" placeholder='{"users": [{"name": "Alice", "age": 30, "active": true}, {"name": "Bob", "age": 25, "active": false}], "settings": {"theme": "dark", "notifications": true}}'>{"users": [{"name": "Alice", "age": 30, "active": true}, {"name": "Bob", "age": 25, "active": false}], "settings": {"theme": "dark", "notifications": true}}</textarea>
+                <div class="help-text">
+                    Paste your JSON here. Supports objects, arrays, nested structures.
+                </div>
+                <div class="examples">
+                    <h4>Quick Examples</h4>
+                    <div class="example-item" onclick="loadExample('simple')">
+                        .users[0].name
+                    </div>
+                    <div class="example-item" onclick="loadExample('nested')">
+                        .settings.theme
+                    </div>
+                    <div class="example-item" onclick="loadExample('wildcard')">
+                        .users[*].age
+                    </div>
+                    <div class="example-item" onclick="loadExample('array')">
+                        .users[*].active
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Path Explorer</div>
+                <div class="tabs">
+                    <button class="tab active" data-tab="dot">Dot Notation</button>
+                    <button class="tab" data-tab="bracket">Bracket Notation</button>
+                </div>
+                <div class="tab-content active" id="dot-tab">
+                    <input type="text" class="path-input" id="dotPath" placeholder="e.g., .users[0].name or .settings.theme" value=".users[0].name">
+                </div>
+                <div class="tab-content" id="bracket-tab">
+                    <input type="text" class="path-input" id="bracketPath" placeholder="e.g., users[0].name or settings.theme">
+                </div>
+                <button class="btn" id="exploreBtn" onclick="explorePath()">Explore Path</button>
+                <div class="stats">
+                    <div class="stat-item">Results: <strong id="resultCount">0</strong></div>
+                    <div class="stat-item">Total Keys: <strong id="totalKeys">0</strong></div>
+                </div>
+                <div class="output-area" id="output"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:['json-path-explorer.html','load',new Date().toISOString()]})}).catch(()=>{});
+
+        // Parse JSON input
+        function parseJSON(json) {
+            try {
+                return JSON.parse(json);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Count total keys in JSON
+        function countKeys(obj) {
+            if (!obj) return 0;
+            let count = 0;
+            if (Array.isArray(obj)) {
+                count = obj.length;
+                obj.forEach(item => count += countKeys(item));
+            } else if (typeof obj === 'object') {
+                for (let key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        count++;
+                        count += countKeys(obj[key]);
+                    }
+                }
+            }
+            return count;
+        }
+
+        // Parse path string into segments
+        function parsePath(path) {
+            if (!path || path.trim() === '') return [];
+            let segments = [];
+            let current = '';
+            let i = 0;
+            while (i < path.length) {
+                const char = path[i];
+                if (char === '.') {
+                    if (current) {
+                        segments.push(current);
+                        current = '';
+                    }
+                } else if (char === '[') {
+                    if (current) {
+                        segments.push(current);
+                        current = '';
+                    }
+                    let bracketContent = '';
+                    i++;
+                    while (i < path.length && path[i] !== ']') {
+                        bracketContent += path[i];
+                        i++;
+                    }
+                    segments.push(bracketContent);
+                } else {
+                    current += char;
+                }
+                i++;
+            }
+            if (current) segments.push(current);
+            return segments;
+        }
+
+        // Evaluate path on JSON
+        function evaluatePath(json, segments) {
+            const results = [];
+            if (!json) return results;
+
+            let current = json;
+            let pathStr = '';
+
+            for (let i = 0; i < segments.length; i++) {
+                const segment = segments[i];
+                if (pathStr) pathStr += '.';
+                pathStr += segment;
+
+                if (segment === '*') {
+                    // Wildcard - get all children
+                    if (Array.isArray(current)) {
+                        current.forEach((item, idx) => {
+                            results.push({
+                                path: pathStr + `[${idx}]`,
+                                value: item,
+                                type: getType(item)
+                            });
+                        });
+                    } else if (typeof current === 'object') {
+                        for (let key in current) {
+                            if (current.hasOwnProperty(key)) {
+                                results.push({
+                                    path: pathStr + '.' + key,
+                                    value: current[key],
+                                    type: getType(current[key])
+                                });
+                            }
+                        }
+                    }
+                    return results;
+                } else if (segment === '') {
+                    // Empty segment - just continue
+                    continue;
+                } else {
+                    // Regular segment
+                    if (Array.isArray(current)) {
+                        // Try to parse as index
+                        const index = parseInt(segment);
+                        if (!isNaN(index) && index >= 0 && index < current.length) {
+                            current = current[index];
+                        } else {
+                            return results;
+                        }
+                    } else if (typeof current === 'object') {
+                        // Try bracket notation first
+                        if (segment.startsWith('[') && segment.endsWith(']')) {
+                            const index = parseInt(segment.slice(1, -1));
+                            if (!isNaN(index) && index >= 0 && current[index] !== undefined) {
+                                current = current[index];
+                            } else {
+                                return results;
+                            }
+                        } else {
+                            // Try property name
+                            if (current[segment] !== undefined) {
+                                current = current[segment];
+                            } else {
+                                return results;
+                            }
+                        }
+                    } else {
+                        return results;
+                    }
+                }
+            }
+
+            if (pathStr) pathStr = '.' + pathStr;
+            results.push({
+                path: pathStr,
+                value: current,
+                type: getType(current)
+            });
+
+            return results;
+        }
+
+        // Get type of value
+        function getType(value) {
+            if (value === null) return 'null';
+            if (Array.isArray(value)) return 'array';
+            return typeof value;
+        }
+
+        // Format value for display
+        function formatValue(value) {
+            if (value === null) return 'null';
+            if (typeof value === 'string') {
+                // Escape quotes and newlines
+                return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+            }
+            if (typeof value === 'number') {
+                return String(value);
+            }
+            if (typeof value === 'boolean') {
+                return String(value);
+            }
+            if (typeof value === 'object') {
+                return JSON.stringify(value, null, 2);
+            }
+            return String(value);
+        }
+
+        // Load example
+        function loadExample(type) {
+            const examples = {
+                simple: '.users[0].name',
+                nested: '.settings.theme',
+                wildcard: '.users[*].age',
+                array: '.users[*].active'
+            };
+            if (examples[type]) {
+                document.getElementById('dotPath').value = examples[type];
+            }
+        }
+
+        // Explore path
+        function explorePath() {
+            const jsonInput = document.getElementById('jsonInput').value;
+            const json = parseJSON(jsonInput);
+
+            if (!json) {
+                document.getElementById('output').innerHTML = '<div class="error-message">Invalid JSON. Please check your input.</div>';
+                document.getElementById('resultCount').textContent = '0';
+                document.getElementById('totalKeys').textContent = '0';
+                return;
+            }
+
+            let path = '';
+            if (document.getElementById('dot-tab').classList.contains('active')) {
+                path = document.getElementById('dotPath').value;
+            } else {
+                path = document.getElementById('bracketPath').value;
+            }
+
+            const segments = parsePath(path);
+            const results = evaluatePath(json, segments);
+
+            // Update stats
+            document.getElementById('resultCount').textContent = results.length;
+            document.getElementById('totalKeys').textContent = countKeys(json);
+
+            // Format output
+            let output = '<div class="results-container">';
+            if (results.length === 0) {
+                output += '<div class="error-message">No results found for the specified path. Check if the path is valid.</div>';
+            } else {
+                results.forEach((result, index) => {
+                    output += `
+                        <div class="result-item">
+                            <div class="result-path">${result.path}</div>
+                            <div class="result-value">${formatValue(result.value)}</div>
+                            <div class="result-type">Type: ${result.type}</div>
+                        </div>
+                    `;
+                });
+            }
+            output += '</div>';
+
+            document.getElementById('output').innerHTML = output;
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+            });
+        });
+
+        // Copy to clipboard
+        document.getElementById('exploreBtn').addEventListener('click', async () => {
+            const output = document.getElementById('output').innerHTML;
+            try {
+                await navigator.clipboard.writeText(output);
+                const btn = document.getElementById('exploreBtn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            } catch (e) {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = output;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+        });
+
+        // Allow Enter key to trigger explore
+        document.getElementById('dotPath').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') explorePath();
+        });
+        document.getElementById('bracketPath').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') explorePath();
+        });
+        document.getElementById('jsonInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') explorePath();
+        });
+    </script>
+</body>
+</html>
