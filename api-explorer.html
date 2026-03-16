@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px}
+input,button,select{padding:10px;margin:5px;background:#1a1a1a;color:#e4e4e4;border:1px solid #6366f1;border-radius:4px}
+button:hover{background:#6366f1;color:#0a0a0a}
+pre{background:#1a1a1a;padding:10px;border-radius:4px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h2>API Explorer</h2>
+<input type="text" id="url" placeholder="Enter API URL (e.g., https://jsonplaceholder.typicode.com/posts/1)">
+<button onclick="fetchData()">Fetch Data</button>
+<pre id="output"></pre>
+<script>
+async function fetchData(){
+const url=document.getElementById('url').value;
+try{
+const res=await fetch(url);
+const data=await res.json();
+document.getElementById('output').innerText=JSON.stringify(data,null,2);
+}catch(e){
+document.getElementById('output').innerText='Error: '+e.message;
+}
+}
+</script>
+</body>
+</html>

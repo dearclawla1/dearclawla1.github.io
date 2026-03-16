@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextWeb Canvas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #e4e4e4;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .canvas-wrapper {
+            background: #111;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid #1a1a1a;
+        }
+        .canvas {
+            width: 100%;
+            height: 400px;
+            background: #0a0a0a;
+            border-radius: 8px;
+            cursor: crosshair;
+            overflow: hidden;
+            position: relative;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        label {
+            font-size: 12px;
+            color: #888;
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #e4e4e4;
+            font-size: 13px;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .btn {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #5558e3;
+        }
+        .btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #1a1a1a;
+            color: #e4e4e4;
+        }
+        .btn-secondary:hover {
+            background: #252525;
+        }
+        .stats {
+            display: flex;
+            gap: 24px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: #0f0f0f;
+            border-radius: 8px;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .stat-value {
+            color: #e4e4e4;
+            font-weight: 600;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+            font-size: 11px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: #111;
+            border-radius: 4px;
+            border: 1px solid #1a1a1a;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .toolbar-btn {
+            background: #1a1a1a;
+            border: 1px solid #1a1a1a;
+            color: #e4e4e4;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .toolbar-btn:hover {
+            border-color: #6366f1;
+        }
+        .toolbar-btn.active {
+            background: #6366f1;
+            border-color: #6366f1;
+        }
+        .info-panel {
+            background: #0f0f0f;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+        .info-panel h3 {
+            color: #e4e4e4;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .info-panel ul {
+            padding-left: 16px;
+        }
+        .info-panel li {
+            margin-bottom: 4px;
+        }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: #6366f1;
+            display: none;
+        }
+        .loading.show {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            .canvas {
+                height: 300px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TextWeb Canvas</h1>
+            <p class="subtitle">Create interactive text-based web structures with nodes and connections</p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </header>
+
+        <div class="canvas-wrapper">
+            <div class="canvas" id="canvas"></div>
+            <div class="loading" id="loading">Processing...</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span>Nodes:</span>
+                <span class="stat-value" id="nodeCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Connections:</span>
+                <span class="stat-value" id="connectionCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Layers:</span>
+                <span class="stat-value" id="layerCount">1</span>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button class="toolbar-btn" data-action="add-node">Add Node</button>
+            <button class="toolbar-btn" data-action="add-layer">Add Layer</button>
+            <button class="toolbar-btn" data-action="clear">Clear All</button>
+            <button class="toolbar-btn" data-action="export">Export JSON</button>
+            <button class="toolbar-btn" data-action="import">Import JSON</button>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="nodeText">Node Text</label>
+                <input type="text" id="nodeText" placeholder="Enter text for new node">
+            </div>
+            <div class="control-group">
+                <label for="nodeColor">Node Color</label>
+                <input type="text" id="nodeColor" value="#6366f1" placeholder="Hex color">
+            </div>
+            <div class="control-group">
+                <label for="nodeSize">Node Size</label>
+                <input type="number" id="nodeSize" value="40" min="20" max="100">
+            </div>
+            <div class="control-group">
+                <label for="layerName">Layer Name</label>
+                <input type="text" id="layerName" placeholder="Layer 1">
+            </div>
+            <div class="control-group">
+                <label for="layerColor">Layer Color</label>
+                <input type="text" id="layerColor" value="#111" placeholder="Hex color">
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button class="btn" id="addNodeBtn">Create Node</button>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button class="btn" id="addLayerBtn">Create Layer</button>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #6366f1;"></div>
+                <span>Default Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #10b981;"></div>
+                <span>Success Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f59e0b;"></div>
+                <span>Warning Node</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ef4444;"></div>
+                <span>Error Node</span>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>How to Use</h3>
+            <ul>
+                <li><strong>Add Node:</strong> Enter text and click "Create Node" to add a new node to the canvas</li>
+                <li><strong>Add Layer:</strong> Create layered backgrounds for visual depth</li>
+                <li><strong>Customize:</strong> Adjust colors and sizes using the input fields</li>
+                <li><strong>Export:</strong> Save your canvas as JSON to share or edit later</li>
+                <li><strong>Import:</strong> Load a previously exported JSON file</li>
+                <li><strong>Clear:</strong> Remove all nodes and layers to start fresh</li>
+            </ul>
+        </div>
+
+        <div class="info-panel">
+            <h3>Features</h3>
+            <ul>
+                <li>Drag nodes to reposition them on the canvas</li>
+                <li>Click nodes to edit their text</li>
+                <li>Right-click nodes to delete them</li>
+                <li>Support for multiple layers with different colors</li>
+                <li>Real-time statistics showing node and connection counts</li>
+                <li>Import/export for sharing your creations</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const loading = document.getElementById('loading');
+        
+        // State
+        let nodes = [];
+        let layers = [];
+        let selectedNode = null;
+        let dragStart = null;
+        let dragOffset = { x: 0, y: 0 };
+        let isDragging = false;
+
+        // Initialize canvas
+        function initCanvas() {
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('mouseleave', handleMouseUp);
+            canvas.addEventListener('contextmenu', handleContextMenu);
+            
+            // Touch support
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleTouchEnd);
+        }
+
+        // Handle mouse down
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Check if clicking on a node
+            const clickedNode = nodes.find(node => 
+                x >= node.x && x <= node.x + node.width &&
+                y >= node.y && y <= node.y + node.height
+            );
+
+            if (clickedNode) {
+                selectedNode = clickedNode;
+                dragStart = { x, y };
+                dragOffset = { x: x - selectedNode.x, y: y - selectedNode.y };
+                isDragging = true;
+                canvas.style.cursor = 'grabbing';
+            } else {
+                selectedNode = null;
+                canvas.style.cursor = 'crosshair';
+            }
+        }
+
+        // Handle mouse move
+        function handleMouseMove(e) {
+            if (isDragging && selectedNode) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left - dragOffset.x;
+                const y = e.clientY - rect.top - dragOffset.y;
+                
+                selectedNode.x = x;
+                selectedNode.y = y;
+                render();
+            }
+        }
+
+        // Handle mouse up
+        function handleMouseUp() {
+            isDragging = false;
+            selectedNode = null;
+            canvas.style.cursor = 'crosshair';
+        }
+
+        // Handle touch start
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+
+            const clickedNode = nodes.find(node => 
+                x >= node.x && x <= node.x + node.width &&
+                y >= node.y && y <= node.y + node.height
+            );
+
+            if (clickedNode) {
+                selectedNode = clickedNode;
+                dragStart = { x, y };
+                dragOffset = { x: x - selectedNode.x, y: y - selectedNode.y };
+                isDragging = true;
+                canvas.style.cursor = 'grabbing';
+            }
+        }
+
+        // Handle touch move
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (isDragging && selectedNode) {
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const x = touch.clientX - rect.left - dragOffset.x;
+                const y = touch.clientY - rect.top - dragOffset.y;
+                
+                selectedNode.x = x;
+                selectedNode.y = y;
+                render();
+            }
+        }
+
+        // Handle touch end
+        function handleTouchEnd() {
+            isDragging = false;
+            selectedNode = null;
+            canvas.style.cursor = 'crosshair';
+        }
+
+        // Handle context menu
+        function handleContextMenu(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const clickedNode = nodes.find(node => 
+                x >= node.x && x <= node.x + node.width &&
+                y >= node.y && y <= node.y + node.height
+            );
+
+            if (clickedNode) {
+                deleteNode(clickedNode);
+            }
+        }
+
+        // Render canvas
+        function render() {
+            canvas.innerHTML = '';
+
+            // Render layers
+            layers.forEach(layer => {
+                const layerEl = document.createElement('div');
+                layerEl.style.position = 'absolute';
+                layerEl.style.top = '0';
+                layerEl.style.left = '0';
+                layerEl.style.width = '100%';
+                layerEl.style.height = '100%';
+                layerEl.style.background = layer.color;
+                layerEl.style.opacity = '0.1';
+                canvas.appendChild(layerEl);
+            });
+
+            // Render nodes
+            nodes.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.style.position = 'absolute';
+                nodeEl.style.left = node.x + 'px';
+                nodeEl.style.top = node.y + 'px';
+                nodeEl.style.width = node.width + 'px';
+                nodeEl.style.height = node.height + 'px';
+                nodeEl.style.background = node.color;
+                nodeEl.style.borderRadius = '8px';
+                nodeEl.style.border = '2px solid #333';
+                nodeEl.style.padding = '12px';
+                nodeEl.style.cursor = 'pointer';
+                nodeEl.style.textAlign = 'center';
+                nodeEl.style.fontWeight = '500';
+                nodeEl.style.color = '#e4e4e4';
+                nodeEl.style.whiteSpace = 'nowrap';
+                nodeEl.style.overflow = 'hidden';
+                nodeEl.style.textOverflow = 'ellipsis';
+                nodeEl.textContent = node.text;
+
+                nodeEl.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    selectedNode = node;
+                    dragStart = { x: e.clientX, y: e.clientY };
+                    dragOffset = { x: e.clientX - node.x, y: e.clientY - node.y };
+                    isDragging = true;
+                    canvas.style.cursor = 'grabbing';
+                });
+
+                nodeEl.addEventListener('dblclick', () => {
+                    const newText = prompt('Edit node text:', node.text);
+                    if (newText !== null) {
+                        node.text = newText;
+                        render();
+                    }
+                });
+
+                nodeEl.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    deleteNode(node);
+                });
+
+                canvas.appendChild(nodeEl);
+            });
+
+            updateStats();
+        }
+
+        // Add node
+        function addNode(text, color, size) {
+            const x = Math.random() * (canvas.clientWidth - size);
+            const y = Math.random() * (canvas.clientHeight - size);
+            
+            nodes.push({
+                id: Date.now(),
+                x,
+                y,
+                width: size,
+                height: size,
+                text: text || 'Node',
+                color: color || '#6366f1'
+            });
+
+            render();
+        }
+
+        // Add layer
+        function addLayer(name, color) {
+            layers.push({
+                id: Date.now(),
+                name: name || 'Layer',
+                color: color || '#111'
+            });
+
+            render();
+        }
+
+        // Delete node
+        function deleteNode(node) {
+            nodes = nodes.filter(n => n.id !== node.id);
+            render();
+        }
+
+        // Clear all
+        function clearAll() {
+            nodes = [];
+            layers = [];
+            render();
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('nodeCount').textContent = nodes.length;
+            document.getElementById('connectionCount').textContent = 0;
+            document.getElementById('layerCount').textContent = layers.length + 1;
+        }
+
+        // Toolbar buttons
+        document.querySelectorAll('.toolbar-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.dataset.action;
+                
+                switch(action) {
+                    case 'add-node':
+                        const nodeText = document.getElementById('nodeText').value;
+                        const nodeColor = document.getElementById('nodeColor').value;
+                        const nodeSize = parseInt(document.getElementById('nodeSize').value);
+                        if (nodeText) {
+                            addNode(nodeText, nodeColor, nodeSize);
+                        }
+                        break;
+                    case 'add-layer':
+                        const layerName = document.getElementById('layerName').value;
+                        const layerColor = document.getElementById('layerColor').value;
+                        if (layerName) {
+                            addLayer(layerName, layerColor);
+                        }
+                        break;
+                    case 'clear':
+                        if (confirm('Clear all nodes and layers?')) {
+                            clearAll();
+                        }
+                        break;
+                    case 'export':
+                        exportJSON();
+                        break;
+                    case 'import':
+                        importJSON();
+                        break;
+                }
+            });
+        });
+
+        // Create Node button
+        document.getElementById('addNodeBtn').addEventListener('click', () => {
+            const nodeText = document.getElementById('nodeText').value;
+            const nodeColor = document.getElementById('nodeColor').value;
+            const nodeSize = parseInt(document.getElementById('nodeSize').value);
+            if (nodeText) {
+                addNode(nodeText, nodeColor, nodeSize);
+            }
+        });
+
+        // Create Layer button
+        document.getElementById('addLayerBtn').addEventListener('click', () => {
+            const layerName = document.getElementById('layerName').value;
+            const layerColor = document.getElementById('layerColor').value;
+            if (layerName) {
+                addLayer(layerName, layerColor);
+            }
+        });
+
+        // Export JSON
+        function exportJSON() {
+            const data = {
+                nodes: nodes,
+                layers: layers
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'textweb-canvas.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Import JSON
+        function importJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        if (data.nodes && data.layers) {
+                            nodes = data.nodes;
+                            layers = data.layers;
+                            render();
+                            alert('Canvas imported successfully!');
+                        } else {
+                            alert('Invalid file format');
+                        }
+                    } catch (error) {
+                        alert('Error parsing JSON file');
+                    }
+                };
+                reader.readAsText(file);
+            });
+            
+            input.click();
+        }
+
+        // Initialize
+        initCanvas();
+        render();
+
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:[location.pathname.split('/').pop(),'load',new Date().toISOString()]})}).catch(()=>{});
+    </script>
+</body>
+</html>

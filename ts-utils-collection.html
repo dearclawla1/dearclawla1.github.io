@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TS Utils Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #1a1a1a;
+        }
+        .header h1 {
+            font-size: 2rem;
+            color: #6366f1;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #888;
+            font-size: 1rem;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .input-section {
+            background: #111;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid #1a1a1a;
+        }
+        .input-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #e4e4e4;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e4e4e4;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .input-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .input-hint {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 8px;
+        }
+        .output-section {
+            background: #111;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #1a1a1a;
+        }
+        .output-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #e4e4e4;
+        }
+        .output-content {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 150px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            color: #e4e4e4;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-x: auto;
+        }
+        .copy-btn {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover {
+            background: #5558e3;
+        }
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+        .copy-btn.copied {
+            background: #10b981;
+        }
+        .copy-btn.copied:hover {
+            background: #059669;
+        }
+        .error-message {
+            background: #ef4444;
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            background: #1a1a1a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .stat-item strong {
+            color: #e4e4e4;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            color: #6366f1;
+            margin: 25px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .tool-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .tool-card:hover {
+            transform: translateY(-2px);
+            border-color: #6366f1;
+        }
+        .tool-card h3 {
+            font-size: 0.95rem;
+            color: #e4e4e4;
+            margin-bottom: 8px;
+        }
+        .tool-card p {
+            font-size: 0.8rem;
+            color: #888;
+            line-height: 1.4;
+        }
+        .tool-card .usage {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #6366f1;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #1a1a1a;
+            text-align: center;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        .footer a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .input-section,
+            .output-section {
+                padding: 15px;
+            }
+            .tool-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TS Utils Collection</h1>
+            <p>Comprehensive TypeScript utility functions and patterns for modern web development</p>
+            <a href="index.html" class="nav-link">Back to Home</a>
+        </div>
+
+        <div class="input-section">
+            <h2>Generate Utility Collection</h2>
+            
+            <div class="input-group">
+                <label for="toolName">Tool Name</label>
+                <input type="text" id="toolName" placeholder="e.g., Array Utilities, Date Helpers, String Tools">
+                <div class="input-hint">Enter a descriptive name for your utility collection</div>
+            </div>
+
+            <div class="input-group">
+                <label for="description">Description</label>
+                <textarea id="description" placeholder="Describe what this utility collection does and includes..."></textarea>
+                <div class="input-hint">Explain the purpose and main features of your utilities</div>
+            </div>
+
+            <div class="input-group">
+                <label for="examples">Example Usage</label>
+                <textarea id="examples" placeholder="import { utils } from './utils';
+utils.array.flatten([1, [2, 3], [4, 5]]);
+utils.date.format(new Date(), 'YYYY-MM-DD');
+utils.string.pad('test', 10);"></textarea>
+                <div class="input-hint">Show example code snippets for your utilities</div>
+            </div>
+        </div>
+
+        <div class="output-section">
+            <h2>Generated Collection</h2>
+            <div id="errorMessage" class="error-message"></div>
+            <div id="outputContent" class="output-content">
+                <div class="empty-state">
+                    <div class="icon">📦</div>
+                    <p>Enter your utility details above to generate a collection</p>
+                </div>
+            </div>
+            <button id="copyBtn" class="copy-btn" disabled>Copy to Clipboard</button>
+        </div>
+
+        <div class="section-title">Available Utility Patterns</div>
+        <div class="tool-grid">
+            <div class="tool-card">
+                <h3>Array Utilities</h3>
+                <p>flatten, deepClone, unique, groupBy, sortBy, chunk, zip, intersection, union, difference</p>
+                <div class="usage">Common array manipulation operations</div>
+            </div>
+            <div class="tool-card">
+                <h3>Date Helpers</h3>
+                <p>format, parse, addDays, addMonths, isToday, isWeekend, timeAgo, compareDates</p>
+                <div class="usage">Date formatting and manipulation</div>
+            </div>
+            <div class="tool-card">
+                <h3>String Tools</h3>
+                <p>pad, trim, capitalize, snakeCase, kebabCase, camelCase, truncate, repeat</p>
+                <div class="usage">String formatting and transformation</div>
+            </div>
+            <div class="tool-card">
+                <h3>Object Utilities</h3>
+                <p>pick, omit, merge, deepEqual, isEmpty, keys, values, entries</p>
+                <div class="usage">Object manipulation and inspection</div>
+            </div>
+            <div class="tool-card">
+                <h3>Math Helpers</h3>
+                <p>round, ceil, floor, random, clamp, average, min, max, factorial</p>
+                <div class="usage">Mathematical operations</div>
+            </div>
+            <div class="tool-card">
+                <h3>Type Guards</h3>
+                <p>isArray, isString, isNumber, isObject, isNull, isUndefined, isBoolean</p>
+                <div class="usage">Type checking functions</div>
+            </div>
+            <div class="tool-card">
+                <h3>Promise Utilities</h3>
+                <p>timeout, retry, allSettled, race, defer, cancel, wrap</p>
+                <div class="usage">Promise handling and control</div>
+            </div>
+            <div class="tool-card">
+                <h3>Event Emitters</h3>
+                <p>emit, on, once, off, once, create, broadcast</p>
+                <div class="usage">Simple event system</div>
+            </div>
+            <div class="tool-card">
+                <h3>Validation</h3>
+                <p>validate, validateEmail, validateUrl, validatePhone, validateNumber</p>
+                <div class="usage">Input validation functions</div>
+            </div>
+            <div class="tool-card">
+                <h3>Formatting</h3>
+                <p>currency, percentage, bytes, time, color, hex, rgb, hsl</p>
+                <div class="usage">Value formatting utilities</div>
+            </div>
+            <div class="tool-card">
+                <h3>Async Utilities</h3>
+                <p>sleep, delay, throttle, debounce, memoize, cache, retry</p>
+                <div class="usage">Async operation helpers</div>
+            </div>
+            <div class="tool-card">
+                <h3>Collection</h3>
+                <p>map, filter, reduce, find, some, every, includes, indexOf</p>
+                <div class="usage">Array iteration methods</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Built with TypeScript best practices • Utility patterns for modern web development</p>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const toolName = document.getElementById('toolName');
+            const description = document.getElementById('description');
+            const examples = document.getElementById('examples');
+            const outputContent = document.getElementById('outputContent');
+            const copyBtn = document.getElementById('copyBtn');
+            const errorMessage = document.getElementById('errorMessage');
+
+            const generateCollection = () => {
+                const name = toolName.value.trim();
+                const desc = description.value.trim();
+                const ex = examples.value.trim();
+
+                if (!name || !desc) {
+                    showError('Please provide both a tool name and description');
+                    return;
+                }
+
+                if (name.length > 100) {
+                    showError('Tool name should be under 100 characters');
+                    return;
+                }
+
+                if (desc.length > 500) {
+                    showError('Description should be under 500 characters');
+                    return;
+                }
+
+                const timestamp = new Date().toISOString();
+                const version = '1.0.0';
+
+                let collection = `# ${name}\n\n`;
+                collection += `## Description\n\n`;
+                collection += `${desc}\n\n`;
+                collection += `## Version\n\n`;
+                collection += `${version}\n\n`;
+                collection += `## Generated\n\n`;
+                collection += `${timestamp}\n\n`;
+                collection += `---\n\n`;
+
+                if (ex) {
+                    collection += `## Examples\n\n`;
+                    collection += `${ex}\n\n`;
+                }
+
+                collection += `## Utility Functions\n\n`;
+                collection += `### Array Utilities\n\n`;
+                collection += `// flatten - Flatten nested arrays\n`;
+                collection += `function flatten(arr) {\n`;
+                collection += `  return arr.flat(Infinity);\n`;
+                collection += `}\n\n`;
+                collection += `// unique - Get unique values\n`;
+                collection += `function unique(arr) {\n`;
+                collection += `  return [...new Set(arr)];\n`;
+                collection += `}\n\n`;
+                collection += `// groupBy - Group by key\n`;
+                collection += `function groupBy(arr, key) {\n`;
+                collection += `  return arr.reduce((acc, item) => {\n`;
+                collection += `    const group = item[key];\n`;
+                collection += `    (acc[group] = acc[group] || []).push(item);\n`;
+                collection += `    return acc;\n`;
+                collection += `  }, {});\n`;
+                collection += `}\n\n`;
+                collection += `### Date Helpers\n\n`;
+                collection += `// format - Format date\n`;
+                collection += `function format(date, format = 'YYYY-MM-DD') {\n`;
+                collection += `  const d = new Date(date);\n`;
+                collection += `  return d.toISOString().split('T')[0];\n`;
+                collection += `}\n\n`;
+                collection += `// isToday - Check if today\n`;
+                collection += `function isToday(date) {\n`;
+                collection += `  const d = new Date(date);\n`;
+                collection += `  const today = new Date();\n`;
+                collection += `  return d.toDateString() === today.toDateString();\n`;
+                collection += `}\n\n`;
+                collection += `### String Tools\n\n`;
+                collection += `// pad - Pad string\n`;
+                collection += `function pad(str, length, char = ' ') {\n`;
+                collection += `  return str + char.repeat(length - str.length);\n`;
+                collection += `}\n\n`;
+                collection += `// capitalize - Capitalize first letter\n`;
+                collection += `function capitalize(str) {\n`;
+                collection += `  return str.charAt(0).toUpperCase() + str.slice(1);\n`;
+                collection += `}\n\n`;
+                collection += `### Object Utilities\n\n`;
+                collection += `// pick - Pick specific keys\n`;
+                collection += `function pick(obj, keys) {\n`;
+                collection += `  return keys.reduce((acc, key) => {\n`;
+                collection += `    if (obj[key] !== undefined) acc[key] = obj[key];\n`;
+                collection += `    return acc;\n`;
+                collection += `  }, {});\n`;
+                collection += `}\n\n`;
+                collection += `// merge - Merge objects\n`;
+                collection += `function merge(...objs) {\n`;
+                collection += `  return objs.reduce((acc, obj) => {\n`;
+                collection += `    Object.assign(acc, obj);\n`;
+                collection += `    return acc;\n`;
+                collection += `  }, {});\n`;
+                collection += `}\n\n`;
+                collection += `### Math Helpers\n\n`;
+                collection += `// clamp - Clamp value\n`;
+                collection += `function clamp(value, min, max) {\n`;
+                collection += `  return Math.min(Math.max(value, min), max);\n`;
+                collection += `}\n\n`;
+                collection += `// random - Random number\n`;
+                collection += `function random(min = 0, max = 1) {\n`;
+                collection += `  return Math.random() * (max - min) + min;\n`;
+                collection += `}\n\n`;
+                collection += `### Type Guards\n\n`;
+                collection += `// isArray - Check if array\n`;
+                collection += `function isArray(value) {\n`;
+                collection += `  return Array.isArray(value);\n`;
+                collection += `}\n\n`;
+                collection += `// isString - Check if string\n`;
+                collection += `function isString(value) {\n`;
+                collection += `  return typeof value === 'string';\n`;
+                collection += `}\n\n`;
+                collection += `// isNumber - Check if number\n`;
+                collection += `function isNumber(value) {\n`;
+                collection += `  return typeof value === 'number' && !isNaN(value);\n`;
+                collection += `}\n\n`;
+                collection += `### Promise Utilities\n\n`;
+                collection += `// timeout - Add timeout\n`;
+                collection += `function timeout(promise, ms) {\n`;
+                collection += `  return Promise.race([promise, new Promise((_, reject) => {\n`;
+                collection += `    setTimeout(() => reject(new Error('Timeout')), ms);\n`;
+                collection += `  })]);\n`;
+                collection += `}\n\n`;
+                collection += `### Validation\n\n`;
+                collection += `// validateEmail - Validate email\n`;
+                collection += `function validateEmail(email) {\n`;
+                collection += `  const regex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n`;
+                collection += `  return regex.test(email);\n`;
+                collection += `}\n\n`;
+                collection += `// validateUrl - Validate URL\n`;
+                collection += `function validateUrl(url) {\n`;
+                collection += `  try {\n`;
+                collection += `    new URL(url);\n`;
+                collection += `    return true;\n`;
+                collection += `  } catch {\n`;
+                collection += `    return false;\n`;
+                collection += `  }\n`;
+                collection += `}\n\n`;
+                collection += `### Formatting\n\n`;
+                collection += `// currency - Format currency\n`;
+                collection += `function currency(value, currency = 'USD') {\n`;
+                collection += `  return new Intl.NumberFormat('en-US', {\n`;
+                collection += `    style: 'currency',\n`;
+                collection += `    currency\n`;
+                collection += `  }).format(value);\n`;
+                collection += `}\n\n`;
+                collection += `// percentage - Format percentage\n`;
+                collection += `function percentage(value) {\n`;
+                collection += `  return new Intl.NumberFormat('en-US', {\n`;
+                collection += `    style: 'percent',\n`;
+                collection += `    minimumFractionDigits: 2\n`;
+                collection += `  }).format(value / 100);\n`;
+                collection += `}\n\n`;
+                collection += `### Async Utilities\n\n`;
+                collection += `// sleep - Sleep for ms\n`;
+                collection += `function sleep(ms) {\n`;
+                collection += `  return new Promise(resolve => setTimeout(resolve, ms));\n`;
+                collection += `}\n\n`;
+                collection += `// debounce - Debounce function\n`;
+                collection += `function debounce(fn, ms) {\n`;
+                collection += `  let timeout;\n`;
+                collection += `  return (...args) => {\n`;
+                collection += `    clearTimeout(timeout);\n`;
+                collection += `    timeout = setTimeout(() => fn(...args), ms);\n`;
+                collection += `  };\n`;
+                collection += `}\n\n`;
+                collection += `## Usage Example\n\n`;
+                collection += `import { \n`;
+                collection += `  flatten, \n`;
+                collection += `  format, \n`;
+                collection += `  pad, \n`;
+                collection += `  pick, \n`;
+                collection += `  merge, \n`;
+                collection += `  clamp, \n`;
+                collection += `  random, \n`;
+                collection += `  isArray, \n`;
+                collection += `  isString, \n`;
+                collection += `  validateEmail, \n`;
+                collection += `  currency, \n`;
+                collection += `  sleep, \n`;
+                collection += `  debounce \n`;
+                collection += `} from './${name.toLowerCase().replace(/\\s+/g, '_')}';\n\n`;
+                collection += `// Example usage:\n`;
+                collection += `const result = flatten([1, [2, 3], [4, 5]]);\n`;
+                collection += `const formatted = format(new Date(), 'YYYY-MM-DD');\n`;
+                collection += `const padded = pad('test', 10);\n`;
+                collection += `const selected = pick({ a: 1, b: 2, c: 3 }, ['a', 'c']);\n`;
+                collection += `const merged = merge({ x: 1 }, { y: 2 });\n`;
+                collection += `const clamped = clamp(5, 0, 10);\n`;
+                collection += `const randomNum = random(1, 100);\n`;
+                collection += `const isArr = isArray([]);\n`;
+                collection += `const isStr = isString('hello');\n`;
+                collection += `const validEmail = validateEmail('test@example.com');\n`;
+                collection += `const formattedMoney = currency(1234.56);\n`;
+                collection += `await sleep(1000);\n`;
+                collection += `const debounced = debounce(() => console.log('debounced'), 500);\n\n`;
+
+                outputContent.textContent = collection;
+                copyBtn.disabled = false;
+                copyBtn.classList.remove('copied');
+                hideError();
+            };
+
+            const showError = (message) => {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('show');
+            };
+
+            const hideError = () => {
+                errorMessage.classList.remove('show');
+            };
+
+            const copyToClipboard = async () => {
+                try {
+                    await navigator.clipboard.writeText(outputContent.textContent);
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy to Clipboard';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                }
+            };
+
+            copyBtn.addEventListener('click', copyToClipboard);
+
+            const debouncedGenerate = () => {
+                setTimeout(generateCollection, 300);
+            };
+
+            toolName.addEventListener('input', debouncedGenerate);
+            description.addEventListener('input', debouncedGenerate);
+            examples.addEventListener('input', debouncedGenerate);
+
+            // Initialize with sample data
+            toolName.value = 'array-utils';
+            description.value = 'A comprehensive collection of array utility functions for TypeScript. Includes flatten, unique, groupBy, sortBy, chunk, zip, intersection, union, and difference operations. Perfect for data manipulation tasks.';
+            examples.value = 'import { utils } from "./array-utils";\n\n// Flatten nested arrays\nconst result = utils.flatten([1, [2, 3], [4, 5]]);\n// Output: [1, 2, 3, 4, 5]\n\n// Get unique values\nconst unique = utils.unique([1, 2, 2, 3, 3, 4]);\n// Output: [1, 2, 3, 4]\n\n// Group by property\nconst grouped = utils.groupBy([{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }], "name");\n// Output: { Alice: [{ id: 1, name: "Alice" }], Bob: [{ id: 2, name: "Bob" }] }';
+
+            generateCollection();
+
+            // Usage tracking
+            fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+                    params: [location.pathname.split('/').pop(), 'load', new Date().toISOString()]
+                })
+            }).catch(() => {});
+        })();
+    </script>
+</body>
+</html>

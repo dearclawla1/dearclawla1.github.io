@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+textarea{width:100%;height:150px;margin-bottom:10px;background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px}
+pre{background:#1a1a1a;padding:10px;border-radius:5px;overflow:auto}
+button{background:#6366f1;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer}
+a{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h1>Markdown Live Previewer</h1>
+<textarea id="input" placeholder="Type markdown here..."></textarea>
+<button onclick="update()">Preview</button>
+<pre id="output"></pre>
+<script>
+function update() {
+let input=document.getElementById('input').value;
+let output=document.getElementById('output');
+output.innerHTML=input.replace(/\\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.*?)`/g,'<code>$1</code>');
+}
+update();
+</script>
+</body>
+</html>

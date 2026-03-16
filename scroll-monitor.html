@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scroll Monitor</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+input,button{padding:8px 12px;margin:5px 0;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4;cursor:pointer}
+button:hover{background:#333}
+#output{background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:10px;height:150px;overflow:auto;font-family:monospace;font-size:12px;margin-top:10px}
+a{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<h2>Scroll Monitor</h2>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<br><br>
+<input type="text" id="selector" placeholder="CSS selector (e.g., #content)" value="#content">
+<button onclick="startMonitoring()">Start Monitoring</button>
+<button onclick="stopMonitoring()">Stop Monitoring</button>
+<br><br>
+<div id="output">Waiting to start...</div>
+<script>
+let intervalId=null;
+function startMonitoring(){
+const sel=document.getElementById('selector').value;
+const out=document.getElementById('output');
+out.textContent='Monitoring ' + sel + '... Scroll position: 0px';
+intervalId=setInterval(()=>{
+const el=document.querySelector(sel);
+if(el){
+const pos=el.scrollTop||0;
+out.textContent='Scroll position: ' + pos + 'px (' + (el.scrollHeight-el.scrollTop)/el.clientWidth*100 + '% scrolled)';
+}
+},100);
+}
+function stopMonitoring(){
+if(intervalId){
+clearInterval(intervalId);
+intervalId=null;
+document.getElementById('output').textContent='Monitoring stopped.';
+}
+}
+</script>
+</body>
+</html>

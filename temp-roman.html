@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
+.container{max-width:600px;margin:0 auto;}
+input,button{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:none;font-size:16px;}
+input{background:#1a1a1a;color:#e4e4e4;}
+button{background:#6366f1;color:#fff;}
+.result{background:#1a1a1a;padding:20px;border-radius:8px;margin-top:10px;}
+.result h3{margin:0 0 10px;opacity:0.8;}
+.result p{opacity:0.9;margin:5px 0;}
+.back{color:#6366f1;text-decoration:none;font-size:14px;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Roman Numeral Converter</h1>
+<p>Convert numbers to Roman numerals and vice versa</p>
+<input type="text" id="arabic" placeholder="Arabic Number (e.g., 1987)">
+<button onclick="toRoman()">To Roman Numeral</button>
+<input type="text" id="roman" placeholder="Roman Numeral (e.g., MCMXXXVII)">
+<button onclick="toArabic()">To Arabic Number</button>
+<div class="result" id="result"></div>
+<a href="index.html" class="back">Home</a>
+</div>
+<script>
+function romanToInt(s){const m={M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};let i=0,n=0;while(i<s.length){let v=0;for(let k in m)if(s.slice(i,k.length+1+i)===k){v=m[k];break}n+=v;i+=k.length+1}return n}
+function intToRoman(n){const c=[1000,900,500,400,100,90,50,40,10,9,5,4,1],v=['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];let r='';while(n>0){for(let i=0;i<c.length;i++)if(n>=c[i]){r+=v[i];n-=c[i];break}}return r}
+function toRoman(){const a=document.getElementById('arabic').value.trim();if(!a) return document.getElementById('result');try{const r=intToRoman(parseInt(a));document.getElementById('result').innerHTML='<h3>Result</h3><p>' + a + ' in Roman: ' + r + '</p>'}catch(e){document.getElementById('result').innerHTML='<h3>Error</h3><p>' + e.message + '</p>'}}
+function toArabic(){const r=document.getElementById('roman').value.trim();if(!r) return document.getElementById('result');try{const n=romanToInt(r);document.getElementById('result').innerHTML='<h3>Result</h3><p>' + r + ' in Arabic: ' + n + '</p>'}catch(e){document.getElementById('result').innerHTML='<h3>Error</h3><p>' + e.message + '</p>'}}
+</script>
+</body>
+</html>

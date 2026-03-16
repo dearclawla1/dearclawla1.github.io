@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Storage Data Exporter</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --accent: #e94560;
+            --accent-hover: #ff6b6b;
+            --success: #4ecca3;
+            --border: #2a2a4a;
+            --code-bg: #0d1b2a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--accent), #ff8a65);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .storage-section {
+            margin-bottom: 20px;
+        }
+
+        .storage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .storage-header h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .storage-header .toggle-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .storage-header .toggle-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .storage-list {
+            max-height: 400px;
+            overflow-y: auto;
+            transition: max-height 0.3s ease;
+        }
+
+        .storage-list.collapsed {
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        .storage-item {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .storage-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(233, 69, 96, 0.2);
+        }
+
+        .storage-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            cursor: pointer;
+        }
+
+        .storage-key {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .storage-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .storage-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .storage-preview {
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: var(--code-bg);
+            border-radius: 6px;
+            margin: 0;
+        }
+
+        .storage-preview.collapsed {
+            display: none;
+        }
+
+        .copy-btn {
+            background: var(--success);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .copy-btn:hover {
+            background: #3dd5c4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(78, 204, 163, 0.3);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transform: translateY(150%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .clear-all {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.2s;
+        }
+
+        .clear-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        .clear-all:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-string {
+            background: rgba(78, 204, 163, 0.2);
+            color: var(--success);
+        }
+
+        .badge-number {
+            background: rgba(233, 69, 96, 0.2);
+            color: var(--accent);
+        }
+
+        .badge-boolean {
+            background: rgba(255, 167, 38, 0.2);
+            color: #ffa61a;
+        }
+
+        .badge-object {
+            background: rgba(110, 127, 138, 0.2);
+            color: #6e7f8a;
+        }
+
+        .badge-array {
+            background: rgba(255, 167, 38, 0.2);
+            color: #ffa61a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 Local Storage Exporter</h1>
+            <p class="subtitle">Export all localStorage and sessionStorage data with filtering and easy copy</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="number" id="totalKeys">0</div>
+                <div class="label">Total Storage Keys</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="totalSize">0 KB</div>
+                <div class="label">Total Size</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="storageCount">0</div>
+                <div class="label">Storage Areas</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-title">Storage Keys</div>
+                <input type="text" class="filter-input" id="filterInput" placeholder="Filter keys by name...">
+                
+                <div id="storageContainer">
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No storage keys found</p>
+                        <p>localStorage and sessionStorage will be populated automatically</p>
+                    </div>
+                </div>
+
+                <button class="copy-btn" id="copyAllBtn" disabled>Copy All Data as JSON</button>
+                <button class="clear-all" id="clearAllBtn">Clear All Storage</button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Quick Actions</div>
+                
+                <div class="storage-section">
+                    <div class="storage-header">
+                        <h3>🔍 Search Storage</h3>
+                        <button class="toggle-btn" id="toggleSearch">Toggle Search</button>
+                    </div>
+                    <div class="storage-list collapsed" id="searchList">
+                        <div class="empty-state" style="padding: 30px;">
+                            <p style="font-size: 0.9rem;">Search for specific keys or values</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="storage-section">
+                    <div class="storage-header">
+                        <h3>📋 Key Details</h3>
+                        <button class="toggle-btn" id="toggleDetails">Toggle Details</button>
+                    </div>
+                    <div class="storage-list collapsed" id="detailsList">
+                        <div class="empty-state" style="padding: 30px;">
+                            <p style="font-size: 0.9rem;">Click on any key to see details</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const STORAGE_TYPES = ['localStorage', 'sessionStorage'];
+            let allStorageData = {};
+            let currentFilter = '';
+            let selectedKey = null;
+
+            // DOM Elements
+            const storageContainer = document.getElementById('storageContainer');
+            const emptyState = document.getElementById('emptyState');
+            const filterInput = document.getElementById('filterInput');
+            const copyAllBtn = document.getElementById('copyAllBtn');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            const toast = document.getElementById('toast');
+            const searchList = document.getElementById('searchList');
+            const detailsList = document.getElementById('detailsList');
+            const toggleSearchBtn = document.getElementById('toggleSearch');
+            const toggleDetailsBtn = document.getElementById('toggleDetails');
+
+            // Initialize
+            function init() {
+                loadStorageData();
+                updateStats();
+                renderStorageList();
+                setupEventListeners();
+            }
+
+            // Load storage data
+            function loadStorageData() {
+                allStorageData = {};
+                STORAGE_TYPES.forEach(type => {
+                    try {
+                        const items = {};
+                        const storage = window[type];
+                        if (storage) {
+                            Object.keys(storage).forEach(key => {
+                                items[key] = {
+                                    value: storage[key],
+                                    type: typeof storage[key],
+                                    size: estimateSize(storage[key])
+                                };
+                            });
+                        }
+                        allStorageData[type] = items;
+                    } catch (e) {
+                        console.error(`Error loading ${type}:`, e);
+                    }
+                });
+            }
+
+            // Estimate size in KB
+            function estimateSize(value) {
+                try {
+                    const str = JSON.stringify(value);
+                    return (str.length / 1024).toFixed(2) + ' KB';
+                } catch {
+                    return 'N/A';
+                }
+            }
+
+            // Get all storage keys
+            function getAllKeys() {
+                const keys = [];
+                STORAGE_TYPES.forEach(type => {
+                    if (allStorageData[type]) {
+                        Object.keys(allStorageData[type]).forEach(key => {
+                            keys.push({
+                                key: key,
+                                storage: type,
+                                ...allStorageData[type][key]
+                            });
+                        });
+                    }
+                });
+                return keys;
+            }
+
+            // Update stats
+            function updateStats() {
+                const keys = getAllKeys();
+                document.getElementById('totalKeys').textContent = keys.length;
+                
+                const totalSize = keys.reduce((sum, item) => {
+                    const size = parseFloat(item.size);
+                    return sum + (isNaN(size) ? 0 : size);
+                }, 0);
+                document.getElementById('totalSize').textContent = totalSize.toFixed(2) + ' KB';
+
+                const storageCount = Object.keys(allStorageData).filter(t => allStorageData[t].length > 0).length;
+                document.getElementById('storageCount').textContent = storageCount;
+            }
+
+            // Get badge class
+            function getBadgeClass(type) {
+                const typeMap = {
+                    'string': 'badge-string',
+                    'number': 'badge-number',
+                    'boolean': 'badge-boolean',
+                    'object': 'badge-object',
+                    'array': 'badge-array'
+                };
+                return typeMap[type] || '';
+            }
+
+            // Format value for display
+            function formatValue(value) {
+                try {
+                    const str = JSON.stringify(value, null, 2);
+                    if (str.length > 200) {
+                        return str.substring(0, 200) + '...';
+                    }
+                    return str;
+                } catch {
+                    return String(value);
+                }
+            }
+
+            // Render storage list
+            function renderStorageList() {
+                const keys = getAllKeys();
+                
+                if (keys.length === 0) {
+                    storageContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>No storage keys found</p>
+                            <p>localStorage and sessionStorage will be populated automatically</p>
+                        </div>
+                    `;
+                    copyAllBtn.disabled = true;
+                    return;
+                }
+
+                // Apply filter
+                if (currentFilter) {
+                    keys.filter(k => k.key.toLowerCase().includes(currentFilter.toLowerCase()));
+                } else {
+                    keys;
+                }
+
+                storageContainer.innerHTML = keys.map(item => `
+                    <div class="storage-item" data-key="${item.key}" data-storage="${item.storage}">
+                        <div class="storage-header-row" onclick="selectKey('${item.key}', '${item.storage}')">
+                            <div>
+                                <span class="storage-key">${escapeHtml(item.key)}</span>
+                                <span class="badge ${getBadgeClass(item.type)}">${item.type}</span>
+                            </div>
+                            <div class="storage-meta">
+                                <span>${item.storage}</span>
+                                <span>•</span>
+                                <span>${item.size}</span>
+                            </div>
+                            <div class="storage-actions">
+                                <button class="btn-icon" onclick="event.stopPropagation(); copyKey('${item.key}', '${item.storage}')">📋</button>
+                                <button class="btn-icon" onclick="event.stopPropagation(); clearKey('${item.key}', '${item.storage}')">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="storage-preview collapsed">
+                            ${escapeHtml(formatValue(item.value))}
+                        </div>
+                    </div>
+                `).join('');
+
+                copyAllBtn.disabled = false;
+            }
+
+            // Escape HTML
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Select a key
+            function selectKey(key, storage) {
+                selectedKey = { key, storage };
+                updateDetailsList();
+            }
+
+            // Update details list
+            function updateDetailsList() {
+                if (!selectedKey) {
+                    detailsList.innerHTML = `
+                        <div class="empty-state" style="padding: 30px;">
+                            <p style="font-size: 0.9rem;">Click on any key to see details</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const item = allStorageData[selectedKey.storage][selectedKey.key];
+                if (!item) return;
+
+                detailsList.innerHTML = `
+                    <div class="storage-item">
+                        <div class="storage-header-row" style="cursor: default;">
+                            <div>
+                                <span class="storage-key">${escapeHtml(selectedKey.key)}</span>
+                                <span class="badge ${getBadgeClass(item.type)}">${item.type}</span>
+                            </div>
+                            <div class="storage-meta">
+                                <span>${selectedKey.storage}</span>
+                                <span>•</span>
+                                <span>${item.size}</span>
+                            </div>
+                        </div>
+                        <div class="storage-preview">
+                            ${escapeHtml(formatValue(item.value))}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Update search list
+            function updateSearchList() {
+                const searchTerm = document.getElementById('searchSearch').value.toLowerCase();
+                const keys = getAllKeys();
+                
+                if (searchTerm === '' || keys.length === 0) {
+                    searchList.innerHTML = `
+                        <div class="empty-state" style="padding: 30px;">
+                            <p style="font-size: 0.9rem;">Search for specific keys or values</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const filtered = keys.filter(k => 
+                    k.key.toLowerCase().includes(searchTerm) || 
+                    String(k.value).toLowerCase().includes(searchTerm)
+                );
+
+                searchList.innerHTML = filtered.map(item => `
+                    <div class="storage-item" onclick="selectKey('${item.key}', '${item.storage}')">
+                        <div class="storage-header-row">
+                            <div>
+                                <span class="storage-key">${escapeHtml(item.key)}</span>
+                                <span class="badge ${getBadgeClass(item.type)}">${item.type}</span>
+                            </div>
+                            <div class="storage-meta">
+                                <span>${item.storage}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Setup event listeners
+            function setupEventListeners() {
+                // Filter input
+                filterInput.addEventListener('input', (e) => {
+                    currentFilter = e.target.value;
+                    renderStorageList();
+                });
+
+                // Copy all button
+                copyAllBtn.addEventListener('click', () => {
+                    try {
+                        const data = {};
+                        STORAGE_TYPES.forEach(type => {
+                            if (allStorageData[type]) {
+                                data[type] = {};
+                                Object.keys(allStorageData[type]).forEach(key => {
+                                    data[type][key] = allStorageData[type][key].value;
+                                });
+                            }
+                        });
+                        
+                        navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+                            .then(() => showToast())
+                            .catch(() => {
+                                fallbackCopy(JSON.stringify(data, null, 2));
+                            });
+                    } catch (e) {
+                        showToast('Error copying data', false);
+                    }
+                });
+
+                // Clear all button
+                clearAllBtn.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to clear all localStorage and sessionStorage data? This cannot be undone!')) {
+                        STORAGE_TYPES.forEach(type => {
+                            try {
+                                if (window[type]) {
+                                    window[type].clear();
+                                }
+                            } catch (e) {
+                                console.error(`Error clearing ${type}:`, e);
+                            }
+                        });
+                        showToast('All storage cleared!');
+                        loadStorageData();
+                        updateStats();
+                        renderStorageList();
+                    }
+                });
+
+                // Toggle search
+                toggleSearchBtn.addEventListener('click', () => {
+                    const searchSection = document.querySelector('.storage-section h3:nth-child(1)').closest('.storage-section');
+                    searchSection.classList.toggle('collapsed');
+                });
+
+                // Toggle details
+                toggleDetailsBtn.addEventListener('click', () => {
+                    detailsList.classList.toggle('collapsed');
+                });
+
+                // Search input
+                const searchInput = document.getElementById('searchSearch');
+                if (searchInput) {
+                    searchInput.addEventListener('input', updateSearchList);
+                }
+            }
+
+            // Copy single key
+            function copyKey(key, storage) {
+                try {
+                    const value = window[storage][key];
+                    navigator.clipboard.writeText(String(value))
+                        .then(() => showToast(`Copied "${key}" from ${storage}`))
+                        .catch(() => {
+                            fallbackCopy(String(value));
+                        });
+                } catch (e) {
+                    showToast('Error copying', false);
+                }
+            }
+
+            // Clear single key
+            function clearKey(key, storage) {
+                if (confirm(`Clear "${key}" from ${storage}?`)) {
+                    try {
+                        window[storage].removeItem(key);
+                        showToast(`Cleared "${key}" from ${storage}`);
+                        loadStorageData();
+                        updateStats();
+                        renderStorageList();
+                    } catch (e) {
+                        showToast('Error clearing key', false);
+                    }
+                }
+            }
+
+            // Show toast notification
+            function showToast(message, show = true) {
+                toast.textContent = message;
+                toast.style.display = 'block';
+                if (show) {
+                    toast.classList.add('show');
+                }
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        toast.style.display = 'none';
+                    }, 300);
+                }, 2500);
+            }
+
+            // Fallback copy method
+            function fallbackCopy(text) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Copied to clipboard!');
+                } catch (e) {
+                    showToast('Failed to copy', false);
+                }
+                textArea.remove();
+            }
+
+            // Initialize app
+            init();
+        })();
+    </script>
+</body>
+</html>

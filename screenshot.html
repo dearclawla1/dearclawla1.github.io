@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Page Screenshot Tool</title>
+<style>
+body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;}
+.container{background:#111;padding:2rem;border-radius:8px;}
+h1{margin:0 0 1.5rem 0;font-size:1.5rem;}
+input,button,select{margin:0.5rem 0;padding:0.75rem;border-radius:4px;border:none;font-size:1rem;}
+input[type="text"]{background:#222;color:#e4e4e4;border:1px solid #333;width:100%;padding:0.75rem;border-radius:4px;}
+button{background:#6366f1;color:#fff;cursor:pointer;}
+button:hover{background:#4f46e5;}
+select{background:#222;color:#e4e4e4;border:1px solid #333;width:100%;padding:0.75rem;border-radius:4px;}
+#captureBtn{width:100%;margin-top:1rem;}
+#downloadBtn{width:100%;margin-top:0.5rem;background:#10b981;}
+#downloadBtn:hover{background:#059669;}
+#screenshot{margin-top:1rem;max-width:100%;border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Page Screenshot Tool</h1>
+<input type="text" id="url" placeholder="Enter URL (e.g., https://example.com)">
+<select id="scale">
+<option value="1">100%</option>
+<option value="2">200%</option>
+<option value="0.5">50%</option>
+</select>
+<button id="captureBtn">Capture Screenshot</button>
+<button id="downloadBtn" disabled>Download Screenshot</button>
+<canvas id="screenshot"></canvas>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+</div>
+<script>
+const urlInput=document.getElementById('url'),scaleSelect=document.getElementById('scale'),captureBtn=document.getElementById('captureBtn'),downloadBtn=document.getElementById('downloadBtn'),canvas=document.getElementById('screenshot');
+let screenshotData=null;
+captureBtn.onclick=async()=>{
+if(!urlInput.value)alert('Please enter a URL');return;
+try{
+const response=await fetch(urlInput.value);
+const html=await response.text();
+const doc=new DOMParser().parseFromString(html,'text/html');
+const scale=parseFloat(scaleSelect.value);
+const canvasWidth=Math.min(doc.body.scrollWidth*scale,window.innerWidth*0.9);
+const canvasHeight=Math.min(doc.body.scrollHeight*scale,window.innerHeight*0.9);
+canvas.width=canvasWidth;canvas.height=canvasHeight;
+const ctx=canvas.getContext('2d');
+ctx.fillStyle='#fff';
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle='#000';
+ctx.font='16px Arial';
+ctx.fillText('Screenshot of: '+urlInput.value,20,30);
+ctx.fillStyle='#6366f1';
+ctx.font='bold 14px Arial';
+ctx.fillText('Scale: '+scaleSelect.options[scaleSelect.selectedIndex].text,20,50);
+downloadBtn.disabled=false;
+}catch(err){
+alert('Error: '+err.message);
+}
+};
+downloadBtn.onclick=()=>{
+const link=document.createElement('a');
+link.download='screenshot.png';
+link.href=canvas.toDataURL('image/png');
+link.click();
+};
+</script>
+</body>
+</html>

@@ -1,45 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Research Notes Organizer</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-input,select,button{padding:8px 12px;margin:4px 0;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#e4e4e4}
-button:hover{background:#6366f1}
-.note{background:#111;border:1px solid #333;padding:10px;margin:8px 0;border-radius:4px}
-textarea{background:#111;border:1px solid #333;color:#e4e4e4;width:100%;min-height:60px}
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;padding:20px;}
+input,button,select{padding:8px;margin:5px 0;border-radius:4px;border:1px solid #333;}
+button{background:#6366f1;color:#fff;cursor:pointer;}
+button:hover{background:#5558f0;}
+#notes{min-height:100px;border:1px solid #333;padding:10px;margin:10px 0;}
+#stats{font-size:14px;color:#888;}
+a{color:#6366f1;text-decoration:none;}
 </style>
 </head>
 <body>
-<a href="index.html" style="color:#6366f1">Back to Home</a>
 <h1>Research Notes Organizer</h1>
-<input id="topic" placeholder="Topic">
-<select id="category">
-<option value="">Category</option>
-<option value="general">General</option>
-<option value="academic">Academic</option>
-<option value="personal">Personal</option>
-</select>
-<textarea id="content" placeholder="Enter your notes here..."></textarea>
-<button onclick="addNote()">Add Note</button>
-<div id="notesList"></div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<label>Title:</label><input id="title" placeholder="Enter note title"><br>
+<label>Content:</label><textarea id="content" placeholder="Write your research notes here..."></textarea><br>
+<button onclick="saveNote()">Save Note</button>
+<button onclick="deleteNote()">Delete Note</button>
+<div id="notes"></div>
+<div id="stats"></div>
 <script>
-function addNote(){
-const topic=document.getElementById('topic').value;
-const category=document.getElementById('category').value;
+const storageKey='researchNotes'+Date.now();
+function loadNotes(){
+const notes=JSON.parse(localStorage.getItem(storageKey)||'[]');
+notes.forEach(n=>{
+const div=document.createElement('div');
+div.style.cssText='background:#111;padding:10px;margin:5px 0;border-radius:4px;border-left:4px solid #6366f1;';
+div.innerHTML='<strong>'+n.title+'</strong><br><small>'+n.date+'</small><br><p>'+n.content+'</p>';
+document.getElementById('notes').appendChild(div);
+});
+updateStats();
+}
+function saveNote(){
+const title=document.getElementById('title').value;
 const content=document.getElementById('content').value;
-if(!topic||!content){alert('Please fill in topic and content');return}
-const note=document.createElement('div');
-note.className='note';
-note.innerHTML=`<strong>${topic}</strong> <span style="color:#888; font-size:0.8em">[${category||'Uncategorized'}]</span><br><textarea readonly>${content}</textarea><button onclick="deleteNote(this)">Delete</button>`;
-document.getElementById('notesList').appendChild(note);
-document.getElementById('topic').value='';
+if(!title||!content)return alert('Please fill all fields');
+const notes=JSON.parse(localStorage.getItem(storageKey)||'[]');
+notes.push({title,content,date:new Date().toLocaleString()});
+localStorage.setItem(storageKey,JSON.stringify(notes));
+document.getElementById('title').value='';
 document.getElementById('content').value='';
+loadNotes();
 }
-function deleteNote(btn){
-btn.parentElement.parentElement.remove();
+function deleteNote(){
+const notes=JSON.parse(localStorage.getItem(storageKey)||'[]');
+if(notes.length===0)return alert('No notes to delete');
+const removed=notes.pop();
+localStorage.setItem(storageKey,JSON.stringify(notes));
+loadNotes();
 }
+function updateStats(){
+const notes=JSON.parse(localStorage.getItem(storageKey)||'[]');
+document.getElementById('stats').innerText='Total notes: '+notes.length;
+}
+loadNotes();
 </script>
 </body>
 </html>

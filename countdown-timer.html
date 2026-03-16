@@ -4,49 +4,43 @@
 <meta charset="UTF-8">
 <title>Countdown Timer</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-.container{max-width:500px;margin:0 auto}
-input,button,select{width:100%;margin:10px 0;padding:10px;border:none;border-radius:4px;font-size:16px}
-button{background:#6366f1;color:#fff;cursor:pointer}
-button:hover{background:#4f46e5}
-#timer{font-size:48px;text-align:center;margin:20px 0}
-#message{text-align:center;font-size:18px;min-height:24px}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:2rem}
+.container{max-width:400px;margin:0 auto;text-align:center}
+input{width:100%;padding:0.75rem;margin:0.5rem 0;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
+button{width:100%;padding:0.75rem;margin:0.5rem 0;border:none;border-radius:4px;background:#6366f1;color:white;font-size:1rem}
+button:hover{background:#5558e6}
+#display{font-size:3rem;font-weight:bold;margin:1rem 0}
 </style>
 </head>
 <body>
 <div class="container">
-<a href="index.html" style="color:#6366f1">Back to Home</a><br><br>
-<h2>Countdown Timer</h2>
-<label>Minutes</label><input type="number" id="minutes" min="0" max="99" value="5">
-<label>Seconds</label><input type="number" id="seconds" min="0" max="59" value="0">
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h1>Countdown Timer</h1>
+<input type="number" id="minutes" placeholder="Minutes" min="0">
+<input type="number" id="seconds" placeholder="Seconds" min="0">
 <button onclick="startTimer()">Start</button>
-<div id="timer">--:--</div>
-<div id="message"></div>
+<button onclick="resetTimer()">Reset</button>
+<div id="display">00:00</div>
 </div>
 <script>
+let interval;
 function startTimer(){
-const min=document.getElementById('minutes').value;
-const sec=document.getElementById('seconds').value;
-let total=min*60+sec;
-document.getElementById('timer').textContent=format(total);
-if(total<=0){
-document.getElementById('message').textContent="Timer complete!";
-return;
-}
-const interval=setInterval(()=>{
-total--;
-document.getElementById('timer').textContent=format(total);
-if(total<=0){
-clearInterval(interval);
-document.getElementById('message').textContent="Timer complete!";
-document.getElementById('timer').textContent="00:00";
-}
+const mins=document.getElementById('minutes').value||0;
+const secs=document.getElementById('seconds').value||0;
+let total=mins*60000+secs*1000;
+const display=document.getElementById('display');
+if(total<=0){display.textContent='00:00';return}
+interval=setInterval(()=>{
+total-=1000;
+const m=Math.floor(total/60000).toString().padStart(2,'0');
+const s=Math.floor((total%60000)/1000).toString().padStart(2,'0');
+display.textContent=`${m}:${s}`;
+if(total<=0){clearInterval(interval);display.textContent='00:00';}
 },1000);
 }
-function format(t){
-const m=Math.floor(t/60).toString().padStart(2,'0');
-const s=(t%60).toString().padStart(2,'0');
-return m+':'+s;
+function resetTimer(){
+clearInterval(interval);
+document.getElementById('display').textContent='00:00';
 }
 </script>
 </body>

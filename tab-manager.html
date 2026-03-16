@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Manager - Browser Tab Organizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #16213e, #1a1a2e);
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00d9ff;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .tabs-section {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #00d9ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #00d9ff;
+            border-radius: 2px;
+        }
+
+        .tabs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tab-card {
+            background: #0f0f23;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #333;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-card:hover {
+            transform: translateY(-3px);
+            border-color: #00d9ff;
+            box-shadow: 0 5px 20px rgba(0, 217, 255, 0.2);
+        }
+
+        .tab-card.favicon {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tab-favicon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .tab-title {
+            flex: 1;
+            font-weight: 500;
+            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tab-url {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tab-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #00d9ff;
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            background: #00b8d4;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #ff3344;
+        }
+
+        .btn-success {
+            background: #00ff88;
+            color: #1a1a2e;
+        }
+
+        .btn-success:hover {
+            background: #00e67a;
+        }
+
+        .controls-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-card {
+            background: #16213e;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        .control-label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .control-input {
+            width: 100%;
+            padding: 10px;
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #eee;
+            font-size: 0.9rem;
+        }
+
+        .control-input:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .control-select {
+            width: 100%;
+            padding: 10px;
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #eee;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .control-select:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .empty-state-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #16213e;
+            color: #eee;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            border-left: 4px solid #00d9ff;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            border-left-color: #ff4757;
+        }
+
+        .toast.success {
+            border-left-color: #00ff88;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #eee;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 20px;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .filter-tab:hover {
+            border-color: #00d9ff;
+            color: #00d9ff;
+        }
+
+        .filter-tab.active {
+            background: #00d9ff;
+            color: #1a1a2e;
+            border-color: #00d9ff;
+        }
+
+        .sort-select {
+            padding: 8px 15px;
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #eee;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tab-card {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📑 Tab Manager</h1>
+            <p class="subtitle">Organize, track, and manage your browser tabs in one place</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="tab-count">0</div>
+                <div class="stat-label">Total Tabs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="favicons-count">0</div>
+                <div class="stat-label">With Favicons</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="selected-count">0</div>
+                <div class="stat-label">Selected</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-size">0 KB</div>
+                <div class="stat-label">Estimated Size</div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="search-input" placeholder="Search tabs by title or URL...">
+        </div>
+
+        <div class="filter-tabs">
+            <div class="filter-tab active" data-filter="all">All Tabs</div>
+            <div class="filter-tab" data-filter="favicons">With Favicons</div>
+            <div class="filter-tab" data-filter="no-favicons">No Favicons</div>
+            <div class="filter-tab" data-filter="selected">Selected Only</div>
+        </div>
+
+        <div class="controls-section">
+            <div class="control-card">
+                <div class="control-label">Select All Tabs</div>
+                <button class="btn btn-primary" id="select-all-btn">Select All</button>
+            </div>
+            <div class="control-card">
+                <div class="control-label">Deselect All Tabs</div>
+                <button class="btn btn-danger" id="deselect-all-btn">Deselect All</button>
+            </div>
+            <div class="control-card">
+                <div class="control-label">Export Selected</div>
+                <button class="btn btn-success" id="export-btn">Export to JSON</button>
+            </div>
+            <div class="control-card">
+                <div class="control-label">Clear Exported Data</div>
+                <button class="btn btn-secondary" id="clear-export-btn">Clear Export</button>
+            </div>
+        </div>
+
+        <div class="tabs-section">
+            <div class="section-title">Your Browser Tabs</div>
+            <div class="tabs-grid" id="tabs-grid">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <div class="empty-state-title">No Tabs Detected</div>
+                    <div class="empty-state-text">
+                        This tool helps you manage your browser tabs. Click any tab in your browser to capture it here.<br><br>
+                        Start by opening a tab, then click this tool's tab to see it appear in the list.
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="window.location.href = 'https://github.com'">Example: GitHub</button>
+                        <button class="btn btn-primary" onclick="window.location.href = 'https://stackoverflow.com'">Example: Stack Overflow</button>
+                        <button class="btn btn-primary" onclick="window.location.href = 'https://google.com'">Example: Google</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // State
+            let tabs = [];
+            let exportedData = null;
+            let selectedTabIds = new Set();
+
+            // DOM Elements
+            const tabsGrid = document.getElementById('tabs-grid');
+            const tabCountEl = document.getElementById('tab-count');
+            const faviconsCountEl = document.getElementById('favicons-count');
+            const selectedCountEl = document.getElementById('selected-count');
+            const totalSizeEl = document.getElementById('total-size');
+            const searchInput = document.getElementById('search-input');
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            const selectAllBtn = document.getElementById('select-all-btn');
+            const deselectAllBtn = document.getElementById('deselect-all-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const clearExportBtn = document.getElementById('clear-export-btn');
+            const toast = document.getElementById('toast');
+
+            // Initialize
+            function init() {
+                setupEventListeners();
+                checkForCapturedTabs();
+            }
+
+            // Check if we're in a browser tab context
+            function checkForCapturedTabs() {
+                // Try to detect if we're embedded in a browser
+                const browserContext = detectBrowserContext();
+                
+                if (browserContext) {
+                    captureTab(browserContext);
+                } else {
+                    // If not embedded, show instructions
+                    showEmptyState();
+                }
+            }
+
+            // Detect if we're running in a browser context
+            function detectBrowserContext() {
+                // Check for window.opener (iframe context)
+                if (window.opener && window.opener.top === window) {
+                    return {
+                        title: window.document.title,
+                        url: window.location.href,
+                        favicon: getFavicon()
+                    };
+                }
+                
+                // Check if any tabs were previously captured
+                const captured = getCapturedTabsFromStorage();
+                if (captured && captured.length > 0) {
+                    return captured[0];
+                }
+                
+                return null;
+            }
+
+            // Get favicon as data URL
+            function getFavicon() {
+                try {
+                    const link = document.createElement('link');
+                    link.rel = 'shortcut icon';
+                    document.head.appendChild(link);
+                    
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            if (link.href) {
+                                fetch(link.href)
+                                    .then(response => response.blob())
+                                    .then(blob => {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            resolve(reader.result);
+                                        };
+                                        reader.readAsDataURL(blob);
+                                    })
+                                    .catch(() => resolve(null));
+                            } else {
+                                resolve(null);
+                            }
+                        }, 500);
+                    });
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // Capture current tab
+            function captureTab(context) {
+                const tab = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    title: context.title || 'Untitled',
+                    url: context.url,
+                    favicon: context.favicon || null,
+                    timestamp: new Date().toISOString(),
+                    selected: false
+                };
+
+                tabs.push(tab);
+                saveTabsToStorage();
+                renderTabs();
+                updateStats();
+            }
+
+            // Get previously captured tabs
+            function getCapturedTabsFromStorage() {
+                try {
+                    const stored = localStorage.getItem('capturedTabs');
+                    if (stored) {
+                        return JSON.parse(stored);
+                    }
+                } catch (e) {
+                    console.error('Error reading captured tabs:', e);
+                }
+                return [];
+            }
+
+            // Save tabs to storage
+            function saveTabsToStorage() {
+                try {
+                    localStorage.setItem('capturedTabs', JSON.stringify(tabs));
+                } catch (e) {
+                    console.error('Error saving captured tabs:', e);
+                }
+            }
+
+            // Render tabs grid
+            function renderTabs() {
+                const filter = getActiveFilter();
+                const searchTerm = searchInput.value.toLowerCase();
+                
+                tabsGrid.innerHTML = '';
+
+                if (tabs.length === 0) {
+                    tabsGrid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-title">No Tabs Captured</div>
+                            <div class="empty-state-text">
+                                Click any tab in your browser to capture it here.<br><br>
+                                Use the example buttons below to test the tool.
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary" onclick="window.location.href = 'https://github.com'">GitHub</button>
+                                <button class="btn btn-primary" onclick="window.location.href = 'https://stackoverflow.com'">Stack Overflow</button>
+                                <button class="btn btn-primary" onclick="window.location.href = 'https://google.com'">Google</button>
+                                <button class="btn btn-primary" onclick="window.location.href = 'https://github.com/search?q=trending'">GitHub Trending</button>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const filteredTabs = tabs.filter(tab => {
+                    const matchesFilter = filter === 'all' ? true :
+                        filter === 'favicons' ? tab.favicon !== null :
+                        filter === 'no-favicons' ? tab.favicon === null :
+                        filter === 'selected' ? tab.selected : true;
+
+                    const matchesSearch = !searchTerm || 
+                        tab.title.toLowerCase().includes(searchTerm) ||
+                        tab.url.toLowerCase().includes(searchTerm);
+
+                    return matchesFilter && matchesSearch;
+                });
+
+                if (filteredTabs.length === 0) {
+                    tabsGrid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔍</div>
+                            <div class="empty-state-title">No Matching Tabs</div>
+                            <div class="empty-state-text">
+                                Try adjusting your search or filter criteria.
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                filteredTabs.forEach(tab => {
+                    const tabEl = document.createElement('div');
+                    tabEl.className = 'tab-card' + (tab.favicon ? ' favicon' : '');
+                    tabEl.dataset.id = tab.id;
+                    tabEl.innerHTML = `
+                        <div class="tab-favicon" style="background: ${getFaviconColor(tab.url)}">
+                            ${tab.favicon ? `<img src="${tab.favicon}" style="width:20px;height:20px;object-fit:contain;">` : '🌐'}
+                        </div>
+                        <div class="tab-title" title="${tab.title}">${tab.title}</div>
+                        <div class="tab-url" title="${tab.url}">${tab.url}</div>
+                        <div class="tab-actions">
+                            <button class="btn btn-primary" onclick="toggleSelect('${tab.id}')">
+                                ${tab.selected ? '✓' : '☑'}
+                            </button>
+                            <button class="btn btn-secondary" onclick="copyToClipboard('${tab.url}')">
+                                📋 Copy URL
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteTab('${tab.id}')">
+                                🗑 Delete
+                            </button>
+                        </div>
+                    `;
+                    tabsGrid.appendChild(tabEl);
+                });
+
+                updateStats();
+            }
+
+            // Get active filter
+            function getActiveFilter() {
+                const active = document.querySelector('.filter-tab.active');
+                if (active) {
+                    return active.dataset.filter;
+                }
+                return 'all';
+            }
+
+            // Update stats
+            function updateStats() {
+                tabCountEl.textContent = tabs.length;
+                
+                const withFavicons = tabs.filter(t => t.favicon !== null).length;
+                faviconsCountEl.textContent = withFavicons;
+                
+                selectedCountEl.textContent = selectedTabIds.size;
+                
+                // Estimate total size (simplified)
+                const estimatedSize = tabs.length * 250; // ~250KB per tab
+                totalSizeEl.textContent = Math.round(estimatedSize / 1024) + ' KB';
+            }
+
+            // Toggle selection
+            function toggleSelect(id) {
+                const tab = tabs.find(t => t.id === id);
+                if (tab) {
+                    tab.selected = !tab.selected;
+                    saveTabsToStorage();
+                    renderTabs();
+                }
+            }
+
+            // Delete tab
+            function deleteTab(id) {
+                tabs = tabs.filter(t => t.id !== id);
+                if (selectedTabIds.has(id)) {
+                    selectedTabIds.delete(id);
+                }
+                saveTabsToStorage();
+                renderTabs();
+            }
+
+            // Select all
+            function selectAll() {
+                tabs.forEach(tab => tab.selected = true);
+                selectedTabIds = new Set(tabs.map(t => t.id));
+                saveTabsToStorage();
+                renderTabs();
+            }
+
+            // Deselect all
+            function deselectAll() {
+                tabs.forEach(tab => tab.selected = false);
+                selectedTabIds.clear();
+                saveTabsToStorage();
+                renderTabs();
+            }
+
+            // Copy to clipboard
+            function copyToClipboard(url) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast('URL copied to clipboard!', 'success');
+                }).catch(err => {
+                    showToast('Failed to copy URL', 'error');
+                });
+            }
+
+            // Export to JSON
+            function exportToJSON() {
+                const selectedTabs = tabs.filter(t => t.selected);
+                if (selectedTabs.length === 0) {
+                    showToast('Please select tabs to export', 'error');
+                    return;
+                }
+
+                const exportData = {
+                    tabs: selectedTabs,
+                    exportedAt: new Date().toISOString(),
+                    totalCount: tabs.length,
+                    selectedCount: selectedTabs.length
+                };
+
+                exportedData = exportData;
+
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tab-manager-export-${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast(`Exported ${selectedTabs.length} tabs!`, 'success');
+            }
+
+            // Clear exported data
+            function clearExport() {
+                exportedData = null;
+                showToast('Export data cleared', 'success');
+            }
+
+            // Show toast notification
+            function showToast(message, type = 'info') {
+                toast.textContent = message;
+                toast.className = 'toast show ' + type;
+                
+                setTimeout(() => {
+                    toast.className = 'toast';
+                }, 3000);
+            }
+
+            // Get favicon color
+            function getFaviconColor(url) {
+                // Simple hash function to generate consistent colors
+                let hash = 0;
+                for (let i = 0; i < url.length; i++) {
+                    hash = ((hash << 5) - hash) + url.charCodeAt(i);
+                    hash |= 0;
+                }
+                const hue = Math.abs(hash % 360);
+                return `hsl(${hue}, 70%, 40%)`;
+            }
+
+            // Setup event listeners
+            function setupEventListeners() {
+                // Filter tabs
+                filterTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        filterTabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        renderTabs();
+                    });
+                });
+
+                // Search input
+                searchInput.addEventListener('input', renderTabs);
+
+                // Select all button
+                selectAllBtn.addEventListener('click', selectAll);
+
+                // Deselect all button
+                deselectAllBtn.addEventListener('click', deselectAll);
+
+                // Export button
+                exportBtn.addEventListener('click', exportToJSON);
+
+                // Clear export button
+                clearExportBtn.addEventListener('click', clearExport);
+
+                // Listen for tab changes (when user switches tabs)
+                window.addEventListener('blur', () => {
+                    // Check if we're still in a browser context
+                    const browserContext = detectBrowserContext();
+                    if (browserContext) {
+                        captureTab(browserContext);
+                    }
+                });
+            }
+
+            // Show empty state
+            function showEmptyState() {
+                tabsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-title">No Tabs Detected</div>
+                        <div class="empty-state-text">
+                            This tool helps you manage your browser tabs. Click any tab in your browser to capture it here.<br><br>
+                            Start by opening a tab, then click this tool's tab to see it appear in the list.
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="window.location.href = 'https://github.com'">Example: GitHub</button>
+                            <button class="btn btn-primary" onclick="window.location.href = 'https://stackoverflow.com'">Example: Stack Overflow</button>
+                            <button class="btn btn-primary" onclick="window.location.href = 'https://google.com'">Example: Google</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Initialize
+            init();
+        })();
+    </script>
+</body>
+</html>

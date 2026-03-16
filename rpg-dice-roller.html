@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Dice Roller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: #111;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .dice-section {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #222;
+        }
+        .dice-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #a5a5a5;
+        }
+        .dice-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .dice-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .dice-input-group label {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .dice-input {
+            background: #1a1a1a;
+            border: 2px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #e4e4e4;
+            font-size: 1.1rem;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .dice-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .dice-input::placeholder {
+            color: #555;
+            font-size: 0.9rem;
+        }
+        .roll-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 16px 32px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .roll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+        }
+        .roll-btn:active {
+            transform: translateY(0);
+        }
+        .roll-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .results-section {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #222;
+        }
+        .results-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #a5a5a5;
+        }
+        .result-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #2a2a2a;
+            transition: all 0.3s ease;
+        }
+        .result-item:hover {
+            border-color: #3a3a3a;
+            transform: translateX(4px);
+        }
+        .dice-icon {
+            font-size: 1.8rem;
+            margin-right: 12px;
+            min-width: 36px;
+            text-align: center;
+        }
+        .result-details {
+            flex: 1;
+        }
+        .result-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #e4e4e4;
+        }
+        .result-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 2px;
+        }
+        .result-total {
+            font-size: 1.1rem;
+            color: #888;
+            margin-top: 4px;
+        }
+        .result-total span {
+            font-weight: 700;
+            color: #6366f1;
+        }
+        .crITICAL {
+            border-color: #ef4444 !important;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%) !important;
+        }
+        .crITICAL .result-value {
+            color: #ef4444;
+        }
+        .natURAL {
+            border-color: #22c55e !important;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%) !important;
+        }
+        .natURAL .result-value {
+            color: #22c55e;
+        }
+        .reroll-btn {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #888;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 10px;
+        }
+        .reroll-btn:hover {
+            background: #3a3a3a;
+            color: #e4e4e4;
+        }
+        .reroll-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .stats-section {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #222;
+        }
+        .stats-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #a5a5a5;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        .stat-item {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+        .clear-btn {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: #888;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .clear-btn:hover {
+            background: #3a3a3a;
+            color: #e4e4e4;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #2a2a2a;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #555;
+        }
+        .empty-state p {
+            margin-bottom: 10px;
+        }
+        .dice-legend {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        .legend-color.cr {
+            background: #ef4444;
+        }
+        .legend-color.na {
+            background: #22c55e;
+        }
+        .legend-color.neu {
+            background: #6366f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RPG Dice Roller</h1>
+        <p class="subtitle">Roll dice for your tabletop RPG adventures</p>
+
+        <div class="dice-section">
+            <h2>Add Dice</h2>
+            <div class="dice-legend">
+                <div class="legend-item">
+                    <div class="legend-color cr"></div>
+                    <span>Critical (1 or 20)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color na"></div>
+                    <span>Natural (1 or 20)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color neu"></div>
+                    <span>Normal Roll</span>
+                </div>
+            </div>
+            <div class="dice-inputs" id="diceInputs">
+                <div class="dice-input-group">
+                    <label for="d4">d4</label>
+                    <input type="number" id="d4" class="dice-input" placeholder="0" min="0" max="100">
+                </div>
+                <div class="dice-input-group">
+                    <label for="d6">d6</label>
+                    <input type="number" id="d6" class="dice-input" placeholder="0" min="0" max="100">
+                </div>
+                <div class="dice-input-group">
+                    <label for="d8">d8</label>
+                    <input type="number" id="d8" class="dice-input" placeholder="0" min="0" max="100">
+                </div>
+                <div class="dice-input-group">
+                    <label for="d10">d10</label>
+                    <input type="number" id="d10" class="dice-input" placeholder="0" min="0" max="100">
+                </div>
+                <div class="dice-input-group">
+                    <label for="d12">d12</label>
+                    <input type="number" id="d12" class="dice-input" placeholder="0" min="0" max="100">
+                </div>
+                <div class="dice-input-group">
+                    <label for="d20">d20</label>
+                    <input type="number" id="d20" class="dice-input" placeholder="0" min="0" max="100">
+                </div>
+            </div>
+            <button class="roll-btn" id="rollBtn">Roll All Dice</button>
+        </div>
+
+        <div class="results-section">
+            <h2>Roll Results</h2>
+            <div id="resultsContainer">
+                <div class="empty-state">
+                    <p>No dice have been rolled yet.</p>
+                    <p>Add dice above and click "Roll All Dice"</p>
+                </div>
+            </div>
+            <button class="clear-btn" id="clearBtn">Clear Results</button>
+        </div>
+
+        <div class="stats-section">
+            <h2>Session Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Total Rolls</div>
+                    <div class="stat-value" id="totalRolls">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Critical Hits</div>
+                    <div class="stat-value" id="criticalHits">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Natural 1s</div>
+                    <div class="stat-value" id="natural1s">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Natural 20s</div>
+                    <div class="stat-value" id="natural20s">0</div>
+                </div>
+            </div>
+        </div>
+
+        <a href="index.html" style="color:#6366f1">Back to Home</a>
+    </div>
+
+    <script>
+        // Session statistics
+        let stats = {
+            totalRolls: 0,
+            criticalHits: 0,
+            natural1s: 0,
+            natural20s: 0
+        };
+
+        // Dice configuration
+        const diceConfig = {
+            d4: { sides: 4, icon: '⚔️' },
+            d6: { sides: 6, icon: '🎲' },
+            d8: { sides: 8, icon: '🎯' },
+            d10: { sides: 10, icon: '🎱' },
+            d12: { sides: 12, icon: '🎮' },
+            d20: { sides: 20, icon: '🔮' }
+        };
+
+        // DOM elements
+        const diceInputs = {
+            d4: document.getElementById('d4'),
+            d6: document.getElementById('d6'),
+            d8: document.getElementById('d8'),
+            d10: document.getElementById('d10'),
+            d12: document.getElementById('d12'),
+            d20: document.getElementById('d20')
+        };
+
+        const rollBtn = document.getElementById('rollBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const totalRollsEl = document.getElementById('totalRolls');
+        const criticalHitsEl = document.getElementById('criticalHits');
+        const natural1sEl = document.getElementById('natural1s');
+        const natural20sEl = document.getElementById('natural20s');
+
+        // Validation
+        function validateInput(input) {
+            const value = parseInt(input.value) || 0;
+            if (value < 0) {
+                input.value = 0;
+                return 0;
+            }
+            if (value > 100) {
+                input.value = 100;
+                return 100;
+            }
+            return value;
+        }
+
+        // Roll a single die
+        function rollDie(sides) {
+            const result = Math.floor(Math.random() * sides) + 1;
+            return result;
+        }
+
+        // Check for critical/natural
+        function checkSpecial(sides, result) {
+            if (sides === 20) {
+                if (result === 1) return 'natural';
+                if (result === 20) return 'critical';
+            }
+            return null;
+        }
+
+        // Roll all dice
+        function rollAllDice() {
+            // Validate all inputs
+            let totalValue = 0;
+            const results = [];
+
+            for (const [key, config] of Object.entries(diceConfig)) {
+                const input = diceInputs[key];
+                const value = validateInput(input);
+                
+                if (value > 0) {
+                    const roll = rollDie(config.sides);
+                    const special = checkSpecial(config.sides, roll);
+                    
+                    totalValue += roll;
+                    
+                    results.push({
+                        die: config.icon,
+                        label: `d${config.sides}`,
+                        value: roll,
+                        total: totalValue,
+                        special: special,
+                        reroll: () => {
+                            input.value = 0;
+                            renderResults();
+                        }
+                    });
+                }
+            }
+
+            // Update stats
+            stats.totalRolls += results.length;
+            stats.criticalHits += results.filter(r => r.special === 'critical').length;
+            stats.natural1s += results.filter(r => r.special === 'natural').length;
+            stats.natural20s += results.filter(r => r.special === 'critical').length;
+
+            // Save stats
+            saveStats();
+
+            // Render results
+            renderResults();
+
+            // Update stats display
+            updateStatsDisplay();
+        }
+
+        // Render results
+        function renderResults() {
+            const results = [];
+            let totalValue = 0;
+
+            for (const [key, config] of Object.entries(diceConfig)) {
+                const input = diceInputs[key];
+                const value = parseInt(input.value) || 0;
+                
+                if (value > 0) {
+                    const roll = rollDie(config.sides);
+                    const special = checkSpecial(config.sides, roll);
+                    
+                    totalValue += roll;
+                    
+                    results.push({
+                        die: config.icon,
+                        label: `d${config.sides}`,
+                        value: roll,
+                        total: totalValue,
+                        special: special,
+                        reroll: () => {
+                            input.value = 0;
+                            renderResults();
+                        }
+                    });
+                }
+            }
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>No dice have been rolled yet.</p>
+                        <p>Add dice above and click "Roll All Dice"</p>
+                    </div>
+                `;
+                return;
+            }
+
+            resultsContainer.innerHTML = results.map((result, index) => {
+                const specialClass = result.special ? result.special : '';
+                return `
+                    <div class="result-item ${specialClass}" data-index="${index}">
+                        <div class="dice-icon">${result.die}</div>
+                        <div class="result-details">
+                            <div class="result-value">${result.value}</div>
+                            <div class="result-label">${result.label}</div>
+                            <div class="result-total">Total: <span>${result.total}</span></div>
+                        </div>
+                        <button class="reroll-btn" onclick="rerollDie(${index})">Reroll</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Reroll a specific die
+        function rerollDie(index) {
+            const result = results[index];
+            const input = result.label === 'd4' ? diceInputs.d4 :
+                           result.label === 'd6' ? diceInputs.d6 :
+                           result.label === 'd8' ? diceInputs.d8 :
+                           result.label === 'd10' ? diceInputs.d10 :
+                           result.label === 'd12' ? diceInputs.d12 :
+                           diceInputs.d20;
+            input.value = 0;
+            renderResults();
+        }
+
+        // Update stats display
+        function updateStatsDisplay() {
+            totalRollsEl.textContent = stats.totalRolls;
+            criticalHitsEl.textContent = stats.criticalHits;
+            natural1sEl.textContent = stats.natural1s;
+            natural20sEl.textContent = stats.natural20s;
+        }
+
+        // Save stats to localStorage
+        function saveStats() {
+            try {
+                localStorage.setItem('rpgDiceStats', JSON.stringify(stats));
+            } catch (e) {
+                console.error('Failed to save stats:', e);
+            }
+        }
+
+        // Load stats from localStorage
+        function loadStats() {
+            try {
+                const saved = localStorage.getItem('rpgDiceStats');
+                if (saved) {
+                    stats = JSON.parse(saved);
+                    updateStatsDisplay();
+                }
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+
+        // Clear results
+        function clearResults() {
+            for (const input of Object.values(diceInputs)) {
+                input.value = 0;
+            }
+            renderResults();
+        }
+
+        // Event listeners
+        rollBtn.addEventListener('click', rollAllDice);
+        clearBtn.addEventListener('click', clearResults);
+
+        // Allow Enter key to roll
+        Object.values(diceInputs).forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    rollAllDice();
+                }
+            });
+        });
+
+        // Initialize
+        loadStats();
+    </script>
+
+    <script>
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:['rpg-dice-roller.html','load',new Date().toISOString()]})}).catch(()=>{});
+    </script>
+</body>
+</html>

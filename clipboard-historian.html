@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Clipboard History Manager</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:2rem}
+.container{max-width:600px;margin:0 auto}
+h1{text-align:center;margin-bottom:1.5rem}
+input,button,select{width:100%;padding:0.75rem;margin:0.5rem 0;border-radius:6px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;font-size:1rem}
+button{background:#6366f1;color:#fff;border:none;cursor:pointer;font-weight:600}
+button:hover{background:#5558e6}
+#history{max-height:300px;overflow-y:auto;background:#1a1a1a;border-radius:6px;padding:1rem}
+.history-item{padding:0.5rem;background:#222;margin:0.25rem 0;border-radius:4px;cursor:pointer;display:flex;justify-content:space-between}
+.history-item:hover{background:#333}
+.history-item span{word-break:break-all}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1;display:block;text-align:center;margin-bottom:1rem">Back to Home</a>
+<h1>Clipboard History Manager</h1>
+<input type="text" id="input" placeholder="Paste or type content..." oninput="updateHistory()">
+<button onclick="copyFromHistory()">Copy Selected</button>
+<select id="action" onchange="handleAction()">
+<option value="">Select Action</option>
+<option value="clear">Clear History</option>
+<option value="limit">Limit to 5 Items</option>
+</select>
+<div id="history"></div>
+</div>
+<script>
+let history=[]
+function updateHistory(){
+const input=document.getElementById('input')
+history.push({text:input.value,timestamp:Date.now()})
+renderHistory()
+}
+function renderHistory(){
+const container=document.getElementById('history')
+container.innerHTML=''
+history.slice(-10).reverse().forEach((item,i,arr)=>{
+const div=document.createElement('div')
+div.className='history-item'
+div.innerHTML=`<span>${escapeHtml(item.text)}</span><span>${new Date(item.timestamp).toLocaleTimeString()}</span>`
+div.onclick=()=>copyToClipboard(item.text)
+container.appendChild(div)
+})
+}
+function copyToClipboard(text){
+navigator.clipboard.writeText(text).then(()=>alert('Copied!'))
+}
+function copyFromHistory(){
+const items=document.querySelectorAll('.history-item')
+items.forEach(item=>{
+const text=item.querySelector('span').innerText
+copyToClipboard(text)
+})
+}
+function handleAction(){
+const action=document.getElementById('action').value
+if(action==='clear'){history=[];renderHistory()}
+if(action==='limit'){history=history.slice(-5);renderHistory()}
+document.getElementById('action').value=''
+}
+function escapeHtml(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+</script>
+</body>
+</html>

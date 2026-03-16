@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;margin:0;padding:20px;}
+input,button,select{margin:10px 0;padding:8px 12px;border:1px solid #333;border-radius:4px;}
+button{background:#6366f1;color:#fff;cursor:pointer;border:none;}
+button:hover{background:#4f46e5;}
+#result{margin-top:20px;padding:15px;background:#1a1a1a;border-radius:4px;display:none;}
+a{color:#6366f1;text-decoration:none;}
+</style>
+</head>
+<body>
+<h2>Research Assistant</h2>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<input id="topic" placeholder="Enter research topic...">
+<button onclick="search()">Search</button>
+<select id="source">
+<option value="web">Web Search</option>
+<option value="files">Files</option>
+<option value="memory">Memory</option>
+</select>
+<div id="result"></div>
+<script>
+function search(){
+const topic=document.getElementById('topic').value.trim();
+const source=document.getElementById('source').value;
+if(!topic){alert('Please enter a topic');return}
+const result=document.getElementById('result');
+let html='<h3>Results for: ' + topic + '</h3>';
+if(source==='web'){html+='<p>Searching web sources...</p><ul><li>Source 1: ' + topic + ' overview</li><li>Source 2: ' + topic + ' analysis</li></ul>'}
+else if(source==='files'){html+='<p>Searching files...</p><ul><li>File 1: ' + topic + '.md</li><li>File 2: ' + topic + '.txt</li></ul>'}
+else{html+='<p>Searching memory...</p><ul><li>Memory 1: ' + topic + ' notes</li><li>Memory 2: ' + topic + ' summary</li></ul>'}
+result.style.display='block';result.innerHTML=html;
+}
+</script>
+</body>
+</html>

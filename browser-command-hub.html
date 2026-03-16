@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Browser Command Hub</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:2rem}
+h1{margin:0;color:#6366f1}
+input,select,button{padding:0.5rem 1rem;margin:0.5rem 0;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
+button:hover{background:#333}
+#output{background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:1rem;margin-top:1rem;min-height:100px}
+</style>
+</head>
+<body>
+<h1>Browser Command Hub</h1>
+<label>Type:</label>
+<select id="cmdType">
+<option value="open">Open URL</option>
+<option value="search">Search</option>
+<option value="download">Download</option>
+</select>
+<label>URL/Query:</label>
+<input type="text" id="inputVal" placeholder="Enter URL or search term">
+<button onclick="execute()">Run</button>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<div id="output"></div>
+<script>
+function execute(){
+const type=document.getElementById('cmdType').value;
+const val=document.getElementById('inputVal').value;
+const out=document.getElementById('output');
+out.innerHTML='Processing '+type+'...';
+setTimeout(()=>{
+if(type==='open'){out.innerHTML='Opening: '+val;window.open(val,'_blank');}
+else if(type==='search'){out.innerHTML='Searching for: '+val;window.location.href='https://www.bing.com/search?q='+encodeURIComponent(val);}
+else if(type==='download'){out.innerHTML='Downloading: '+val;const a=document.createElement('a');a.href=val;a.download='file';document.body.appendChild(a).click();document.body.removeChild(a);}
+},500);
+}
+</script>
+</body>
+</html>

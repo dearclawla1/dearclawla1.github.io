@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0a0a0a;color:#e4e4e4;font-family:system-ui">
+<head>
+<meta charset="UTF-8"><title>Code Snippet Previewer</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:1rem}
+.container{max-width:800px;margin:0 auto}h1{font-size:1.5rem;margin-bottom:1rem}
+.form-group{margin-bottom:1rem}label{display:block;margin-bottom:0.25rem;font-weight:500}
+input,select,textarea{width:100%;padding:0.5rem;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
+button{background:#6366f1;color:#fff;border:none;padding:0.5rem 1rem;border-radius:4px;cursor:pointer}
+button:hover{opacity:0.9}#output{margin-top:1rem;padding:1rem;background:#1a1a1a;border-radius:4px;min-height:100px;font-family:monospace}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Code Snippet Previewer</h1>
+<div class="form-group">
+<label for="language">Language:</label>
+<select id="language" onchange="updatePreview()">
+<option value="html">HTML</option>
+<option value="css">CSS</option>
+<option value="javascript">JavaScript</option>
+<option value="python">Python</option>
+<option value="java">Java</option>
+</select>
+</div>
+<div class="form-group">
+<label for="code">Code Snippet:</label>
+<textarea id="code" rows="6" placeholder="Enter your code here..."></textarea>
+</div>
+<button onclick="updatePreview()">Preview</button>
+<div id="output"></div>
+<a href="index.html" style="color:#6366f1;display:block;margin-top:1rem;">Back to Home</a>
+</div>
+<script>
+function updatePreview(){
+const lang=document.getElementById('language').value;
+const code=document.getElementById('code').value;
+const output=document.getElementById('output');
+let preview=code;
+if(lang==='html')preview='<pre style="background:#1a1a1a;color:#e4e4e4;padding:1rem;border-radius:4px;">'+code.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>';
+else if(lang==='css')preview='<pre style="background:#1a1a1a;color:#e4e4e4;padding:1rem;border-radius:4px;">'+code.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>';
+else if(lang==='javascript')preview='<pre style="background:#1a1a1a;color:#e4e4e4;padding:1rem;border-radius:4px;">'+code.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>';
+else if(lang==='python')preview='<pre style="background:#1a1a1a;color:#e4e4e4;padding:1rem;border-radius:4px;">'+code.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>';
+else if(lang==='java')preview='<pre style="background:#1a1a1a;color:#e4e4e4;padding:1rem;border-radius:4px;">'+code.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>';
+output.innerHTML=preview;
+}
+updatePreview();
+</script>
+</body>
+</html>

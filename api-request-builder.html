@@ -8,76 +8,141 @@ h1{color:#6366f1;margin-bottom:20px}
 input,select,textarea{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;margin:5px 0;width:100%}
 button{background:#6366f1;border:none;color:#fff;padding:10px 20px;cursor:pointer}
 button:hover{background:#5558ff}
-#output{background:#1a1a1a;border:1px solid #333;padding:10px;min-height:100px;white-space:pre-wrap;word-wrap:break-word}
-.container{max-width:800px;margin:0 auto}
+#output{background:#1a1a1a;border:1px solid #333;padding:15px;min-height:100px;white-space:pre-wrap;overflow:auto}
+#output.error{border-color:#ef4444}
+#output.success{border-color:#22c55e}
 </style>
 </head>
 <body>
-<div class="container">
 <h1>API Request Builder</h1>
-<div id="form-container">
-<details>
-<summary>Show/Hide Form</summary>
-<div id="form">
-<h2>Request Details</h2>
-<input type="text" id="method" placeholder="GET" value="GET">
-<select id="endpoint">
-<option value="">Select Endpoint</option>
-<option value="/api/users">/api/users</option>
-<option value="/api/posts">/api/posts</option>
-<option value="/api/comments">/api/comments</option>
+<div style="max-width:600px;margin:0 auto">
+<p>Build and test API requests. Press <strong>Enter</strong> to submit.</p>
+<form id="request-form">
+<div style="margin-bottom:15px">
+<label>Method:</label>
+<select id="method" name="method">
+<option value="GET">GET</option>
+<option value="POST">POST</option>
+<option value="PUT">PUT</option>
+<option value="DELETE">DELETE</option>
 </select>
-<input type="text" id="headers" placeholder="Content-Type: application/json">
-<textarea id="body" placeholder="Request body (optional)"></textarea>
-<button id="build-btn">Build Request</button>
-<button id="clear-btn" style="display:none;background:#ef4444;">Clear</button>
 </div>
-</details>
+<div style="margin-bottom:15px">
+<label>URL:</label>
+<input type="text" id="url" name="url" placeholder="https://api.example.com/endpoint" required>
 </div>
-<div id="output">Build a request to see the output...</div>
+<div style="margin-bottom:15px">
+<label>Headers (JSON):</label>
+<textarea id="headers" name="headers" placeholder='{"Content-Type": "application/json"}' style="height:80px"></textarea>
+</div>
+<div style="margin-bottom:15px">
+<label>Body (JSON):</label>
+<textarea id="body" name="body" placeholder='{"name": "value"}' style="height:100px"></textarea>
+</div>
+<div style="margin-bottom:15px">
+<label>Query Params:</label>
+<input type="text" id="query" name="query" placeholder="param1=value1&param2=value2">
+</div>
+<button type="submit">Build Request</button>
+<button type="button" id="clear-btn">Clear</button>
+</form>
+<h2>Output:</h2>
+<div id="output" aria-live="polite"></div>
+</div>
 <script>
-const form = document.getElementById('form');
-const buildBtn = document.getElementById('build-btn');
-const clearBtn = document.getElementById('clear-btn');
-const output = document.getElementById('output');
-const methodInput = document.getElementById('method');
-const endpointInput = document.getElementById('endpoint');
-const headersInput = document.getElementById('headers');
-const bodyInput = document.getElementById('body');
+(function(){
+const form=document.getElementById('request-form');
+const urlInput=document.getElementById('url');
+const output=document.getElementById('output');
+const clearBtn=document.getElementById('clear-btn');
 
-function buildRequest() {
-const method = methodInput.value.toUpperCase() || 'GET';
-const endpoint = endpointInput.value || '/';
-const headers = headersInput.value || '';
-const body = bodyInput.value || '';
-
-let request = `${method} ${endpoint}`;
-if (headers) {
-request += `\n\nHeaders:\n${headers}`;
-}
-if (body) {
-request += `\n\nBody:\n${body}`;
-}
-output.textContent = request;
-clearBtn.style.display = 'inline-block';
+function showError(message){
+output.textContent=message;
+output.className='error';
 }
 
-buildBtn.addEventListener('click', buildRequest);
-clearBtn.addEventListener('click', () => {
-output.textContent = 'Output cleared.';
-methodInput.value = 'GET';
-endpointInput.value = '';
-headersInput.value = '';
-bodyInput.value = '';
-clearBtn.style.display = 'none';
-});
+function showSuccess(message){
+output.textContent=message;
+output.className='success';
+}
 
-document.addEventListener('keydown', (e) => {
-if (e.key === 'Enter') {
+function showResult(message){
+output.textContent=message;
+output.className='';
+}
+
+function buildUrl(url,query){
+if(query){
+const separator=url.includes('?')?'&':'?';
+return url+separator+query;
+}
+return url;
+}
+
+function parseJSON(str,field){
+if(!str.trim()){
+return null;
+}
+try{
+return JSON.parse(str);
+}catch(e){
+showError(`Invalid ${field} JSON: ${e.message}`);
+return null;
+}
+}
+
+async function handleSubmit(e){
 e.preventDefault();
-buildRequest();
+const method=document.getElementById('method').value;
+let url=document.getElementById('url').value.trim();
+const headersStr=document.getElementById('headers').value;
+const bodyStr=document.getElementById('body').value;
+const query=document.getElementById('query').value.trim();
+
+if(!url){
+showError('URL is required');
+return;
+}
+
+const headers=parseJSON(headersStr,'Headers')||{};
+const body=parseJSON(bodyStr,'Body');
+
+let fullUrl=buildUrl(url,query);
+
+try{
+let requestText='';
+if(method!=='GET' && method!=='DELETE'){
+const body=body||{};
+requestText=JSON.stringify(body,null,2);
+}else{
+requestText=null;
+}
+
+requestText='\n\n'+'Request Body: '+JSON.stringify(body,null,2);
+
+showSuccess('Request built successfully!');
+showResult('Method: ' + method + '\n' + 'URL: ' + fullUrl + requestText);
+}catch(e){
+showError('Error: ' + e.message);
+}
+}
+
+form.addEventListener('submit',handleSubmit);
+clearBtn.addEventListener('click',()=>{
+form.reset();
+showResult('Form cleared');
+});
+
+// Keyboard shortcut: Enter to submit
+document.addEventListener('keydown',(e)=>{
+if(e.key==='Enter'&&!e.target.matches('textarea')){
+form.dispatchEvent(new Event('submit',{cancelable:true}));
 }
 });
+
+// Show initial message
+showResult('Fill the form and press Enter or click "Build Request"');
+})();
 </script>
 </body>
 </html>

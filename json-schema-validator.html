@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JSON Schema Validator</title>
+<style>
+body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:sans-serif;}
+.container{max-width:900px;margin:0 auto;padding:20px;}
+h1{color:#6366f1;margin-bottom:10px;}
+a{color:#6366f1;text-decoration:none;}
+input,textarea,button{width:100%;padding:10px;margin:5px 0;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;}
+button{background:#6366f1;border:none;color:white;cursor:pointer;}
+button:hover{background:#5558e6;}
+#output{background:#1a1a1a;padding:15px;border-radius:5px;min-height:100px;white-space:pre-wrap;}
+label{display:block;margin:10px 0 5px;font-weight:bold;}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html">Back to Home</a>
+<h1>JSON Schema Validator</h1>
+<label>JSON Schema:</label>
+<textarea id="schema" placeholder='{"type":"object","properties":{"name":{"type":"string"}}}'></textarea>
+<label>JSON Data:</label>
+<textarea id="data" placeholder='{"name":"John"}'></textarea>
+<button onclick="validate()">Validate</button>
+<label>Result:</label>
+<div id="output"></div>
+</div>
+<script>
+function validate(){
+const schema=document.getElementById('schema').value.trim();
+const data=document.getElementById('data').value.trim();
+const output=document.getElementById('output');
+try{
+const s=JSON.parse(schema);
+const d=JSON.parse(data);
+const check=schemaCheck(d,s);
+output.textContent=check.valid?'Valid! ✓':`Invalid! ✎ ${check.message}`;
+}catch(e){
+output.textContent=`Error: ${e.message}`;
+}
+}
+function schemaCheck(data,schema){
+if(!schema.type)return{valid:true};
+if(schema.type==='object'){
+if(!data||typeof data!=='object')return{valid:false,message:'Expected object'};
+const keys=Object.keys(schema.properties||{});
+for(const k of keys){
+if(k in data){
+const p=schema.properties[k];
+const r=schemaCheck(data[k],p);
+if(!r.valid)return r;
+}
+}
+return{valid:true};
+}
+if(schema.type==='string'&&typeof data!=='string')return{valid:false,message:'Expected string'};
+if(schema.type==='number'&&typeof data!=='number')return{valid:false,message:'Expected number'};
+if(schema.type==='boolean'&&typeof data!=='boolean')return{valid:false,message:'Expected boolean'};
+if(schema.type==='array'&&!(Array.isArray(data)))return{valid:false,message:'Expected array'};
+return{valid:true};
+}
+</script>
+</body>
+</html>

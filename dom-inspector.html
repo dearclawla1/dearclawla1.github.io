@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DOM Inspector</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px;}
+a{color:#6366f1;text-decoration:none;}
+input,select,button{margin:5px 0;}
+#output{background:#1a1a1a;padding:10px;border:1px solid #333;min-height:50px;}
+</style>
+</head>
+<body>
+<a href="index.html" style="color:#6366f1">Back to Home</a><br>
+<h3>DOM Inspector</h3>
+<input id="url" placeholder="Enter URL"><button onclick="inspect()">Inspect</button>
+<select id="filter"><option value="all">All</option><option value="input">Inputs</option><option value="button">Buttons</option><option value="link">Links</option></select>
+<div id="output">Enter a URL and click Inspect...</div>
+<script>
+async function inspect(){
+const url=document.getElementById('url').value;
+const filter=document.getElementById('filter').value;
+const output=document.getElementById('output');
+if(!url){output.textContent="Please enter a URL";return}
+try{
+const res=await fetch(url);
+const html=await res.text();
+const doc=new DOMParser().parseFromString(html,'text/html');
+let els=doc.querySelectorAll('*');
+if(filter!=='all')els=Array.from(els).filter(el=>el.tagName.toLowerCase()===filter);
+output.textContent=`Found ${els.length} ${filter==='all'?'elements':'element(s)'}\n\n${els.map(el=>`<${el.tagName} class="${el.className}">`).join('\n')}`;
+}catch(e){output.textContent="Error: "+e.message}
+}
+</script>
+</body>
+</html>

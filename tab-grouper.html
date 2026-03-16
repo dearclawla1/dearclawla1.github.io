@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Grouper - Browser Tab Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #0f3460;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #e94560;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #16213e;
+            border-radius: 10px;
+            border: 1px solid #0f3460;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #e94560;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .tabs-container {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #0f3460;
+            margin-bottom: 20px;
+        }
+
+        .tabs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tabs-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #e94560;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff6b6b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #0f3460;
+            color: #eee;
+        }
+
+        .btn-secondary:hover {
+            background: #1a4a7a;
+        }
+
+        .btn-success {
+            background: #00b894;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #00d8c4;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff6b6b;
+        }
+
+        .tab-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 60px;
+            padding: 10px;
+            background: #1a1a2e;
+            border-radius: 8px;
+            border: 2px dashed #0f3460;
+            align-items: center;
+        }
+
+        .tab-item {
+            background: #0f3460;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            user-select: none;
+            border: 1px solid transparent;
+        }
+
+        .tab-item:hover {
+            background: #1a4a7a;
+            transform: translateY(-2px);
+            border-color: #e94560;
+        }
+
+        .tab-item.active {
+            background: #e94560;
+            border-color: #ff6b6b;
+        }
+
+        .tab-icon {
+            font-size: 1.2rem;
+        }
+
+        .tab-title {
+            flex: 1;
+            font-size: 0.9rem;
+            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tab-url {
+            font-size: 0.75rem;
+            color: #888;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tab-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .tab-action-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .tab-action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .tab-action-close {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .tab-action-group {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .group-panel {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #0f3460;
+            margin-bottom: 20px;
+        }
+
+        .group-panel.hidden {
+            display: none;
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #0f3460;
+        }
+
+        .group-title {
+            font-size: 1.2rem;
+            color: #e94560;
+            font-weight: bold;
+        }
+
+        .group-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .group-tab {
+            background: #0f3460;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .group-tab:hover {
+            background: #1a4a7a;
+        }
+
+        .group-tab.active {
+            background: #e94560;
+            border-color: #ff6b6b;
+        }
+
+        .group-content {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .group-tabs-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #888;
+        }
+
+        .grouped-tab {
+            background: linear-gradient(135deg, #0f3460, #1a4a7a);
+        }
+
+        .grouped-tab:hover {
+            background: linear-gradient(135deg, #1a4a7a, #16213e);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #00b894;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #e74c3c;
+        }
+
+        .toast.success {
+            background: #00b894;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .color-picker label {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .color-picker input[type="color"] {
+            width: 40px;
+            height: 30px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 0.9rem;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid #0f3460;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #e94560;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 0.9rem;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📑 Tab Grouper</h1>
+            <p class="subtitle">Organize your browser tabs into color-coded groups for better productivity</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalTabs">0</div>
+                    <div class="stat-label">Total Tabs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="groupedTabs">0</div>
+                    <div class="stat-label">Grouped Tabs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="activeGroups">0</div>
+                    <div class="stat-label">Active Groups</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <h2>📋 All Tabs</h2>
+                <div class="tabs-controls">
+                    <button class="btn btn-primary" onclick="addNewTab()">+ Add Tab</button>
+                    <button class="btn btn-secondary" onclick="selectAll()">Select All</button>
+                    <button class="btn btn-secondary" onclick="deselectAll()">Deselect All</button>
+                    <button class="btn btn-success" onclick="moveSelectedToGroup()">→ Group Selected</button>
+                    <button class="btn btn-danger" onclick="deleteSelected()">🗑 Delete Selected</button>
+                </div>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="searchTabs" placeholder="Search tabs by title or URL..." oninput="filterTabs()">
+            </div>
+
+            <div class="tab-list" id="tabList">
+                <div class="empty-state">
+                    <h3>No tabs yet</h3>
+                    <p>Click "+ Add Tab" or press Enter to create a new tab</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="group-panel hidden" id="groupPanel">
+            <div class="group-header">
+                <div class="group-title">📁 <span id="groupName">New Group</span></div>
+                <div class="group-tabs">
+                    <button class="btn btn-secondary" onclick="deleteGroup()">Delete Group</button>
+                    <button class="btn btn-primary" onclick="closeGroupPanel()">Done</button>
+                </div>
+            </div>
+            
+            <div class="color-picker">
+                <label>Group Color:</label>
+                <input type="color" id="groupColor" value="#9b59b6" oninput="updateGroupColor()">
+            </div>
+
+            <div class="group-content" id="groupContent"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="modal hidden" id="renameModal">
+        <div class="modal-content">
+            <h3 class="modal-title">Rename Tab</h3>
+            <div class="modal-body">
+                <input type="text" id="renameInput" placeholder="Enter new tab name">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmRename()">Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal hidden" id="renameGroupModal">
+        <div class="modal-content">
+            <h3 class="modal-title">Rename Group</h3>
+            <div class="modal-body">
+                <input type="text" id="renameGroupInput" placeholder="Enter new group name">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeGroupRenameModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmGroupRename()">Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab data structure
+        let tabs = [];
+        let groups = [];
+        let selectedTabs = new Set();
+        let currentGroup = null;
+        let tempGroupName = '';
+        let tempGroupColor = '#9b59b6';
+        let tempGroupTabs = [];
+
+        // Load data from localStorage
+        function loadData() {
+            const savedTabs = localStorage.getItem('tabGrouper_tabs');
+            const savedGroups = localStorage.getItem('tabGrouper_groups');
+            
+            if (savedTabs) {
+                tabs = JSON.parse(savedTabs);
+            }
+            if (savedGroups) {
+                groups = JSON.parse(savedGroups);
+            }
+            updateUI();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('tabGrouper_tabs', JSON.stringify(tabs));
+            localStorage.setItem('tabGrouper_groups', JSON.stringify(groups));
+        }
+
+        // Add new tab
+        function addNewTab() {
+            const title = prompt('Enter tab title:', 'New Tab');
+            if (title) {
+                const newTab = {
+                    id: Date.now(),
+                    title: title,
+                    url: '',
+                    icon: '🌐',
+                    selected: false
+                };
+                tabs.push(newTab);
+                saveData();
+                updateUI();
+                showToast('Tab added!', 'success');
+            }
+        }
+
+        // Delete tab
+        function deleteTab(tabId) {
+            const tabIndex = tabs.findIndex(t => t.id === tabId);
+            if (tabIndex !== -1) {
+                tabs.splice(tabIndex, 1);
+                saveData();
+                updateUI();
+                showToast('Tab deleted', 'error');
+            }
+        }
+
+        // Toggle tab selection
+        function toggleSelect(tabId) {
+            const tab = tabs.find(t => t.id === tabId);
+            if (tab) {
+                tab.selected = !tab.selected;
+                saveData();
+                updateUI();
+            }
+        }
+
+        // Select all tabs
+        function selectAll() {
+            tabs.forEach(tab => tab.selected = true);
+            saveData();
+            updateUI();
+        }
+
+        // Deselect all tabs
+        function deselectAll() {
+            tabs.forEach(tab => tab.selected = false);
+            saveData();
+            updateUI();
+        }
+
+        // Move selected tabs to group
+        function moveSelectedToGroup() {
+            const selected = tabs.filter(t => t.selected);
+            if (selected.length === 0) {
+                showToast('Please select tabs first', 'error');
+                return;
+            }
+            if (!currentGroup) {
+                createNewGroup(selected);
+            } else {
+                selected.forEach(tab => {
+                    const group = groups.find(g => g.id === currentGroup.id);
+                    if (group) {
+                        tab.groupId = group.id;
+                    }
+                });
+                saveData();
+                updateUI();
+                showToast(`Moved ${selected.length} tab(s) to "${currentGroup.name}"`, 'success');
+            }
+            deselectAll();
+        }
+
+        // Delete selected tabs
+        function deleteSelected() {
+            const selected = tabs.filter(t => t.selected);
+            if (selected.length === 0) {
+                showToast('Please select tabs first', 'error');
+                return;
+            }
+            if (confirm(`Delete ${selected.length} selected tab(s)?`)) {
+                tabs = tabs.filter(t => !t.selected);
+                saveData();
+                updateUI();
+                showToast('Selected tabs deleted', 'error');
+            }
+        }
+
+        // Create new group
+        function createNewGroup(selectedTabsList = []) {
+            const tabsToGroup = selectedTabsList.length > 0 
+                ? selectedTabsList 
+                : tabs.filter(t => t.selected);
+            
+            if (tabsToGroup.length === 0) {
+                showToast('No tabs to group', 'error');
+                return;
+            }
+
+            tempGroupName = 'Group';
+            tempGroupColor = '#9b59b6';
+            tempGroupTabs = tabsToGroup.map(t => ({
+                id: t.id,
+                title: t.title,
+                url: t.url,
+                icon: t.icon
+            }));
+            
+            currentGroup = {
+                id: Date.now(),
+                name: tempGroupName,
+                color: tempGroupColor,
+                tabs: tempGroupTabs
+            };
+
+            openGroupPanel();
+        }
+
+        // Open group panel
+        function openGroupPanel() {
+            document.getElementById('groupPanel').classList.remove('hidden');
+            document.getElementById('groupName').textContent = currentGroup ? currentGroup.name : 'New Group';
+            document.getElementById('groupColor').value = currentGroup ? currentGroup.color : '#9b59b6';
+            renderGroupContent();
+        }
+
+        // Close group panel
+        function closeGroupPanel() {
+            currentGroup = null;
+            document.getElementById('groupPanel').classList.add('hidden');
+            document.getElementById('groupContent').innerHTML = '';
+        }
+
+        // Update group color
+        function updateGroupColor() {
+            tempGroupColor = document.getElementById('groupColor').value;
+            if (currentGroup) {
+                currentGroup.color = tempGroupColor;
+                saveData();
+            }
+        }
+
+        // Delete group
+        function deleteGroup() {
+            if (currentGroup && confirm(`Delete group "${currentGroup.name}" and all its tabs?`)) {
+                groups = groups.filter(g => g.id !== currentGroup.id);
+                tabs = tabs.filter(t => t.groupId !== currentGroup.id);
+                saveData();
+                closeGroupPanel();
+                updateUI();
+                showToast('Group deleted', 'success');
+            }
+        }
+
+        // Render group content
+        function renderGroupContent() {
+            const container = document.getElementById('groupContent');
+            if (!currentGroup || currentGroup.tabs.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No tabs in this group</h3></div>';
+                return;
+            }
+
+            let html = `<div class="group-tabs-list">`;
+            currentGroup.tabs.forEach((tab, index) => {
+                html += `
+                    <div class="tab-item grouped-tab" data-id="${tab.id}">
+                        <span class="tab-icon">${tab.icon}</span>
+                        <span class="tab-title">${tab.title}</span>
+                        <span class="tab-url">${tab.url || ''}</span>
+                        <div class="tab-actions">
+                            <button class="tab-action-btn tab-action-group" onclick="moveToSelected()">↩</button>
+                            <button class="tab-action-btn tab-action-close" onclick="removeFromGroup(${index})">×</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        // Remove tab from group
+        function removeFromGroup(index) {
+            if (currentGroup) {
+                currentGroup.tabs.splice(index, 1);
+                saveData();
+                renderGroupContent();
+            }
+        }
+
+        // Move tab back to selected
+        function moveToSelected() {
+            if (currentGroup && currentGroup.tabs.length > 0) {
+                const tab = currentGroup.tabs[0];
+                currentGroup.tabs = currentGroup.tabs.slice(1);
+                const originalTab = tabs.find(t => t.id === tab.id);
+                originalTab.groupId = null;
+                originalTab.selected = true;
+                saveData();
+                renderGroupContent();
+                updateUI();
+            }
+        }
+
+        // Filter tabs by search
+        function filterTabs() {
+            const query = document.getElementById('searchTabs').value.toLowerCase();
+            const tabList = document.getElementById('tabList');
+            
+            if (query === '') {
+                renderAllTabs();
+                return;
+            }
+
+            const filtered = tabs.filter(t => 
+                t.title.toLowerCase().includes(query) || 
+                (t.url && t.url.toLowerCase().includes(query))
+            );
+
+            if (filtered.length === 0) {
+                tabList.innerHTML = '<div class="empty-state"><h3>No matching tabs</h3></div>';
+                return;
+            }
+
+            renderTabList(filtered);
+        }
+
+        // Render all tabs
+        function renderAllTabs() {
+            renderTabList(tabs);
+        }
+
+        // Render tab list
+        function renderTabList(tabList) {
+            const container = document.getElementById('tabList');
+            if (tabList.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No tabs</h3></div>';
+                return;
+            }
+
+            container.innerHTML = tabList.map(tab => `
+                <div class="tab-item ${tab.selected ? 'active' : ''}" data-id="${tab.id}">
+                    <span class="tab-icon">${tab.icon}</span>
+                    <span class="tab-title">${tab.title}</span>
+                    <span class="tab-url">${tab.url || ''}</span>
+                    <div class="tab-actions">
+                        <button class="tab-action-btn tab-action-group" onclick="openGroupPanel()">📁</button>
+                        <button class="tab-action-btn" onclick="renameTab(${tab.id})">✏️</button>
+                        <button class="tab-action-btn tab-action-close" onclick="deleteTab(${tab.id})">🗑</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update UI
+        function updateUI() {
+            renderAllTabs();
+            document.getElementById('totalTabs').textContent = tabs.length;
+            document.getElementById('groupedTabs').textContent = tabs.filter(t => t.groupId).length;
+            document.getElementById('activeGroups').textContent = groups.length;
+        }
+
+        // Rename tab
+        function renameTab(tabId) {
+            const tab = tabs.find(t => t.id === tabId);
+            if (tab) {
+                document.getElementById('renameInput').value = tab.title;
+                document.getElementById('renameModal').classList.remove('hidden');
+                document.getElementById('renameInput').focus();
+            }
+        }
+
+        // Confirm rename
+        function confirmRename() {
+            const newTitle = document.getElementById('renameInput').value;
+            const tab = tabs.find(t => t.id === parseInt(document.getElementById('renameInput').dataset.id));
+            if (tab && newTitle) {
+                tab.title = newTitle;
+                saveData();
+                updateUI();
+                closeModal();
+                showToast('Tab renamed', 'success');
+            }
+        }
+
+        // Open group rename modal
+        function openGroupRenameModal() {
+            const group = groups.find(g => g.id === currentGroup.id);
+            if (group) {
+                document.getElementById('renameGroupInput').value = group.name;
+                document.getElementById('renameGroupModal').classList.remove('hidden');
+            }
+        }
+
+        // Close modals
+        function closeModal() {
+            document.getElementById('renameModal').classList.add('hidden');
+        }
+
+        function closeGroupRenameModal() {
+            document.getElementById('renameGroupModal').classList.add('hidden');
+        }
+
+        // Confirm group rename
+        function confirmGroupRename() {
+            const newTitle = document.getElementById('renameGroupInput').value;
+            if (newTitle) {
+                const group = groups.find(g => g.id === currentGroup.id);
+                if (group) {
+                    group.name = newTitle;
+                    saveData();
+                    closeGroupRenameModal();
+                    if (currentGroup) {
+                        currentGroup.name = newTitle;
+                    }
+                    showToast('Group renamed', 'success');
+                }
+            }
+        }
+
+        // Update group color
+        function updateGroupName() {
+            if (currentGroup) {
+                currentGroup.name = document.getElementById('groupName').textContent;
+                saveData();
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && document.activeElement.tagName !== 'INPUT') {
+                addNewTab();
+            }
+        });
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>

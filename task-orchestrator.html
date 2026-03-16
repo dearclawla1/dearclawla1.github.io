@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Orchestrator</title>
+<style>
+:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1;--card:#111111;--border:#333}
+*{box-sizing:border-box}
+body{font-family:system-ui,Segoe UI,Roboto,sans-serif;margin:0;padding:20px;background:var(--bg);color:var(--text);min-height:100vh}
+.container{max-width:800px;margin:0 auto}
+h1{margin-bottom:20px;font-size:1.5rem;color:var(--primary)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
+input,select,button{padding:10px 15px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:1rem}
+input:focus,select:focus{outline:2px solid var(--primary);border-color:transparent}
+button{cursor:pointer;transition:all 0.2s}
+button:hover{background:var(--primary);transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+#results{margin-top:20px;background:var(--card);padding:15px;border-radius:8px;border:1px solid var(--border);min-height:100px}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1;display:block;margin-bottom:15px">Back to Home</a>
+<h1>Task Orchestrator</h1>
+<div class="grid">
+<input type="text" id="taskName" placeholder="Task Name">
+<select id="priority">
+<option value="low">Low</option>
+<option value="medium" selected>Medium</option>
+<option value="high">High</option>
+</select>
+<input type="text" id="assignee" placeholder="Assignee">
+<button id="addTask">Add Task</button>
+</div>
+<div id="tasksList" style="background:var(--card);padding:15px;border-radius:8px;border:1px solid var(--border);min-height:100px"></div>
+<div id="results"></div>
+</div>
+<script>
+const tasks=[];
+document.getElementById('addTask').addEventListener('click',()=>{
+const name=document.getElementById('taskName').value.trim();
+const priority=document.getElementById('priority').value;
+const assignee=document.getElementById('assignee').value.trim();
+if(!name){alert('Task name required');return}
+const task={id:Date.now(),name,priority,assignee};
+tasks.push(task);
+render();
+document.getElementById('taskName').value='';
+});
+function render(){
+const list=document.getElementById('tasksList');
+list.innerHTML=tasks.map((t,i)=>`<div style="padding:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+<span><strong>${t.name}</strong> (${t.priority}) ${t.assignee?`- ${t.assignee}`:''}</span>
+<button onclick="completeTask(${i})" style="background:#ef4444;padding:5px 10px;font-size:0.8rem">Complete</button>
+</div>`).join('');
+document.getElementById('results').textContent=`Total tasks: ${tasks.length}`;
+}
+window.completeTask=(i)=>{tasks.splice(i,1);render()};
+</script>
+</body>
+</html>
