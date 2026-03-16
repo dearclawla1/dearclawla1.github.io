@@ -41,6 +41,11 @@ canvas{display:block}
 #death-screen h1{color:#dc2626;font-size:48px;margin-bottom:16px}
 #death-screen button{background:#6366f1;border:none;color:#fff;padding:12px 32px;border-radius:6px;font-size:16px;cursor:pointer;margin-top:16px}
 #zone-name{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:28px;font-weight:bold;text-shadow:0 0 20px rgba(99,102,241,0.8);opacity:0;transition:opacity 0.5s;pointer-events:none}
+#chat-box{position:absolute;bottom:55px;left:10px;pointer-events:auto;width:280px}
+#chat-messages{max-height:120px;overflow-y:auto;background:rgba(0,0,0,0.5);border-radius:4px;padding:4px 6px;font-size:11px;color:#ccc;margin-bottom:4px}
+#chat-messages div{padding:1px 0}
+#chat-input{width:100%;background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:4px 8px;border-radius:4px;font-size:12px;display:none}
+#mp-status{position:absolute;top:10px;left:50%;transform:translateX(-50%);color:#6366f1;font-size:11px;background:rgba(0,0,0,0.6);padding:2px 10px;border-radius:3px}
 #suggestion-box{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);pointer-events:auto;background:rgba(10,10,30,0.85);border:1px solid #6366f1;border-radius:6px;padding:8px 12px;display:flex;gap:6px;align-items:center}
 #suggestion-box input{background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:6px 10px;border-radius:4px;font-size:12px;width:200px}
 #suggestion-box button{background:#6366f1;border:none;color:#fff;padding:6px 12px;border-radius:4px;font-size:12px;cursor:pointer}
@@ -78,6 +83,11 @@ canvas{display:block}
     <div class="touch-btn" id="btn-inv">&#128188;</div>
   </div>
   <div id="zone-name"></div>
+  <div id="mp-status"></div>
+  <div id="chat-box">
+    <div id="chat-messages"></div>
+    <input type="text" id="chat-input" placeholder="Press Enter to chat..." maxlength="100">
+  </div>
   <div id="suggestion-box">
     <input type="text" id="suggest-input" placeholder="Suggest a feature..." maxlength="200">
     <button onclick="submitSuggestion()">Send</button>
@@ -219,6 +229,9 @@ let entities = [], projectiles = [], particles = [], floatingTexts = [], lootBag
 let currentZone = null, zoneMap = null;
 let input = { x: 0, y: 0, attack: false, aimX: 0, aimY: 0 };
 let lastAttackTime = 0, inventoryOpen = false, deathScreenVisible = false;
+let remotePlayers = new Map(); // id -> { name, className, level, hp, maxHp, x, y, facing, color, weapon, hurtTimer, invincible }
+let ws = null, wsReady = false, lastSendTime = 0, myServerId = null, chatOpen = false;
+const PARTYKIT_HOST = 'gwens-realm.dearclawla1.partykit.dev';
 
 // ============================================================
 // PLAYER
@@ -340,6 +353,7 @@ function enterZone(zoneId, spawnX, spawnY) {
   player.x = spawnX || currentZone.width * currentZone.tileSize / 2;
   player.y = spawnY || currentZone.height * currentZone.tileSize / 2;
   projectiles = []; particles = []; lootBags = []; floatingTexts = [];
+  connectToZone(zoneId);
 }
 
 // ============================================================
@@ -352,6 +366,7 @@ function playerAttack() {
   if (w.mpCost && player.mp < w.mpCost) return;
   if (w.mpCost) player.mp -= w.mpCost;
   lastAttackTime = now;
+  sendAttack();
   const fx = player.facing.x, fy = player.facing.y;
   const len = Math.sqrt(fx * fx + fy * fy) || 1;
   const dx = fx / len, dy = fy / len;
@@ -557,8 +572,8 @@ function updateParticles(dt) {
 // INPUT
 // ============================================================
 const keys = {};
-window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key.toLowerCase() === 'i') toggleInventory(); if (e.key === 'Escape' && inventoryOpen) toggleInventory(); });
-window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+window.addEventListener('keydown', e => { if (chatOpen) return; keys[e.key.toLowerCase()] = true; if (e.key.toLowerCase() === 'i') toggleInventory(); if (e.key === 'Escape' && inventoryOpen) toggleInventory(); });
+window.addEventListener('keyup', e => { if (chatOpen) return; keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousedown', e => { if (!inventoryOpen) input.attack = true; });
 canvas.addEventListener('mouseup', () => { input.attack = false; });
 canvas.addEventListener('mousemove', e => { input.aimX = e.clientX; input.aimY = e.clientY; });
@@ -660,6 +675,236 @@ function loadSuggestions() {
 function voteSuggestion(id) { fetch(`${API_BASE}/api/suggestions/vote/${id}`, { method: 'POST' }).then(() => loadSuggestions()).catch(() => {}); }
 
 // ============================================================
+// MULTIPLAYER NETWORKING
+// ============================================================
+function connectToZone(zoneId) {
+  if (ws) { ws.close(); ws = null; wsReady = false; }
+  remotePlayers.clear();
+  const url = `wss://${PARTYKIT_HOST}/party/${zoneId}`;
+  document.getElementById('mp-status').textContent = 'Connecting...';
+  ws = new WebSocket(url);
+  ws.onopen = () => {
+    wsReady = true;
+    document.getElementById('mp-status').textContent = '';
+    ws.send(JSON.stringify({ type: 'join', player: {
+      id: myServerId || undefined, name: player.name, className: player.className,
+      level: player.level, hp: player.hp, maxHp: getPlayerStats().maxHp,
+      x: player.x, y: player.y, facing: player.facing, color: player.color,
+      weapon: player.weapon, zone: zoneId, lastUpdate: Date.now()
+    }}));
+  };
+  ws.onmessage = (ev) => { handleServerMessage(ev.data); };
+  ws.onclose = () => { wsReady = false; document.getElementById('mp-status').textContent = 'Disconnected'; };
+  ws.onerror = () => { wsReady = false; };
+}
+
+function handleServerMessage(raw) {
+  let msg;
+  try { msg = JSON.parse(raw); } catch { return; }
+  switch (msg.type) {
+    case 'state':
+      myServerId = msg.you;
+      for (const [id, p] of Object.entries(msg.players)) {
+        if (id === myServerId) continue;
+        remotePlayers.set(id, { ...p, hurtTimer: 0, invincible: 0, targetX: p.x, targetY: p.y });
+      }
+      updateMpStatus();
+      break;
+    case 'player-join':
+      if (msg.player.id === myServerId) break;
+      remotePlayers.set(msg.player.id, { ...msg.player, hurtTimer: 0, invincible: 0, targetX: msg.player.x, targetY: msg.player.y });
+      addChatMessage(`${msg.player.name} joined`, '#6366f1');
+      updateMpStatus();
+      break;
+    case 'player-leave':
+      { const rp = remotePlayers.get(msg.id);
+        if (rp) addChatMessage(`${rp.name} left`, '#888');
+        remotePlayers.delete(msg.id); }
+      updateMpStatus();
+      break;
+    case 'player-move':
+      { const rp = remotePlayers.get(msg.id);
+        if (rp) { rp.targetX = msg.x; rp.targetY = msg.y; rp.facing = msg.facing; } }
+      break;
+    case 'player-attack':
+      { const rp = remotePlayers.get(msg.id);
+        if (rp) { rp.facing = msg.facing;
+          // Show attack visual for remote player
+          const w = WEAPONS[msg.weapon];
+          if (w && w.type === 'melee') {
+            const len = Math.sqrt(msg.facing.x * msg.facing.x + msg.facing.y * msg.facing.y) || 1;
+            const dx = msg.facing.x / len, dy = msg.facing.y / len;
+            for (let i = 0; i < 3; i++) {
+              const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.0;
+              const dist = (w.range || 40) * (0.5 + Math.random() * 0.5);
+              particles.push({ x: rp.x + Math.cos(angle) * dist, y: rp.y + Math.sin(angle) * dist,
+                vx: Math.cos(angle) * 20, vy: Math.sin(angle) * 20, life: 0.15, maxLife: 0.15, color: '#ccc', size: 2 });
+            }
+          }
+        } }
+      break;
+    case 'projectile':
+      { const p = msg.proj;
+        if (p.ownerId !== myServerId) {
+          projectiles.push({ x: p.x, y: p.y, vx: p.vx, vy: p.vy, damage: p.damage, range: p.range,
+            traveled: p.traveled || 0, owner: 'remote', ownerId: p.ownerId, color: p.color, size: p.size });
+        } }
+      break;
+    case 'player-damage':
+      if (msg.id === myServerId) {
+        player.hp = msg.hp; player.hurtTimer = 0.2; player.invincible = 0.5;
+        addFloatingText(player.x, player.y - 20, `-${msg.damage}`, '#dc2626');
+        if (player.hp <= 0) playerDeath();
+      } else {
+        const rp = remotePlayers.get(msg.id);
+        if (rp) { rp.hp = msg.hp; rp.hurtTimer = 0.2;
+          addFloatingText(rp.x, rp.y - 20, `-${msg.damage}`, '#ef4444'); }
+      }
+      break;
+    case 'player-death':
+      if (msg.id === myServerId) {
+        const killer = remotePlayers.get(msg.killerId);
+        addChatMessage(`Killed by ${killer?.name || 'unknown'}!`, '#dc2626');
+        playerDeath();
+      } else {
+        const rp = remotePlayers.get(msg.id);
+        if (rp) { rp.hp = 0; addChatMessage(`${rp.name} was slain!`, '#dc2626'); }
+      }
+      break;
+    case 'chat':
+      if (msg.id !== myServerId) addChatMessage(`${msg.name}: ${msg.text}`, '#e0e0e0');
+      break;
+    case 'pong':
+      document.getElementById('mp-status').textContent = `${msg.playerCount} online`;
+      break;
+  }
+}
+
+function sendMove() {
+  if (!wsReady || !ws) return;
+  const now = Date.now();
+  if (now - lastSendTime < 50) return; // 20 updates/sec max
+  lastSendTime = now;
+  ws.send(JSON.stringify({ type: 'move', x: player.x, y: player.y, facing: player.facing }));
+}
+
+function sendAttack() {
+  if (!wsReady || !ws) return;
+  const w = WEAPONS[player.weapon]; if (!w) return;
+  ws.send(JSON.stringify({ type: 'attack', facing: player.facing, weapon: player.weapon, damage: getWeaponDamage() }));
+  // For ranged/magic, also send projectile
+  if (w.type !== 'melee') {
+    const fx = player.facing.x, fy = player.facing.y;
+    const len = Math.sqrt(fx * fx + fy * fy) || 1;
+    const dx = fx / len, dy = fy / len;
+    const pColor = w.element === 'fire' ? '#ef4444' : w.element === 'ice' ? '#60a5fa' : w.element === 'lightning' ? '#fbbf24' : '#e2e8f0';
+    ws.send(JSON.stringify({ type: 'projectile', proj: {
+      id: Math.random().toString(36).slice(2), ownerId: myServerId,
+      x: player.x + dx * 16, y: player.y + dy * 16, vx: dx * w.projSpeed, vy: dy * w.projSpeed,
+      damage: getWeaponDamage(), range: w.range, traveled: 0, color: pColor, size: w.type === 'magic' ? 6 : 4
+    }}));
+  }
+}
+
+function sendHitPlayer(targetId, damage) {
+  if (!wsReady || !ws) return;
+  ws.send(JSON.stringify({ type: 'hit-player', targetId, damage }));
+}
+
+function sendChat(text) {
+  if (!wsReady || !ws) return;
+  ws.send(JSON.stringify({ type: 'chat', text }));
+  addChatMessage(`${player.name}: ${text}`, '#e0e0e0');
+}
+
+function sendPing() { if (wsReady && ws) ws.send(JSON.stringify({ type: 'ping' })); }
+setInterval(sendPing, 5000);
+
+function updateMpStatus() {
+  const count = remotePlayers.size + 1;
+  document.getElementById('mp-status').textContent = `${count} in zone`;
+}
+
+function updateRemotePlayers(dt) {
+  for (const [, rp] of remotePlayers) {
+    // Interpolate position smoothly
+    rp.x += (rp.targetX - rp.x) * Math.min(1, dt * 10);
+    rp.y += (rp.targetY - rp.y) * Math.min(1, dt * 10);
+    rp.hurtTimer = Math.max(0, (rp.hurtTimer || 0) - dt);
+    rp.invincible = Math.max(0, (rp.invincible || 0) - dt);
+  }
+}
+
+function checkPvpHits() {
+  if (!currentZone?.pvp) return;
+  // Check local projectiles hitting remote players
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i];
+    if (p.owner !== 'player') continue;
+    for (const [id, rp] of remotePlayers) {
+      const dx = p.x - rp.x, dy = p.y - rp.y;
+      if (dx * dx + dy * dy < (14 + p.size) * (14 + p.size)) {
+        sendHitPlayer(id, p.damage);
+        projectiles.splice(i, 1);
+        for (let j = 0; j < 4; j++) particles.push({ x: p.x, y: p.y, vx: (Math.random() - 0.5) * 80, vy: (Math.random() - 0.5) * 80,
+          life: 0.3, maxLife: 0.3, color: p.color, size: 2 });
+        break;
+      }
+    }
+  }
+  // Check melee hits on remote players
+  if (input.attack && WEAPONS[player.weapon]?.type === 'melee') {
+    const w = WEAPONS[player.weapon];
+    const fx = player.facing.x, fy = player.facing.y;
+    const len = Math.sqrt(fx * fx + fy * fy) || 1;
+    const ndx = fx / len, ndy = fy / len;
+    for (const [id, rp] of remotePlayers) {
+      const ex = rp.x - player.x, ey = rp.y - player.y;
+      const dist = Math.sqrt(ex * ex + ey * ey);
+      if (dist > w.range) continue;
+      const dot = (ex * ndx + ey * ndy) / dist;
+      if (dot < 0.4) continue;
+      sendHitPlayer(id, getWeaponDamage());
+    }
+  }
+  // Check remote projectiles hitting local player
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i];
+    if (p.owner !== 'remote') continue;
+    const dx = p.x - player.x, dy = p.y - player.y;
+    if (dx * dx + dy * dy < (14 + p.size) * (14 + p.size)) {
+      // Server handles damage, just remove projectile visually
+      projectiles.splice(i, 1);
+    }
+  }
+}
+
+// Chat input handling
+const chatInput = document.getElementById('chat-input');
+window.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !chatOpen && gameStarted && !inventoryOpen) {
+    e.preventDefault(); chatOpen = true; chatInput.style.display = 'block'; chatInput.focus();
+  } else if (e.key === 'Enter' && chatOpen) {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (text) sendChat(text);
+    chatInput.value = ''; chatInput.style.display = 'none'; chatOpen = false; canvas.focus();
+  } else if (e.key === 'Escape' && chatOpen) {
+    chatInput.value = ''; chatInput.style.display = 'none'; chatOpen = false; canvas.focus();
+  }
+});
+
+function addChatMessage(text, color) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.style.color = color || '#ccc';
+  div.textContent = text;
+  container.appendChild(div);
+  if (container.children.length > 50) container.removeChild(container.firstChild);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ============================================================
 // RENDERING
 // ============================================================
 function draw() {
@@ -696,6 +941,24 @@ function draw() {
       ctx.fillStyle = '#ef4444'; ctx.fillRect(e.x - bw / 2, e.y - e.size / 2 - 8, bw * (e.hp / e.maxHp), 4); }
     ctx.fillStyle = '#ccc'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(e.name, e.x, e.y - e.size / 2 - 12);
   }
+  // Remote players
+  for (const [, rp] of remotePlayers) {
+    if (rp.hp <= 0) continue;
+    const flash = rp.hurtTimer > 0;
+    ctx.fillStyle = flash ? '#fff' : (rp.color || '#888');
+    const angle = Math.atan2(rp.facing?.y || 0, rp.facing?.x || 1);
+    ctx.save(); ctx.translate(rp.x, rp.y); ctx.rotate(angle);
+    ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-8, -9); ctx.lineTo(-8, 9); ctx.closePath();
+    ctx.fill(); ctx.shadowColor = rp.color || '#888'; ctx.shadowBlur = 8; ctx.fill(); ctx.shadowBlur = 0; ctx.restore();
+    ctx.fillStyle = '#fff'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(rp.name || '?', rp.x, rp.y - 18);
+    ctx.fillText(`Lv.${rp.level || 1}`, rp.x, rp.y - 28);
+    // HP bar
+    if (rp.hp < (rp.maxHp || 100)) {
+      const bw = 30; ctx.fillStyle = '#333'; ctx.fillRect(rp.x - bw / 2, rp.y - 36, bw, 3);
+      ctx.fillStyle = '#ef4444'; ctx.fillRect(rp.x - bw / 2, rp.y - 36, bw * (rp.hp / (rp.maxHp || 100)), 3);
+    }
+  }
   for (const p of projectiles) { ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 6; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; }
   if (!(player.invincible > 0 && Math.floor(performance.now() / 100) % 2 === 0)) {
     const flash = player.hurtTimer > 0; ctx.fillStyle = flash ? '#fff' : player.color;
@@ -728,6 +991,9 @@ function drawMinimap() {
   for (const p of currentZone.portals) { mmCtx.fillStyle = '#6366f1'; mmCtx.fillRect(p.x * scale, p.y * scale, p.w * scale + 2, p.h * scale + 2); }
   for (const e of entities) { if (e.dead) continue; mmCtx.fillStyle = e.color;
     mmCtx.fillRect(e.x / currentZone.tileSize * scale - 1, e.y / currentZone.tileSize * scale - 1, 2, 2); }
+  for (const [, rp] of remotePlayers) {
+    if (rp.hp <= 0) continue; mmCtx.fillStyle = rp.color || '#60a5fa';
+    mmCtx.fillRect(rp.x / currentZone.tileSize * scale - 1, rp.y / currentZone.tileSize * scale - 1, 3, 3); }
   mmCtx.fillStyle = '#fff';
   mmCtx.fillRect(player.x / currentZone.tileSize * scale - 2, player.y / currentZone.tileSize * scale - 2, 4, 4);
 }
@@ -757,6 +1023,7 @@ function gameLoop(timestamp) {
   if (input.attack) playerAttack();
   for (let i = lootBags.length - 1; i >= 0; i--) { lootBags[i].timer -= dt; if (lootBags[i].timer <= 0) lootBags.splice(i, 1); }
   updateEnemies(dt); updateProjectiles(dt); updateParticles(dt); checkPortals(); checkLootPickup();
+  updateRemotePlayers(dt); sendMove(); checkPvpHits();
   draw(); requestAnimationFrame(gameLoop);
 }
 
