@@ -24,17 +24,25 @@ input{background:#1a1a1a;color:#e4e4e4;width:100%}
 select{background:#1a1a1a;color:#e4e4e4;width:100%}
 .output-box{background:#1a1a1a;padding:16px;border-radius:8px;font-family:monospace;font-size:0.9rem;border:1px solid #333}
 .output-box code{color:#a3a3a3}
-.info-section{background:#1a1a1a;padding:16px;border-radius:8px;margin-bottom:20px;border:1px solid #333}
-.preview-box{background:#1a1a1a;padding:16px;border-radius:8px;margin-bottom:20px;border:1px solid #333}
-.preview-label{color:#888;font-size:0.85rem}
-.preview-value{color:#6366f1;font-size:1.1rem;font-weight:500}
-.actions-section{background:#1a1a1a;padding:16px;border-radius:8px;margin-bottom:20px;border:1px solid #333}
-h3{color:#e4e4e4;margin:0 0 8px}
-p{color:#a3a3a3;margin:0}
-.action-buttons{display:flex;gap:10px;flex-wrap:wrap}
-.copy-btn{background:#2a2a2a}
-.copy-btn.copied{background:#059667}
-kbd{background:#2a2a2a;padding:2px 6px;border-radius:4px;font-size:0.8rem;color:#a3a3a3}
+.info-section{background:#1a1a1a;padding:18px;border-radius:8px;margin-bottom:20px;border:1px solid #333}
+.info-section h3{color:#6366f1;margin-top:0;font-size:1rem}
+.info-section p{color:#a3a3a3;font-size:0.9rem;margin:0}
+.copy-btn{background:#333;color:#e4e4e4;border:1px solid #444;padding:6px 12px;border-radius:6px;font-size:0.85rem;cursor:pointer;transition:all 0.2s}
+.copy-btn:hover{background:#444;color:#fff}
+.copy-btn.copied{background:#10b981;color:#fff;border-color:#10b981}
+.preview-box{background:#1a1a1a;padding:16px;border-radius:8px;margin-bottom:20px;border:1px solid #333;display:flex;align-items:center;gap:15px}
+.preview-box .preview-label{color:#6366f1;font-size:0.9rem;font-weight:500}
+.preview-box .preview-value{color:#e4e4e4;font-family:monospace;font-size:1rem}
+.preview-box .preview-value:empty{display:none}
+.actions-section{background:#1a1a1a;padding:18px;border-radius:8px;margin-bottom:20px;border:1px solid #333}
+.actions-section h3{color:#6366f1;margin-top:0;font-size:1rem}
+.actions-section p{color:#a3a3a3;font-size:0.9rem;margin:0 0 12px}
+.actions-section .action-buttons{display:flex;gap:10px;flex-wrap:wrap}
+kbd{background:#2a2a2a;color:#e4e4e4;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:0.8rem;border:1px solid #333}
+@media(max-width:600px){
+.container{padding:10px}
+h1{font-size:1.5rem}
+}
 </style>
 </head>
 <body>
@@ -86,7 +94,7 @@ kbd{background:#2a2a2a;padding:2px 6px;border-radius:4px;font-size:0.8rem;color:
 </div>
 
 <div class="output-box">
-<code id="output">Viewport: 1920 A- 1080</code>
+<code id="output">Viewport: 1920 × 1080</code>
 </div>
 
 <div class="info-section">
@@ -120,7 +128,7 @@ const currentViewport=document.getElementById('currentViewport');
 function getCurrentViewport(){
 const width=window.innerWidth;
 const height=window.innerHeight;
-return `${width} A- ${height}`;
+return `${width} × ${height}`;
 }
 
 // Update current viewport display
@@ -139,9 +147,10 @@ const [w,h]=ratio.split('/').map(Number);
 const currentW=parseInt(widthInput.value)||1920;
 const currentH=parseInt(heightInput.value)||1080;
 const newW=currentW;
-const newH=Math.round(currentH*h/w);
-infoText.textContent={`Applied ${ratio} aspect ratio. Height adjusted to ${newH}px.`};
-output.textContent=`Viewport: ${currentW} A- ${newH}`;
+const newH=Math.round((currentW/w)*h);
+heightInput.value=newH;
+infoText.textContent={`Applied ${ratio} aspect ratio. Height adjusted to ${newH}px.`;
+output.textContent=`Viewport: ${currentW} × ${newH}`;
 }
 
 // Apply dimensions
@@ -149,8 +158,8 @@ function applyDimensions(){
 const width=parseInt(widthInput.value)||0;
 const height=parseInt(heightInput.value)||0;
 if(width>0&&height>0){
-infoText.textContent={`Applied dimensions: ${width} A- ${height}px`};
-output.textContent=`Viewport: ${width} A- ${height}`;
+infoText.textContent={`Applied dimensions: ${width} × ${height}px`;
+output.textContent=`Viewport: ${width} × ${height}`;
 }
 else{
 infoText.textContent='Invalid dimensions. Please enter valid numbers.';
@@ -167,8 +176,8 @@ const newW=Math.round(currentW*scale);
 const newH=Math.round(currentH*scale);
 widthInput.value=newW;
 heightInput.value=newH;
-infoText.textContent={`Applied scale ${scale}. New dimensions: ${newW} A- ${newH}px`};
-output.textContent=`Viewport: ${newW} A- ${newH}`;
+infoText.textContent={`Applied scale ${scale}. New dimensions: ${newW} × ${newH}px`;
+output.textContent=`Viewport: ${newW} × ${newH}`;
 }
 else{
 infoText.textContent='Invalid scale. Please enter a positive number.';
@@ -181,8 +190,8 @@ widthInput.value='1920';
 heightInput.value='1080';
 aspectRatioSelect.value='';
 scaleInput.value='1';
-infoText.textContent='Reset to default dimensions: 1920 A- 1080';
-output.textContent='Viewport: 1920 A- 1080';
+infoText.textContent='Reset to default dimensions: 1920 × 1080';
+output.textContent='Viewport: 1920 × 1080';
 }
 
 // Toggle fullscreen
@@ -215,30 +224,39 @@ infoText.textContent='Failed to copy to clipboard.';
 }
 
 // Event listeners
-applyBtn.addEventListener('click',applyAspectRatio);
+applyBtn.addEventListener('click',applyDimensions);
 scaleBtn.addEventListener('click',applyScale);
 resetBtn.addEventListener('click',resetDefaults);
 fullscreenBtn.addEventListener('click',toggleFullscreen);
 copyInfoBtn.addEventListener('click',copyInfo);
+aspectRatioSelect.addEventListener('change',applyAspectRatio);
 
 // Keyboard shortcuts
-document.addEventListener('keydown',e=>{
+document.addEventListener('keydown',function(e){
 if(e.key==='Enter'){
-applyAspectRatio();
+e.preventDefault();
+applyDimensions();
 }
 else if(e.ctrlKey&&e.key==='r'){
+e.preventDefault();
 resetDefaults();
 }
 else if(e.ctrlKey&&e.key==='f'){
+e.preventDefault();
 toggleFullscreen();
 }
 else if(e.ctrlKey&&e.key==='c'){
+e.preventDefault();
 copyInfo();
 }
-});
+}
+
+// Update on window resize
+window.addEventListener('resize',updateCurrentViewport);
 
 // Initialize
 updateCurrentViewport();
+output.textContent=`Viewport: ${getCurrentViewport()}`;
 })();
 </script>
 </body>
