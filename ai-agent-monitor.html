@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #1f1f1f;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            color: #e4e4e4;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .panel {
+            background: #141414;
+            border: 1px solid #1f1f1f;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e4e4e4;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: #6366f1;
+            border-radius: 2px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            background: #0f0f0f;
+            border: 1px solid #1f1f1f;
+            border-radius: 6px;
+            padding: 12px 14px;
+            color: #e4e4e4;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .input-group input::placeholder,
+        .input-group textarea::placeholder {
+            color: #4b5563;
+        }
+        .input-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .output-section {
+            margin-top: 20px;
+        }
+        .output-section h2 {
+            font-size: 16px;
+            color: #e4e4e4;
+            margin-bottom: 12px;
+        }
+        .output-box {
+            background: #0f0f0f;
+            border: 1px solid #1f1f1f;
+            border-radius: 8px;
+            padding: 18px;
+            min-height: 150px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover {
+            background: #5558e3;
+        }
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+        .copy-btn.copied {
+            background: #10b981;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .stat-card {
+            background: #141414;
+            border: 1px solid #1f1f1f;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #e4e4e4;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #1f1f1f;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .token-chart {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100px;
+            margin-top: 15px;
+        }
+        .token-bar {
+            flex: 1;
+            height: 40px;
+            background: #1f1f1f;
+            border-radius: 4px;
+            margin: 0 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        .token-fill {
+            height: 100%;
+            background: linear-gradient(180deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+            transition: height 0.5s ease;
+        }
+        .token-fill.warning {
+            background: linear-gradient(180deg, #f59e0b, #d97706);
+        }
+        .token-fill.danger {
+            background: linear-gradient(180deg, #ef4444, #dc2626);
+        }
+        .chart-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 4px;
+        }
+        .chart-title {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+        .workflow-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .workflow-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #141414;
+            border: 1px solid #1f1f1f;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        .workflow-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .workflow-status.active {
+            background: #10b981;
+        }
+        .workflow-status.pending {
+            background: #f59e0b;
+        }
+        .workflow-status.error {
+            background: #ef4444;
+        }
+        .workflow-name {
+            flex: 1;
+            color: #e4e4e4;
+        }
+        .workflow-token {
+            color: #6b7280;
+        }
+        .workflow-rate {
+            color: #9ca3af;
+        }
+        .input-hint {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .error-message {
+            background: #7f1d1d;
+            border: 1px solid #991b1b;
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 12px;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+        .success-message {
+            background: #064e3b;
+            border: 1px solid #059669;
+            color: #6ee7b7;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 12px;
+            display: none;
+        }
+        .success-message.show {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Agent Monitor</h1>
+            <p>Monitor AI agent sessions, visualize token usage and rate limits, coordinate multiple AI workflows</p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <div class="panel-title">Session Configuration</div>
+                
+                <div class="input-group">
+                    <label for="agentName">Agent Name</label>
+                    <input type="text" id="agentName" placeholder="e.g., CodeAssistant, DataProcessor, NLPAnalyzer">
+                    <div class="input-hint">Enter a descriptive name for this AI agent</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="apiKey">API Key</label>
+                    <input type="password" id="apiKey" placeholder="sk-... or your API authentication key">
+                    <div class="input-hint">Enter your API key for authentication</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="model">Model</label>
+                    <input type="text" id="model" placeholder="e.g., gpt-4o, claude-3-5-sonnet, gemini-1.5-pro">
+                    <div class="input-hint">Specify the AI model to use</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="prompt">System Prompt</label>
+                    <textarea id="prompt" placeholder="You are a helpful AI assistant that..."></textarea>
+                    <div class="input-hint">Define the agent's behavior and guidelines</div>
+                </div>
+
+                <div id="error-message" class="error-message"></div>
+                <div id="success-message" class="success-message"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Rate Limits & Quotas</div>
+                
+                <div class="input-group">
+                    <label for="requestsPerMinute">Requests Per Minute</label>
+                    <input type="number" id="requestsPerMinute" placeholder="60" min="1" max="1000">
+                    <div class="input-hint">Set the rate limit for API requests</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="maxTokens">Max Tokens Per Request</label>
+                    <input type="number" id="maxTokens" placeholder="4096" min="1" max="32768">
+                    <div class="input-hint">Maximum tokens allowed per request</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="maxInputTokens">Max Input Tokens</label>
+                    <input type="number" id="maxInputTokens" placeholder="8192" min="1" max="262144">
+                    <div class="input-hint">Maximum input tokens per request</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="maxOutputTokens">Max Output Tokens</label>
+                    <input type="number" id="maxOutputTokens" placeholder="4096" min="1" max="32768">
+                    <div class="input-hint">Maximum output tokens per request</div>
+                </div>
+
+                <div id="error-message" class="error-message"></div>
+                <div id="success-message" class="success-message"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Active Workflows</div>
+                
+                <div class="input-group">
+                    <label for="workflowInput">Workflow Definition (JSON)</label>
+                    <textarea id="workflowInput" placeholder='[{
+  "name": "DataProcessing",
+  "status": "active",
+  "tokensUsed": 1500,
+  "rateLimit": 50,
+  "model": "gpt-4o"
+},
+{
+  "name": "NLPAnalysis",
+  "status": "pending",
+  "tokensUsed": 0,
+  "rateLimit": 30,
+  "model": "claude-3"
+}]'></textarea>
+                    <div class="input-hint">Define multiple AI workflows to coordinate</div>
+                </div>
+
+                <div id="error-message" class="error-message"></div>
+                <div id="success-message" class="success-message"></div>
+            </div>
+        </div>
+
+        <div class="output-section">
+            <h2>Generated Configuration</h2>
+            <div class="output-box">
+                <button class="copy-btn" onclick="copyOutput()">Copy</button>
+                <span id="output"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const outputEl = document.getElementById('output');
+            const errorEl = document.getElementById('error-message');
+            const successEl = document.getElementById('success-message');
+            const copyBtn = document.querySelector('.copy-btn');
+
+            function showError(message) {
+                errorEl.textContent = message;
+                errorEl.classList.add('show');
+                successEl.classList.remove('show');
+            }
+
+            function showSuccess(message) {
+                successEl.textContent = message;
+                successEl.classList.add('show');
+                errorEl.classList.remove('show');
+            }
+
+            function hideMessages() {
+                errorEl.classList.remove('show');
+                successEl.classList.remove('show');
+            }
+
+            function validateAgent() {
+                const agentName = document.getElementById('agentName').value.trim();
+                const apiKey = document.getElementById('apiKey').value.trim();
+                const model = document.getElementById('model').value.trim();
+                const prompt = document.getElementById('prompt').value.trim();
+
+                if (!agentName) {
+                    showError('Agent name is required');
+                    return false;
+                }
+                if (!apiKey) {
+                    showError('API key is required');
+                    return false;
+                }
+                if (!model) {
+                    showError('Model is required');
+                    return false;
+                }
+                if (prompt.length > 5000) {
+                    showError('System prompt exceeds 5000 characters');
+                    return false;
+                }
+                return true;
+            }
+
+            function validateRateLimits() {
+                const rpm = parseInt(document.getElementById('requestsPerMinute').value) || 0;
+                const maxTokens = parseInt(document.getElementById('maxTokens').value) || 0;
+                const maxInput = parseInt(document.getElementById('maxInputTokens').value) || 0;
+                const maxOutput = parseInt(document.getElementById('maxOutputTokens').value) || 0;
+
+                if (rpm < 1 || rpm > 1000) {
+                    showError('Requests per minute must be between 1 and 1000');
+                    return false;
+                }
+                if (maxTokens < 1 || maxTokens > 32768) {
+                    showError('Max tokens must be between 1 and 32768');
+                    return false;
+                }
+                if (maxInput < 1 || maxInput > 262144) {
+                    showError('Max input tokens must be between 1 and 262144');
+                    return false;
+                }
+                if (maxOutput < 1 || maxOutput > 32768) {
+                    showError('Max output tokens must be between 1 and 32768');
+                    return false;
+                }
+                return true;
+            }
+
+            function validateWorkflows() {
+                const input = document.getElementById('workflowInput').value.trim();
+                if (!input) {
+                    showError('Workflow definition is required');
+                    return false;
+                }
+                try {
+                    const workflows = JSON.parse(input);
+                    if (!Array.isArray(workflows)) {
+                        showError('Workflows must be an array');
+                        return false;
+                    }
+                    if (workflows.length === 0) {
+                        showError('Workflows array cannot be empty');
+                        return false;
+                    }
+                    workflows.forEach((wf, index) => {
+                        if (!wf.name || typeof wf.name !== 'string') {
+                            showError(`Workflow ${index + 1}: name is required`);
+                            return false;
+                        }
+                        if (typeof wf.tokensUsed !== 'number') {
+                            showError(`Workflow ${index + 1}: tokensUsed must be a number`);
+                            return false;
+                        }
+                        if (typeof wf.rateLimit !== 'number') {
+                            showError(`Workflow ${index + 1}: rateLimit must be a number`);
+                            return false;
+                        }
+                        if (!['active', 'pending', 'error'].includes(wf.status)) {
+                            showError(`Workflow ${index + 1}: status must be 'active', 'pending', or 'error'`);
+                            return false;
+                        }
+                    });
+                    return true;
+                } catch (e) {
+                    showError('Invalid JSON: ' + e.message);
+                    return false;
+                }
+            }
+
+            function generateOutput() {
+                hideMessages();
+                const agentName = document.getElementById('agentName').value.trim();
+                const apiKey = document.getElementById('apiKey').value.trim();
+                const model = document.getElementById('model').value.trim();
+                const prompt = document.getElementById('prompt').value.trim();
+                const rpm = parseInt(document.getElementById('requestsPerMinute').value) || 0;
+                const maxTokens = parseInt(document.getElementById('maxTokens').value) || 0;
+                const maxInput = parseInt(document.getElementById('maxInputTokens').value) || 0;
+                const maxOutput = parseInt(document.getElementById('maxOutputTokens').value) || 0;
+                const workflows = document.getElementById('workflowInput').value.trim();
+
+                let output = '=== AI Agent Configuration ===\n\n';
+                output += `Agent: ${agentName}\n`;
+                output += `API Key: ${apiKey}\n`;
+                output += `Model: ${model}\n`;
+                output += `System Prompt: ${prompt}\n\n`;
+                output += '=== Rate Limits ===\n';
+                output += `Requests/Minute: ${rpm}\n`;
+                output += `Max Tokens: ${maxTokens}\n`;
+                output += `Max Input Tokens: ${maxInput}\n`;
+                output += `Max Output Tokens: ${maxOutput}\n\n`;
+
+                if (workflows) {
+                    output += '=== Active Workflows ===\n';
+                    try {
+                        const wfArray = JSON.parse(workflows);
+                        wfArray.forEach((wf, i) => {
+                            output += `\nWorkflow ${i + 1}: ${wf.name}\n`;
+                            output += `Status: ${wf.status}\n`;
+                            output += `Tokens Used: ${wf.tokensUsed}\n`;
+                            output += `Rate Limit: ${wf.rateLimit} req/min\n`;
+                            output += `Model: ${wf.model}\n`;
+                        });
+                    } catch (e) {
+                        output += 'Error parsing workflows\n';
+                    }
+                }
+
+                output += '\n=== Token Usage Visualization ===\n';
+                output += 'Input Tokens: ' + Math.min(maxInput, 100) + ' / ' + maxInput + '\n';
+                output += 'Output Tokens: ' + Math.min(maxOutput, 100) + ' / ' + maxOutput + '\n';
+                output += 'Total Capacity: ' + (maxInput + maxOutput) + ' tokens\n';
+
+                outputEl.textContent = output;
+            }
+
+            function updateVisualizations() {
+                const maxInput = parseInt(document.getElementById('maxInputTokens').value) || 100;
+                const maxOutput = parseInt(document.getElementById('maxOutputTokens').value) || 100;
+                const rpm = parseInt(document.getElementById('requestsPerMinute').value) || 0;
+
+                const inputBar = document.querySelector('.token-bar:nth-child(1)');
+                const outputBar = document.querySelector('.token-bar:nth-child(2)');
+                const rateBar = document.querySelector('.token-bar:nth-child(3)');
+
+                if (inputBar) {
+                    inputBar.querySelector('.token-fill').style.height = Math.min(maxInput, 100) + '%';
+                    inputBar.querySelector('.token-fill').className = 'token-fill';
+                }
+                if (outputBar) {
+                    outputBar.querySelector('.token-fill').style.height = Math.min(maxOutput, 100) + '%';
+                    outputBar.querySelector('.token-fill').className = 'token-fill';
+                }
+                if (rateBar) {
+                    const ratePercent = Math.min(rpm, 100);
+                    rateBar.querySelector('.token-fill').style.height = ratePercent + '%';
+                    rateBar.querySelector('.token-fill').className = 'token-fill';
+                }
+
+                const inputLabel = document.querySelector('.chart-label:nth-child(1)');
+                const outputLabel = document.querySelector('.chart-label:nth-child(2)');
+                const rateLabel = document.querySelector('.chart-label:nth-child(3)');
+
+                if (inputLabel) inputLabel.textContent = 'Input Tokens';
+                if (outputLabel) outputLabel.textContent = 'Output Tokens';
+                if (rateLabel) rateLabel.textContent = 'Rate Limit';
+            }
+
+            function updateWorkflowList() {
+                const input = document.getElementById('workflowInput').value.trim();
+                const container = document.querySelector('.workflow-list');
+
+                if (!input) {
+                    container.innerHTML = '<div style="color:#6b7280; font-size:12px; padding:15px;">No workflows defined</div>';
+                    return;
+                }
+
+                try {
+                    const workflows = JSON.parse(input);
+                    container.innerHTML = workflows.map((wf, i) => {
+                        const statusClass = wf.status;
+                        return '<div class="workflow-item">' +
+                            '<div class="workflow-status ' + statusClass + '"></div>' +
+                            '<div class="workflow-name">' + wf.name + '</div>' +
+                            '<div class="workflow-token">' + wf.tokensUsed + ' tokens</div>' +
+                            '<div class="workflow-rate">' + wf.rateLimit + ' req/min</div>' +
+                            '</div>';
+                    }).join('');
+                } catch (e) {
+                    container.innerHTML = '<div style="color:#ef4444; font-size:12px; padding:15px;">Invalid JSON</div>';
+                }
+            }
+
+            function copyOutput() {
+                const output = outputEl.textContent;
+                navigator.clipboard.writeText(output).then(() => {
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    showError('Failed to copy: ' + err.message);
+                });
+            }
+
+            function setupEventListeners() {
+                const inputs = document.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('input', () => {
+                        hideMessages();
+                        updateVisualizations();
+                        updateWorkflowList();
+                    });
+                });
+
+                document.getElementById('agentName').addEventListener('blur', validateAgent);
+                document.getElementById('apiKey').addEventListener('blur', validateAgent);
+                document.getElementById('model').addEventListener('blur', validateAgent);
+                document.getElementById('requestsPerMinute').addEventListener('blur', validateRateLimits);
+                document.getElementById('maxTokens').addEventListener('blur', validateRateLimits);
+                document.getElementById('maxInputTokens').addEventListener('blur', validateRateLimits);
+                document.getElementById('maxOutputTokens').addEventListener('blur', validateRateLimits);
+                document.getElementById('workflowInput').addEventListener('blur', validateWorkflows);
+            }
+
+            setupEventListeners();
+            generateOutput();
+            updateVisualizations();
+            updateWorkflowList();
+        })();
+    </script>
+</body>
+</html>
