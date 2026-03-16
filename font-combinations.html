@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+h1{color:#6366f1;margin-bottom:20px}
+.controls{margin-bottom:20px}
+input,select{padding:8px;margin:5px;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;border-radius:4px}
+button{padding:8px 16px;background:#6366f1;border:none;color:#fff;border-radius:4px;cursor:pointer}
+#preview{background:#1a1a1a;padding:20px;border-radius:8px;min-height:100px;margin-top:20px}
+.back{color:#6366f1;text-decoration:none}
+</style>
+</head>
+<body>
+<a href="index.html" class="back">Back to Home</a>
+<h1>Font Combinations</h1>
+<div class="controls">
+<label>Primary Font: <select id="primaryFont"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Courier New">Courier New</option><option value="Times New Roman">Times New Roman</option></select></label>
+<label>Secondary Font: <select id="secondaryFont"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Courier New">Courier New</option><option value="Times New Roman">Times New Roman</option></select></label>
+<label>Size: <input type="number" id="fontSize" value="18" min="10" max="72"></label>
+<label>Weight: <select id="fontWeight"><option value="normal">Normal</option><option value="bold">Bold</option><option value="300">Light</option><option value="900">Black</option></select></label>
+<button onclick="updatePreview()">Update Preview</button>
+</div>
+<div id="preview">
+<h2 id="primaryText">Primary Text</h2>
+<p id="secondaryText">Secondary Text</p>
+</div>
+<script>
+const fonts = ['Arial','Georgia','Verdana','Courier New','Times New Roman'];
+function loadFont(name){
+fonts.forEach(f => {if(f !== name) FontFace.remove(f)});
+FontFace.load(name)}
+function updatePreview(){
+const primary = document.getElementById('primaryFont').value;
+const secondary = document.getElementById('secondaryFont').value;
+const size = document.getElementById('fontSize').value;
+const weight = document.getElementById('fontWeight').value;
+const primaryText = document.getElementById('primaryText');
+const secondaryText = document.getElementById('secondaryText');
+primaryText.style.fontFamily = primary;
+primaryText.style.fontSize = size + 'px';
+primaryText.style.fontWeight = weight;
+secondaryText.style.fontFamily = secondary;
+secondaryText.style.fontSize = size + 'px';
+secondaryText.style.fontWeight = weight;
+}
+document.getElementById('primaryFont').onchange = updatePreview;
+document.getElementById('secondaryFont').onchange = updatePreview;
+document.getElementById('fontSize').onchange = updatePreview;
+document.getElementById('fontWeight').onchange = updatePreview;
+updatePreview();
+</script>
+</body>
+</html>
