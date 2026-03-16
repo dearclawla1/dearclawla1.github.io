@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Project Idea Generator</title>
+<style>
+body{margin:0;background:#0a0a0a;color:#e4e4e4;font-family:system-ui,sans-serif}
+a{color:#6366f1;text-decoration:none}
+.container{max-width:600px;margin:40px auto;padding:20px}
+h1{text-align:center;margin-bottom:30px}
+label{display:block;margin:15px 0 5px;font-weight:600}
+input,select{width:100%;padding:10px;margin-bottom:15px;border:1px solid #333;border-radius:4px;background:#111;color:#e4e4e4}
+button{width:100%;padding:12px;background:#6366f1;border:none;border-radius:4px;color:white;font-weight:600;cursor:pointer}
+button:hover{background:#5558ff}
+#output{margin-top:20px;padding:15px;background:#111;border-radius:4px;border:1px solid #333;min-height:100px}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+<h1>Project Idea Generator</h1>
+<label>Domain</label>
+<select id="domain">
+<option value="">Select Domain</option>
+<option value="AI">Artificial Intelligence</option>
+<option value="Space">Space Exploration</option>
+<option value="Health">Healthcare</option>
+<option value="Education">Education</option>
+<option value="Finance">Finance</option>
+</select>
+<label>Target Audience</label>
+<select id="audience">
+<option value="">Select Audience</option>
+<option value="Beginners">Beginners</option>
+<option value="Experts">Experts</option>
+<option value="Students">Students</option>
+<option value="Professionals">Professionals</option>
+</select>
+<label>Difficulty</label>
+<select id="difficulty">
+<option value="easy">Easy</option>
+<option value="medium">Medium</option>
+<option value="hard">Hard</option>
+</select>
+<button onclick="generate()">Generate Project Idea</button>
+<div id="output">Enter your preferences and click Generate!</div>
+<script>
+function generate(){
+const domain=document.getElementById('domain').value;
+const audience=document.getElementById('audience').value;
+const diff=document.getElementById('difficulty').value;
+let text="";
+if(!domain||!audience){text="Please select both domain and audience."}else{
+const ideas={
+AI:["AI-powered homework helper","Smart study planner with habit tracking","AI tutor for coding basics","Personalized quiz generator","Code snippet explainer bot","Math problem solver assistant","Essay outline generator","Vocabulary builder app","Research summary tool","Grammar checker for students"],
+Space:["Citizen science platform for space data","Virtual planetarium for classrooms","Space mission simulator game","Astronomy photo analysis tool","Space news digest app","Rocket science visualizer","Moon landing timeline interactive","Satellite image viewer","Space trivia quiz","Astronomy observation guide"],
+Health:["Medication reminder app","Symptom checker assistant","Mental health mood tracker","Nutrition plan generator","Exercise tracker","Sleep quality analyzer","Hydration reminder","Meditation guide","Health habit builder","Wellness journal"],
+Education:["Interactive history timeline","Language learning game","Science experiment simulator","Literature analysis tool","History quiz maker","Math visualizer","Grammar practice app","Debate practice assistant","Study group scheduler","Research paper organizer"],
+Finance:["Budget tracker for students","Investment portfolio simulator","Expense categorizer app","Savings goal planner","Debt payoff calculator","Subscription manager","Credit score checker","Financial literacy quiz","Investment education tool","Tax prep helper"]
+};
+text=ideas[domain]||[];
+text=text[Math.floor(Math.random()*text.length)];
+text+=" (Domain: "+domain+", Audience: "+audience+", Difficulty: "+diff+")";
+}
+document.getElementById('output').innerText=text;
+}
+</script>
+</div>
+</body>
+</html>
