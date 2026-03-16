@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ROT13 Encoder</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -9,39 +10,90 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#e4
 .container{max-width:600px;margin:0 auto}
 h1{margin-bottom:20px;text-align:center;color:#6366f1}
 a{color:#6366f1;text-decoration:none}
-input{width:100%;padding:12px;font-size:16px;background:#1a1a1a;border:2px solid #333;border-radius:8px;color:#e4e4e4;margin-bottom:10px}
-button{width:100%;padding:12px;font-size:16px;background:#6366f1;border:none;border-radius:8px;color:white;cursor:pointer;margin-bottom:10px}
-button:hover{background:#5558e6}
-#result{background:#1a1a1a;padding:15px;border-radius:8px;border:2px solid #333;font-family:monospace;font-size:14px;white-space:pre-wrap;min-height:100px;resize:vertical}
-.instructions{color:#888;font-size:14px;margin-bottom:15px;text-align:center}
+input{width:100%;padding:12px;font-size:16px;background:#1a1a1a;border:2px solid #333;border-radius:8px;color:#e4e4e4;margin-bottom:15px}
+input:focus{outline:none;border-color:#6366f1}
+button{width:100%;padding:14px;font-size:16px;font-weight:600;background:#6366f1;border:none;border-radius:8px;color:white;cursor:pointer;transition:background 0.2s}
+button:hover{background:#5558f0}
+.output{background:#1a1a1a;border:2px solid #333;border-radius:8px;padding:15px;font-family:monospace;font-size:14px;min-height:80px;white-space:pre-wrap;word-break:break-word}
+.results-section{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px;margin-top:20px}
+.result-box{background:#1a1a1a;border:2px solid #333;border-radius:8px;padding:15px;font-family:monospace;font-size:14px;min-height:80px;white-space:pre-wrap;word-break:break-word}
+.results-section h2{margin-bottom:10px;color:#6366f1;text-align:center;font-size:18px}
+.clear-btn{background:#ef4444;margin-top:15px}
+.clear-btn:hover{background:#dc2626}
+.loading{opacity:0.6;pointer-events:none}
 </style>
 </head>
 <body>
 <div class="container">
-<a href="index.html" style="color:#6366f1;display:block;margin-bottom:15px">Home</a>
-<h1>ROT13 Encoder</h1>
-<p class="instructions">ROT13 shifts each letter by 13 positions (e.g., A→N, B→O). Perfect for simple obfuscation!</p>
-<textarea id="input" placeholder="Enter text to encode..."></textarea>
-<button onclick="encode()">Encode</button>
-<button onclick="decode()" style="background:#444">Decode</button>
-<textarea id="result" placeholder="Result will appear here..." readonly></textarea>
+<h1>ROT13 Encoder/Decoder</h1>
+<input type="text" id="inputText" placeholder="Type or paste text here..." autocomplete="off">
+<button id="convertBtn">Convert</button>
+<div class="output" id="output"></div>
+<div class="results-section">
+<div class="result-box" id="encoded"></div>
+<div class="result-box" id="decoded"></div>
+</div>
+<button class="clear-btn" id="clearBtn" style="display:none">Clear All</button>
 </div>
 <script>
+const inputText = document.getElementById('inputText');
+const convertBtn = document.getElementById('convertBtn');
+const output = document.getElementById('output');
+const encoded = document.getElementById('encoded');
+const decoded = document.getElementById('decoded');
+const clearBtn = document.getElementById('clearBtn');
+
 function rot13(str) {
-return str.replace(/[a-zA-Z]/g, c => {
+return str.replace(/[a-zA-Z]/g, function(c) {
 const code = c.charCodeAt(0);
-const base = code >= 97 ? 97 : 65;
-return String.fromCharCode(base + ((code - base + 13) % 26));
+const base = c >= 'a' ? 97 : 65;
+const offset = c >='a' && c<='z' ? code - 97 : code - 65;
+return String.fromCharCode(((offset + 13) % 26) + base);
 });
 }
-function encode() {
-const text = document.getElementById('input').value;
-document.getElementById('result').value = rot13(text);
+
+function convert() {
+const text = inputText.value;
+if(!text) {
+output.textContent = '';
+encoded.textContent = '';
+decoded.textContent = '';
+clearBtn.style.display = 'none';
+return;
 }
-function decode() {
-const text = document.getElementById('input').value;
-document.getElementById('result').value = rot13(text);
+const encodedText = rot13(text);
+const decodedText = rot13(encodedText);
+output.textContent = encodedText;
+encoded.textContent = encodedText;
+decoded.textContent = text;
+clearBtn.style.display = 'block';
 }
+
+convertBtn.addEventListener('click', convert);
+
+inputText.addEventListener('keydown', function(e) {
+if(e.key === 'Enter') {
+convert();
+}
+});
+
+clearBtn.addEventListener('click', function() {
+inputText.value = '';
+output.textContent = '';
+encoded.textContent = '';
+decoded.textContent = '';
+clearBtn.style.display = 'none';
+inputText.focus();
+});
+
+inputText.addEventListener('input', function() {
+if(inputText.value === '') {
+output.textContent = '';
+encoded.textContent = '';
+decoded.textContent = '';
+clearBtn.style.display = 'none';
+}
+});
 </script>
 </body>
 </html>
