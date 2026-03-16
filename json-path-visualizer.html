@@ -21,7 +21,7 @@ path{color:#6366f1;font-weight:bold;}
 <textarea id="output"></textarea>
 <script>
 function parseJSON(){const e=document.getElementById("jsonInput").value;try{JSON.parse(e)&&document.getElementById("output").value="Parsed: "+JSON.stringify(JSON.parse(e),null,2)}catch(e){document.getElementById("output").value="Error: "+e.message}}
-function evaluatePath(){const e=document.getElementById("jsonInput").value,n=document.getElementById("pathInput").value;try{const o=JSON.parse(e),r=n.split(".");let t=o,a=0;for(let i=0;i<r.length;i++)if(r[i].startsWith("[")){const s=r[i].substring(1).split("]");if(s[0]!=""&&a<s[0]){const n=+s[0];t=t[s[0]]}}else t=t[r[i]],a++;t&&(document.getElementById("output").value="Result: "+JSON.stringify(t)):(document.getElementById("output").value="Error: Path not found")}catch(e){document.getElementById("output").value="Error: "+e.message}}
+function evaluatePath(){const e=document.getElementById("jsonInput").value,n=document.getElementById("pathInput").value;try{const o=JSON.parse(e),r=n.split(".");let t=o,a=0;for(let i=0;i<r.length;i++)if(r[i].startsWith("[")){const s=r[i].substring(1).split("]");if(s[0]!=""&&a<s[0]){const n=+s[0];t=t[s[0]]}}else t=t[r[i]],a++;t&&(document.getElementById("output").value="Result: "+JSON.stringify(t)):(document.getElementById("output").value="Error: Path not found"))}catch(e){document.getElementById("output").value="Parse Error: "+e.message}}
 </script>
 </body>
 </html>
