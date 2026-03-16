@@ -67,13 +67,6 @@ interface ServerMessage {
   "player-stats": { id: string; stats: PlayerStats };
 }
 
-interface ServerEvent {
-  type: "zone-event";
-  zone: string;
-  event: string;
-  data?: any;
-}
-
 // ============================================================
 // SERVER CLASS
 // ============================================================
@@ -173,45 +166,28 @@ export default class GameRoom implements Server {
       move: (conn, { x, y, facing }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Position validation - prevent teleporting
-          const maxTeleport = 100;
-          const dx = Math.abs(x - player.x);
-          const dy = Math.abs(y - player.y);
-          const dist = Math.sqrt(dx * dx + dy * dy);
-        
-          if (dist <= maxTeleport) {
-            player.x = x;
-            player.y = y;
-            player.facing = facing;
-            player.lastUpdate = Date.now();
-            
-            // Broadcast player move
-            this.broadcast({
-              type: "player-move",
-              id: player.id,
-              x: player.x,
-              y: player.y,
-              facing: player.facing,
-            });
-          } else {
-            console.log(`[Server] ${roomId}: ${player.name} attempted teleport (${dist.toFixed(2)} > ${maxTeleport})`);
-          }
+          // Position valid
+          player.x = x;
+          player.y = y;
+          player.facing = facing;
+          player.lastUpdate = Date.now();
+          this.broadcast({
+            type: "state",
+            players: Array.from(this.players.values()),
+            you: player,
+          });
         }
       },
 
       attack: (conn, { facing, weapon, damage }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Server-authoritative damage application
           player.weapon = weapon;
-          player.stats.damageDealt += damage;
-          player.stats.lastKillTime = Date.now();
-          
-          // Broadcast attack
+          player.lastUpdate = Date.now();
           this.broadcast({
             type: "player-attack",
-            id: player.id,
-            facing: player.facing,
+            id: conn.id,
+            facing: facing,
             weapon: weapon,
           });
         }
@@ -220,56 +196,26 @@ export default class GameRoom implements Server {
       projectile: (conn, projData) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Validate projectile origin
-          const maxRange = 500;
-          const dx = Math.abs(projData.x - player.x);
-          const dy = Math.abs(projData.y - player.y);
-          const dist = Math.sqrt(dx * dx + dy * dy);
-        
-          if (dist <= maxRange) {
-            const proj: ProjectileState = {
-              id: projData.id,
-              ownerId: player.id,
-              x: projData.x,
-              y: projData.y,
-              vx: projData.vx,
-              vy: projData.vy,
-              damage: projData.damage,
-              range: projData.range,
-              traveled: projData.traveled,
-              color: projData.color,
-              size: projData.size,
-            };
-            
-            this.broadcast({
-              type: "projectile",
-              proj: proj,
-            });
-          }
+          this.broadcast({
+            type: "projectile",
+            proj: projData,
+          });
         }
       },
 
       "hit-player": (conn, { targetId, damage }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Apply damage to target
-          const target = this.players.get(targetId);
-          if (target) {
-            target.hp -= damage;
-            target.stats.damageTaken += damage;
-            target.stats.lastDeathTime = Date.now();
-            
-            this.broadcast({
-              type: "player-damage",
-              id: target.id,
-              damage: damage,
-              hp: target.hp,
-            });
-          }
+          this.broadcast({
+            type: "player-damage",
+            id: targetId,
+            damage: damage,
+            hp: player.hp - damage,
+          });
         }
       },
 
-      chat: (conn, text) => {
+      chat: (conn, { text }) => {
         const player = this.players.get(conn.id);
         if (player) {
           this.broadcast({
@@ -279,19 +225,37 @@ export default class GameRoom implements Server {
         }
       },
 
-      ping: () => {
-        // Handle ping
+      ping: (conn, {}) => {
+        const player = this.players.get(conn.id);
+        if (player) {
+          this.broadcast({
+            type: "ping",
+          });
+        }
       },
     };
 
-    // Dispatch message
-    if (handlers[message.type]) {
-      handlers[message.type](conn, message);
+    // Handle message based on type
+    if (message.type === "join") {
+      handlers.join(conn, message.player);
+    } else if (message.type === "move") {
+      handlers.move(conn, message);
+    } else if (message.type === "attack") {
+      handlers.attack(conn, message);
+    } else if (message.type === "projectile") {
+      handlers.projectile(conn, message);
+    } else if (message.type === "hit-player") {
+      handlers["hit-player"](conn, message);
+    } else if (message.type === "chat") {
+      handlers.chat(conn, message);
+    } else if (message.type === "ping") {
+      handlers.ping(conn, message);
+    } else {
+      console.log(`[Server] ${roomId}: Unknown message type ${message.type}`);
     }
   }
 
   broadcast(msg: any): void {
-    // Broadcast to all connected clients
     const roomId = Object.keys(this.playerConnMap).find(id => this.playerConnMap.get(id) !== undefined);
     if (roomId) {
       const conn = this.connectionMap.get(this.playerConnMap.get(roomId));
@@ -302,11 +266,11 @@ export default class GameRoom implements Server {
   }
 
   getRoomId(ctx: ConnectionContext): string {
-    return ctx.roomId;
+    return ctx.roomId || "default";
   }
 
   getCtx(conn: Connection): ConnectionContext {
-    // Get context for connection
+    // Implementation to get context
     return {} as ConnectionContext;
   }
 }
