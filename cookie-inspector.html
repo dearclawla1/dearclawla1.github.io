@@ -13,6 +13,12 @@ button{background:#6366f1;color:#fff;cursor:pointer}
 button:hover{background:#5558ff}
 #output{background:#1a1a1a;border:1px solid #333;padding:1rem;border-radius:4px;min-height:100px;font-family:monospace;font-size:0.9rem;white-space:pre-wrap}
 a{display:block;margin-top:1rem;text-align:center}
+.dark-mode{background:#121212;color:#e0e0e0}
+.dark-mode input{background:#1a1a1a;border-color:#444}
+.dark-mode button{background:#5558ff}
+.dark-mode #output{background:#1a1a1a;border-color:#444}
+.back-link{display:inline-block;margin-top:1rem;color:#6366f1;text-decoration:none;font-size:0.9rem}
+.back-link:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -27,43 +33,103 @@ a{display:block;margin-top:1rem;text-align:center}
 <input type="text" id="cookieSameSite" placeholder="SameSite (Strict/Lax/None)">
 <button onclick="inspect()">Inspect Cookie</button>
 <div id="output">Enter cookie details and click Inspect...</div>
-<a href="index.html" style="color:#6366f1">Back to Home</a>
+<a href="index.html" class="back-link">Back to Home</a>
 </div>
 <script>
-function inspect(){
-const name=document.getElementById('cookieName').value.trim();
-const value=document.getElementById('cookieValue').value.trim();
-const domain=document.getElementById('cookieDomain').value.trim();
-const path=document.getElementById('cookiePath').value.trim();
-const secure=document.getElementById('cookieSecure').value.trim().toLowerCase()===true;
-const httpOnly=document.getElementById('cookieHttpOnly').value.trim().toLowerCase()===true;
-const sameSite=document.getElementById('cookieSameSite').value.trim();
-let output='';
-if(!name||!value){output+='❌ Missing name or value.\n\n';}else{
-output=`🍪 Cookie Details:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Name: ${name}
-Value: ${value}
-Domain: ${domain||'any'}
-Path: ${path||'/'}
-Secure: ${secure?'✅ Yes':'❌ No'}
-HttpOnly: ${httpOnly?'✅ Yes':'❌ No'}
-SameSite: ${sameSite||'not set'}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Analysis:
-`;
-if(!domain){output+='⚠️ No domain specified (will use current host).\n\n';}
-if(!path){output+='⚠️ No path specified (will use root /).\n\n';}
-if(!sameSite){output+='⚠️ SameSite not set (defaults to browser behavior).\n\n';}
-if(secure&&domain){output+='✅ Secure flag set (HTTPS only).\n\n';}
-if(httpOnly){output+='✅ HttpOnly flag set (XSS protection).\n\n';}
-if(sameSite==='Strict'){output+='✅ Strict SameSite (no cross-site cookies).\n\n';}
-else if(sameSite==='Lax'){output+='✅ Lax SameSite (limited cross-site).\n\n';}
-else if(sameSite==='None'){output+='✅ None SameSite (cross-site allowed).\n\n';}
-output+='━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+function validateInput(input) {
+  if (!input.value.trim()) {
+    return {valid: false, message: 'Field cannot be empty'};
+  }
+  return {valid: true};
 }
-document.getElementById('output').textContent=output;
+
+function normalizeBoolean(value) {
+  const lower = value.toLowerCase().trim();
+  if (lower === 'true') return 'true';
+  if (lower === 'false') return 'false';
+  return value;
 }
+
+function normalizeSameSite(value) {
+  const lower = value.toLowerCase().trim();
+  if (['strict', 'lax', 'none'].includes(lower)) {
+    return lower.toUpperCase();
+  }
+  return value;
+}
+
+function inspect() {
+  const output = document.getElementById('output');
+  
+  const nameResult = validateInput(document.getElementById('cookieName'));
+  if (!nameResult.valid) {
+    output.textContent = 'Error: ' + nameResult.message + '\n\nPlease enter a cookie name.';
+    return;
+  }
+  
+  const valueResult = validateInput(document.getElementById('cookieValue'));
+  if (!valueResult.valid) {
+    output.textContent = 'Error: ' + valueResult.message + '\n\nPlease enter a cookie value.';
+    return;
+  }
+  
+  const domain = document.getElementById('cookieDomain').value.trim();
+  const path = document.getElementById('cookiePath').value.trim();
+  const secure = normalizeBoolean(document.getElementById('cookieSecure').value);
+  const httpOnly = normalizeBoolean(document.getElementById('cookieHttpOnly').value);
+  const sameSite = normalizeSameSite(document.getElementById('cookieSameSite').value);
+  
+  // Validate domain format
+  if (!domain) {
+    output.textContent = 'Error: Domain is required.\n\nPlease enter a domain (e.g., example.com).';
+    return;
+  }
+  
+  // Validate path format
+  if (!path) {
+    output.textContent = 'Error: Path is required.\n\nPlease enter a path (e.g., /).';
+    return;
+  }
+  
+  // Validate SameSite
+  if (!['STRICT', 'LAX', 'NONE'].includes(sameSite)) {
+    output.textContent = 'Error: SameSite must be STRICT, LAX, or NONE.\n\nPlease enter a valid SameSite value.';
+    return;
+  }
+  
+  // Validate boolean values
+  if (!['true', 'false'].includes(secure)) {
+    output.textContent = 'Error: Secure must be true or false.\n\nPlease enter true or false for Secure.';
+    return;
+  }
+  
+  if (!['true', 'false'].includes(httpOnly)) {
+    output.textContent = 'Error: HttpOnly must be true or false.\n\nPlease enter true or false for HttpOnly.';
+    return;
+  }
+  
+  // Build cookie string
+  const cookieString = `${name}=${value}; Domain=${domain}; Path=${path}; Secure=${secure}; HttpOnly=${httpOnly}; SameSite=${sameSite}`;
+  
+  // Build JSON representation
+  const cookieJSON = JSON.stringify({
+    name: name,
+    value: value,
+    domain: domain,
+    path: path,
+    secure: secure === 'true',
+    httpOnly: httpOnly === 'true',
+    sameSite: sameSite
+  }, null, 2);
+  
+  // Build Set-Cookie header
+  const setCookieHeader = `Set-Cookie: ${name}=${value}; Domain=${domain}; Path=${path}; Secure=${secure}; HttpOnly=${httpOnly}; SameSite=${sameSite}`;
+  
+  output.textContent = `=== Cookie Inspection Results ===\n\n--- Cookie String ---\n${cookieString}\n\n--- JSON Representation ---\n${cookieJSON}\n\n--- Set-Cookie Header ---\n${setCookieHeader}\n\n--- Validation Summary ---\n✓ Name: ${name}\n✓ Value: ${value}\n✓ Domain: ${domain}\n✓ Path: ${path}\n✓ Secure: ${secure === 'true' ? 'enabled' : 'disabled'}\n✓ HttpOnly: ${httpOnly === 'true' ? 'enabled' : 'disabled'}\n✓ SameSite: ${sameSite}`;
+}
+
+// Track usage
+fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:['cookie-inspector.html','load',new Date().toISOString()]})}).catch(()=>{});
 </script>
 </body>
 </html>
