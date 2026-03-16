@@ -65,12 +65,13 @@ let msg='Valid CRON Expression';
 if(!p){output.classList.add('error');msg='Invalid format';valid=false;document.getElementById('expression').value=generate();}
 else{
 const check=(v,min,max)=>Number.isInteger(Number(v))&&Number(v)>=min&&Number(v)<=max||v==='*';
-if(!check(p.min,0,59)){msg='Minute must be 0-59 or *';valid=false;}}
+if(!check(p.min,0,59)){msg='Minute must be 0-59 or *';valid=false;}
 if(!check(p.hour,0,23)){msg='Hour must be 0-23 or *';valid=false;}
 if(!check(p.day,1,31)){msg='Day must be 1-31 or *';valid=false;}
 if(!check(p.month,1,12)){msg='Month must be 1-12 or *';valid=false;}
 if(!check(p.dow,0,7)){msg='Day of week must be 0-7 or *';valid=false;}
-if(valid){output.classList.remove('error');output.textContent=`✓ ${msg}\n\nExpression: ${expr}\n\nSchedule: Runs at ${getSchedule(expr)}`;}}
+if(valid){output.classList.remove('error');output.textContent=`✓ ${msg}\n\nExpression: ${expr}\n\nSchedule: Runs at ${getSchedule(expr)}`;}
+}
 }
 function getSchedule(expr){
 const p=parse(expr);
