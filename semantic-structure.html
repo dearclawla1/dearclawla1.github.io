@@ -2,34 +2,166 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Semantic Structure</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semantic Structure Analyzer</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-h1{color:#6366f1;margin-bottom:20px}
-input,button{margin:5px 5px 5px 0;padding:8px 12px;border-radius:4px;border:1px solid #333}
-button{background:#6366f1;color:#fff;cursor:pointer}
-button:hover{background:#5558ff}
-#output{background:#111;padding:15px;border-radius:4px;margin-top:15px;min-height:100px;white-space:pre-wrap;font-family:monospace}
-a{color:#6366f1;text-decoration:none}
+*{box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui,-apple-system,sans-serif;margin:0;padding:20px;min-height:100vh}
+.container{max-width:1200px;margin:0 auto}
+h1{color:#6366f1;margin:0 0 15px;font-size:1.8rem}
+.subtitle{color:#888;font-size:0.9rem;margin-bottom:20px}
+input,button{margin:5px 5px 5px 0;padding:10px 14px;border-radius:6px;border:1px solid #333;font-size:0.95rem;transition:all 0.2s}
+input:focus{outline:2px solid #6366f1;outline-offset:2px}
+input::placeholder{color:#555}
+button{background:#6366f1;color:#fff;cursor:pointer;font-weight:500}
+button:hover{background:#5558ff;transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+#url{width:100%;max-width:800px;background:#111;color:#e4e4e4;border:1px solid #333;padding:12px;border-radius:6px;font-family:inherit}
+#output{background:#111;padding:20px;border-radius:6px;margin-top:20px;min-height:200px;white-space:pre-wrap;font-family:monospace;font-size:0.9rem;line-height:1.6;overflow:auto;max-height:60vh;border:1px solid #333}
+.output-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #222}
+.output-title{color:#6366f1;font-weight:600;font-size:1.1rem}
+.output-actions{display:flex;gap:8px}
+.action-btn{background:#222;color:#e4e4e4;border:1px solid #333;padding:6px 10px;font-size:0.85rem;cursor:pointer}
+.action-btn:hover{background:#333}
+.action-btn.primary{background:#6366f1;color:#fff;border-color:#6366f1}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tag{background:#1a1a1a;color:#888;padding:4px 8px;border-radius:4px;font-size:0.8rem;border:1px solid #333}
+.tag.highlight{background:#1e2a3a;color:#6366f1;border-color:#6366f1}
+.tag.error{background:#2a1a1a;color:#ff6b6b;border-color:#ff6b6b}
+hierarchy{margin-top:15px;padding:15px;background:#151515;border-radius:6px;border-left:3px solid #6366f1}
+hierarchy-item{display:flex;align-items:center;gap:8px;margin:4px 0;padding:4px 0}
+hierarchy-tag{background:#222;color:#e4e4e4;padding:2px 8px;border-radius:4px;font-size:0.85rem;font-weight:500}
+hierarchy-arrow{color:#6366f1;font-size:0.8rem}
+.stats{display:flex;gap:15px;margin-top:15px;flex-wrap:wrap}
+.stat{background:#151515;padding:10px 15px;border-radius:6px;border:1px solid #222}
+.stat-label{color:#888;font-size:0.85rem}
+.stat-value{color:#e4e4e4;font-weight:600;font-size:1rem}
+.back-link{display:inline-block;margin-top:15px;color:#6366f1;text-decoration:none;font-size:0.9rem}
+.back-link:hover{text-decoration:underline}
+@media(max-width:768px){
+body{padding:15px}
+h1{font-size:1.5rem}
+#url{max-width:100%}
+}
 </style>
 </head>
 <body>
-<h1>Semantic Structure</h1>
-<p>Visualize logical hierarchy and content flow of web pages</p>
-<input type="text" id="url" placeholder="Enter URL or HTML content" style="width:400px">
+<div class="container">
+<h1>Semantic Structure Analyzer</h1>
+<p class="subtitle">Visualize logical hierarchy and content flow of web pages</p>
+<input type="text" id="url" placeholder="Enter URL or HTML content (supports both)" autocomplete="off">
 <button onclick="analyze()">Analyze</button>
 <div id="output">Enter content above and click Analyze to see semantic structure...</div>
-<a href="index.html">Back to Home</a>
+<a href="index.html" class="back-link">Back to Home</a>
+</div>
 <script>
+let currentAnalysis = null;
+
 function analyze(){
-const url=document.getElementById('url').value;
-const out=document.getElementById('output');
-if(!url){out.textContent='Please enter content...';return}
-const html=/<[^>]+>/.test(url)?url:url;
-const tags=html.match(/<([a-z]+)/gi)||[];
-const hierarchy=tags.map(t=>{const tag=t.match(/<([a-z]+)/i)[1];return tag.toUpperCase();}).join(' → ');
-out.textContent=`Detected Semantic Flow:\n${hierarchy}\n\nKey Sections Found: ${tags.filter(t=>/<(header|nav|main|section|article|footer)>/.test(t)).length} major semantic elements`;
+const url = document.getElementById('url').value;
+const out = document.getElementById('output');
+if(!url){
+out.textContent = 'Please enter content...';
+return;
 }
+
+const isUrl = /https?:\/\//.test(url);
+let html = url;
+
+if(isUrl){
+fetch(url)
+.then(res => res.text())
+.then(content => {
+html = content;
+analyzeContent(html);
+})
+.catch(err => {
+out.textContent = `Error fetching URL: ${err.message}\n\nPlease check the URL and try again.`;
+});
+}else{
+analyzeContent(html);
+}
+}
+
+function analyzeContent(html){
+const out = document.getElementById('output');
+const tags = html.match(/<([a-z][a-z0-9]*)/gi) || [];
+const tagCounts = {};
+tags.forEach(t => {
+const tag = t.match(/<([a-z][a-z0-9]*)/i)[1].toUpperCase();
+tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+});
+
+const semanticTags = ['HEADER','NAV','MAIN','SECTION','ARTICLE','ASIDE','FOOTER'];
+const foundSemantic = semanticTags.filter(tag => tagCounts[tag] > 0);
+const missingSemantic = semanticTags.filter(tag => tagCounts[tag] === 0);
+
+const hierarchy = tags.map(t => {
+const tag = t.match(/<([a-z][a-z0-9]*)/i)[1].toUpperCase();
+return tag;
+}).join(' → ');
+
+const textContent = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+const wordCount = textContent.split(' ').length;
+const charCount = textContent.length;
+
+const output = `
+=== Semantic Structure Analysis ===
+
+📊 TAG CLOUD:
+${Object.entries(tagCounts).map(([tag, count]) => {
+const isSemantic = semanticTags.includes(tag);
+return `<span class="tag ${isSemantic ? 'highlight' : ''}">${tag} (${count})</span>`;
+}).join('')}
+
+${missingSemantic.length > 0 ? `\n⚠️ Missing Semantic Elements: ${missingSemantic.join(', ')}` : ''}
+
+📑 SEMANTIC FLOW:
+${hierarchy || 'No tags detected'}
+
+📝 CONTENT METRICS:
+<div class="stats">
+<div class="stat"><span class="stat-label">Words:</span><span class="stat-value">${wordCount}</span></div>
+<div class="stat"><span class="stat-label">Characters:</span><span class="stat-value">${charCount}</span></div>
+</div>
+
+🎯 KEY SECTIONS FOUND:
+${foundSemantic.length > 0 ? `✅ ${foundSemantic.join(', ')}` : '⚠️ No major semantic elements detected'}
+
+💡 RECOMMENDATIONS:
+${missingSemantic.length > 0 ? `Consider adding: ${missingSemantic.slice(0, 3).join(', ')}` : 'Structure looks good!'}
+`;
+
+out.innerHTML = output;
+currentAnalysis = {tags, tagCounts, semanticTags, foundSemantic, missingSemantic};
+}
+
+function copyToClipboard(){
+if(currentAnalysis){
+const text = document.getElementById('output').textContent;
+navigator.clipboard.writeText(text).then(() => {
+const btn = document.querySelector('.action-btn.primary');
+const originalText = btn.textContent;
+btn.textContent = 'Copied!';
+setTimeout(() => btn.textContent = originalText, 2000);
+});
+}
+}
+
+document.addEventListener('keydown', (e) => {
+if(e.ctrlKey && e.key === 'Enter){
+analyze();
+}
+if(e.ctrlKey && e.key === 'c' && currentAnalysis){
+copyToClipboard();
+}
+});
+
+document.getElementById('url').addEventListener('keydown', (e) => {
+if(e.ctrlKey && e.key === 'Enter'){
+analyze();
+}
+});
 </script>
 </body>
 </html>
