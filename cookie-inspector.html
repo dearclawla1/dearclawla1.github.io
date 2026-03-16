@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cookie Inspector</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:2rem}
+h1{color:#6366f1;margin-bottom:1rem}
+.container{max-width:600px;margin:0 auto}
+input,button{display:block;width:100%;margin:0.5rem 0;padding:0.75rem;border-radius:4px;border:none;font-size:1rem}
+input{background:#1a1a1a;border:1px solid #333;color:#e4e4e4}
+button{background:#6366f1;color:#fff;cursor:pointer}
+button:hover{background:#5558ff}
+#output{background:#1a1a1a;border:1px solid #333;padding:1rem;border-radius:4px;min-height:100px;font-family:monospace;font-size:0.9rem;white-space:pre-wrap}
+a{display:block;margin-top:1rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>Cookie Inspector</h1>
+<div class="container">
+<input type="text" id="cookieName" placeholder="Cookie name (e.g., sessionId)">
+<input type="text" id="cookieValue" placeholder="Cookie value">
+<input type="text" id="cookieDomain" placeholder="Domain (e.g., example.com)">
+<input type="text" id="cookiePath" placeholder="Path (e.g., /)">
+<input type="text" id="cookieSecure" placeholder="Secure (true/false)">
+<input type="text" id="cookieHttpOnly" placeholder="HttpOnly (true/false)">
+<input type="text" id="cookieSameSite" placeholder="SameSite (Strict/Lax/None)">
+<button onclick="inspect()">Inspect Cookie</button>
+<div id="output">Enter cookie details and click Inspect...</div>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+</div>
+<script>
+function inspect(){
+const name=document.getElementById('cookieName').value.trim();
+const value=document.getElementById('cookieValue').value.trim();
+const domain=document.getElementById('cookieDomain').value.trim();
+const path=document.getElementById('cookiePath').value.trim();
+const secure=document.getElementById('cookieSecure').value.trim().toLowerCase()===true;
+const httpOnly=document.getElementById('cookieHttpOnly').value.trim().toLowerCase()===true;
+const sameSite=document.getElementById('cookieSameSite').value.trim();
+let output='';
+if(!name||!value){output+='❌ Missing name or value.\n\n';}else{
+output=`🍪 Cookie Details:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name: ${name}
+Value: ${value}
+Domain: ${domain||'any'}
+Path: ${path||'/'}
+Secure: ${secure?'✅ Yes':'❌ No'}
+HttpOnly: ${httpOnly?'✅ Yes':'❌ No'}
+SameSite: ${sameSite||'not set'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Analysis:
+`;
+if(!domain){output+='⚠️ No domain specified (will use current host).\n\n';}
+if(!path){output+='⚠️ No path specified (will use root /).\n\n';}
+if(!sameSite){output+='⚠️ SameSite not set (defaults to browser behavior).\n\n';}
+if(secure&&domain){output+='✅ Secure flag set (HTTPS only).\n\n';}
+if(httpOnly){output+='✅ HttpOnly flag set (XSS protection).\n\n';}
+if(sameSite==='Strict'){output+='✅ Strict SameSite (no cross-site cookies).\n\n';}
+else if(sameSite==='Lax'){output+='✅ Lax SameSite (limited cross-site).\n\n';}
+else if(sameSite==='None'){output+='✅ None SameSite (cross-site allowed).\n\n';}
+output+='━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+}
+document.getElementById('output').textContent=output;
+}
+</script>
+</body>
+</html>
