@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+input,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;border-radius:4px;margin:5px 0}
+button{background:#6366f1;border:none;color:#fff;padding:10px 20px;border-radius:4px;cursor:pointer}
+button:hover{background:#5558e6}
+#preview{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;min-height:100px}
+a{color:#6366f1}
+</style>
+</head>
+<body>
+<h2>Font-Viewer</h2>
+<label>Upload Font File:</label>
+<input type="file" id="fontInput" accept=".woff,.woff2,.ttf,.otf">
+<button onclick="loadFont()">Load Font</button>
+<div id="preview"></div>
+<script>
+function loadFont(){
+const file=document.getElementById('fontInput').files[0];
+if(!file)return;
+const reader=new FileReader();
+reader.onload=function(e){
+const preview=document.getElementById('preview');
+preview.innerHTML='';
+const font=new FontFace('previewFont',e.target.result,{style:'normal'});
+font.load().then(function(){
+document.fonts.add(font);
+preview.innerHTML='<span style="font-family:previewFont;font-size:24px">Hello World - Test Text</span>';
+});
+};
+reader.readAsArrayBuffer(file);
+}
+</script>
+<a href="index.html">Back to Home</a>
+</body>
+</html>
