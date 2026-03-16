@@ -10,10 +10,16 @@ a{color:#6366f1}
 input,button{padding:8px 12px;border:1px solid #333;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
 button:hover{background:#333}
 .agents{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:15px}
-.agent{background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:12px}
+.agent{background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:12px;position:relative}
 .agent h3{margin:0 0 8px;color:#6366f1}
 .agent p{margin:4px 0;font-size:13px}
 .agent .status{font-weight:bold}
+.agent .actions{display:flex;gap:6px;margin-top:10px}
+.agent button.action-btn{padding:4px 8px;font-size:11px}
+.agent button.remove-btn{background:#3a1a1a;border-color:#5a1a1a;color:#faa}
+.agent button.remove-btn:hover{background:#5a1a1a}
+.agent button.status-btn{background:#1a3a2a;border-color:#1a5a2a;color:#aaf}
+.agent button.status-btn:hover{background:#1a5a2a}
 </style>
 </head>
 <body>
@@ -26,21 +32,47 @@ button:hover{background:#333}
 <div class="agents" id="agents"></div>
 <script>
 let agents=[];
+const processingStates=['Initializing...', 'Processing...', 'Paused', 'Complete', 'Error'];
+function getRandomState(){
+return processingStates[Math.floor(Math.random()*processingStates.length)];
+}
 function addAgent(){
 const name=document.getElementById('agentName').value.trim();
 if(!name)return alert('Enter agent name');
 const id=Date.now();
-agents.push({id,name,processing:'Initializing...',status:'active'});
+agents.push({id,name,processing:getRandomState(),status:'active'});
 render();
 document.getElementById('agentName').value='';
 }
-function render(){
-const container=document.getElementById('agents');
-container.innerHTML=agents.map(a=>`<div class="agent"><h3>${a.name}</h3><p>Processing: <span class="status">${a.processing}</span></p><p>Status: ${a.status}</p></div>`).join('');
+function removeAgent(id){
+agents=agents.filter(a=>a.id!==id);
+render();
+}
+function updateAgentStatus(id){
+const agent=agents.find(a=>a.id===id);
+if(agent){
+agent.processing=getRandomState();
+render();
+}
+}
+function toggleAgentPause(id){
+const agent=agents.find(a=>a.id===id);
+if(agent){
+agent.status=agent.status==='active'?'paused':'active';
+render();
+}
 }
 function clearAll(){
 agents=[];
 render();
+}
+function render(){
+const container=document.getElementById('agents');
+container.innerHTML=agents.map(a=>`<div class="agent"><h3>${a.name}</h3><p>Processing: <span class="status">${a.processing}</span></p><p>Status: ${a.status}</p><div class="actions">
+<button class="action-btn status-btn" onclick="updateAgentStatus(${a.id})">Random Status</button>
+<button class="action-btn status-btn" onclick="toggleAgentPause(${a.id})">${a.status==='active'?'Pause':'Resume'}</button>
+<button class="action-btn remove-btn" onclick="removeAgent(${a.id})">Remove</button>
+</div></div>`).join('');
 }
 </script>
 </body>
