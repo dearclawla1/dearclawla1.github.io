@@ -8,64 +8,75 @@ h1{color:#6366f1;margin-bottom:20px}
 input,select,textarea{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;margin:5px 0;width:100%}
 button{background:#6366f1;border:none;color:#fff;padding:10px 20px;cursor:pointer}
 button:hover{background:#5558ff}
-#output{background:#1a1a1a;border:1px solid #333;padding:15px;margin-top:10px;min-height:100px}
-a{color:#6366f1}
+#output{background:#1a1a1a;border:1px solid #333;padding:10px;min-height:100px;white-space:pre-wrap;word-wrap:break-word}
+.container{max-width:800px;margin:0 auto}
 </style>
 </head>
 <body>
+<div class="container">
 <h1>API Request Builder</h1>
-
-<div style="margin-bottom:10px">
-  <label for="method">Method:</label>
-  <input type="text" id="method" name="method" placeholder="GET, POST, PUT, DELETE...">
+<div id="form-container">
+<details>
+<summary>Show/Hide Form</summary>
+<div id="form">
+<h2>Request Details</h2>
+<input type="text" id="method" placeholder="GET" value="GET">
+<select id="endpoint">
+<option value="">Select Endpoint</option>
+<option value="/api/users">/api/users</option>
+<option value="/api/posts">/api/posts</option>
+<option value="/api/comments">/api/comments</option>
+</select>
+<input type="text" id="headers" placeholder="Content-Type: application/json">
+<textarea id="body" placeholder="Request body (optional)"></textarea>
+<button id="build-btn">Build Request</button>
+<button id="clear-btn" style="display:none;background:#ef4444;">Clear</button>
 </div>
-
-<div style="margin-bottom:10px">
-  <label for="url">URL:</label>
-  <input type="text" id="url" name="url" placeholder="https://api.example.com/endpoint">
+</details>
 </div>
-
-<div style="margin-bottom:10px">
-  <label for="headers">Headers:</label>
-  <textarea id="headers" name="headers" placeholder="Content-Type: application/json&#10;Authorization: Bearer token" rows="4"></textarea>
-</div>
-
-<div style="margin-bottom:10px">
-  <label for="body">Body:</label>
-  <textarea id="body" name="body" placeholder='{"key": "value"}' rows="6"></textarea>
-</div>
-
-<div style="margin-bottom:10px">
-  <button id="build">Build Request</button>
-  <button id="clear">Clear</button>
-</div>
-
-<div id="output"></div>
-
+<div id="output">Build a request to see the output...</div>
 <script>
-document.getElementById('build').addEventListener('click', function() {
-  var method = document.getElementById('method').value;
-  var url = document.getElementById('url').value;
-  var headers = document.getElementById('headers').value;
-  var body = document.getElementById('body').value;
+const form = document.getElementById('form');
+const buildBtn = document.getElementById('build-btn');
+const clearBtn = document.getElementById('clear-btn');
+const output = document.getElementById('output');
+const methodInput = document.getElementById('method');
+const endpointInput = document.getElementById('endpoint');
+const headersInput = document.getElementById('headers');
+const bodyInput = document.getElementById('body');
 
-  try {
-    var output = '<p><strong>Method:</strong> ' + method + '</p>';
-    output += '<p><strong>URL:</strong> ' + url + '</p>';
-    output += '<p><strong>Headers:</strong> ' + headers + '</p>';
-    output += '<p><strong>Body:</strong> ' + body + '</p>';
-    document.getElementById('output').innerHTML = output;
-  } catch(e) {
-    document.getElementById('output').innerHTML = '<p style="color:#ff6b6b">Error: ' + e.message + '</p>';
-  }
+function buildRequest() {
+const method = methodInput.value.toUpperCase() || 'GET';
+const endpoint = endpointInput.value || '/';
+const headers = headersInput.value || '';
+const body = bodyInput.value || '';
+
+let request = `${method} ${endpoint}`;
+if (headers) {
+request += `\n\nHeaders:\n${headers}`;
+}
+if (body) {
+request += `\n\nBody:\n${body}`;
+}
+output.textContent = request;
+clearBtn.style.display = 'inline-block';
+}
+
+buildBtn.addEventListener('click', buildRequest);
+clearBtn.addEventListener('click', () => {
+output.textContent = 'Output cleared.';
+methodInput.value = 'GET';
+endpointInput.value = '';
+headersInput.value = '';
+bodyInput.value = '';
+clearBtn.style.display = 'none';
 });
 
-document.getElementById('clear').addEventListener('click', function() {
-  document.getElementById('method').value = '';
-  document.getElementById('url').value = '';
-  document.getElementById('headers').value = '';
-  document.getElementById('body').value = '';
-  document.getElementById('output').innerHTML = '';
+document.addEventListener('keydown', (e) => {
+if (e.key === 'Enter') {
+e.preventDefault();
+buildRequest();
+}
 });
 </script>
 </body>
