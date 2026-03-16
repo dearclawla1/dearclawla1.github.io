@@ -25,7 +25,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="home">← Back to Home</a>
+        <a href="index.html" class="home">Back to Home</a>
         <h1>User Activity Log</h1>
         <div class="input-group">
             <input type="text" id="username" placeholder="Enter GitHub username (e.g., github)">
@@ -41,23 +41,42 @@
                 const reposRes = await fetch(`https://api.github.com/users/${username}/repos?per_page=30`);
                 if (!reposRes.ok) throw new Error('User not found');
                 const repos = await reposRes.json();
-                const commitsRes = await fetch(`https://api.github.com/users/${username}/events/public?per_page=30`);
-                const events = await commitsRes.json();
-                let html = '<div class="activity-card"><strong>Public Repos:</strong><div class="activity-item">';
-                repos.forEach(r => {
-                    html += `<span class="tag repo">${r.name}</span>`;
+                const contributionsRes = await fetch(`https://api.github.com/users/${username}/events?per_page=30`);
+                if (!contributionsRes.ok) throw new Error('Failed to fetch events');
+                const events = await contributionsRes.json();
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+                repos.forEach(repo => {
+                    const card = document.createElement('div');
+                    card.className = 'activity-card';
+                    card.innerHTML = `
+                        <div class="activity-item">
+                            <strong>${repo.name}</strong>
+                            <span>${repo.html_url}</span>
+                        </div>
+                        <div class="activity-item">
+                            <span>${repo.description || 'No description'}</span>
+                        </div>
+                    `;
+                    resultsDiv.appendChild(card);
                 });
-                html += '</div></div><div class="activity-card"><strong>Recent Activity:</strong><div class="activity-item">';
-                events.slice(0, 10).forEach(e => {
-                    const repo = e.repo || e.payload.repository_name;
-                    const desc = e.payload.description || 'Activity';
-                    const time = new Date(e.created).toLocaleDateString();
-                    html += `<div>${repo ? '<strong>' + repo + '</strong>' : ''} ${desc} — ${time}</div>`;
+                events.forEach(event => {
+                    const card = document.createElement('div');
+                    card.className = 'activity-card';
+                    card.innerHTML = `
+                        <div class="activity-item">
+                            <strong>${event.type}</strong>
+                            <span>${event.payload.repository_name || event.payload.name}</span>
+                        </div>
+                        <div class="activity-item">
+                            <span>${event.payload.commit_message || 'No message'}</span>
+                        </div>
+                    `;
+                    resultsDiv.appendChild(card);
                 });
-                html += '</div></div>';
-                document.getElementById('results').innerHTML = html;
-            } catch (err) {
-                document.getElementById('results').innerHTML = `<div style="color:#e94560">Error: ${err.message}</div>`;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('results').innerHTML = `<p style="color: #ff6b6b;">Error: ${error.message}</p>`;
             }
         }
     </script>
