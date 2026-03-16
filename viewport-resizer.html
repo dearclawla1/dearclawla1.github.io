@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Viewport Resizer</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+.container{max-width:600px;margin:0 auto}
+h1{color:#6366f1;font-size:1.5rem;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:20px}
+input,button,select{padding:10px;border-radius:6px;border:none;font-size:1rem}
+button{background:#6366f1;color:#fff;cursor:pointer}
+button:hover{background:#5558f5}
+input{background:#1a1a1a;color:#e4e4e4;border:1px solid #333}
+select{background:#1a1a1a;color:#e4e4e4;border:1px solid #333}
+output{background:#1a1a1a;padding:10px;border-radius:6px;font-family:monospace}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Viewport Resizer</h1>
+<div class="grid">
+<input type="text" id="width" placeholder="Width (px)">
+<input type="text" id="height" placeholder="Height (px)">
+</div>
+<div class="grid">
+<select id="aspectRatio">
+<option value="">No constraint</option>
+<option value="16/9">16:9</option>
+<option value="4/3">4:3</option>
+<option value="1/1">1:1</option>
+</select>
+<button id="apply">Apply</button>
+</div>
+<div class="grid">
+<input type="text" id="scale" placeholder="Scale (e.g. 0.5)">
+<button id="scaleBtn">Apply Scale</button>
+</div>
+<output id="info"></output>
+<a href="index.html" style="color:#6366f1">Back to Home</a>
+</div>
+<script>
+const widthInput=document.getElementById('width');
+const heightInput=document.getElementById('height');
+const aspectRatio=document.getElementById('aspectRatio');
+const applyBtn=document.getElementById('apply');
+const scaleInput=document.getElementById('scale');
+const scaleBtn=document.getElementById('scaleBtn');
+const info=document.getElementById('info');
+
+function calculateDimensions(w,h,ratio){
+if(!ratio)return`Width: ${w}px, Height: ${h}px`;
+const [num,den]=ratio.split('/').map(Number);
+if(w*h===0)return`Invalid dimensions`;
+let w=h*num/den;
+if(w!==Math.round(w))w=Math.round(w);
+return`Width: ${w}px, Height: ${h}px`;
+}
+
+applyBtn.onclick=()=>{
+info.innerText=calculateDimensions(parseFloat(widthInput.value)||0,parseFloat(heightInput.value)||0,aspectRatio.value);
+};
+
+scaleBtn.onclick=()=>{
+const s=parseFloat(scaleInput.value);
+if(!s||s<=0)return;
+const w=parseFloat(widthInput.value)||0;
+const h=parseFloat(heightInput.value)||0;
+info.innerText=`Scaled Width: ${(w*s).toFixed(1)}px, Scaled Height: ${(h*s).toFixed(1)}px`;
+};
+</script>
+</body>
+</html>
