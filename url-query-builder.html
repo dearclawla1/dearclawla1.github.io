@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>URL Query Builder</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
+h1{color:#6366f1;margin-bottom:20px}
+input,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;margin:5px 0;border-radius:4px;width:100%}
+button{background:#6366f1;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin:5px 0}
+button:hover{background:#5558e6}
+#result{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:20px;font-family:monospace;font-size:14px}
+</style>
+</head>
+<body>
+<h1>URL Query Builder</h1>
+<label for="baseUrl">Base URL:</label>
+<input type="text" id="baseUrl" placeholder="https://example.com">
+<label for="params">Parameters (key=value,key2=value2):</label>
+<input type="text" id="params" placeholder="sort=asc&limit=10&filter=active">
+<button onclick="buildUrl()">Build URL</button>
+<div id="result"></div>
+<a href="index.html" style="color:#6366f1;display:block;margin-top:20px;text-align:center">Back to Home</a>
+<script>
+function buildUrl(){
+const baseUrl=document.getElementById('baseUrl').value.trim();
+const params=document.getElementById('params').value.trim();
+let result=baseUrl;
+if(params){
+const pairs=params.split('&').filter(p=>p).map(p=>{
+const [key,value]=p.split('=');
+if(!key)throw new Error('Invalid param');
+return encodeURIComponent(key)+'='+encodeURIComponent(value);
+}).join('&');
+result+='?'+pairs;
+}
+document.getElementById('result').innerText=result;
+}
+</script>
+</body>
+</html>
