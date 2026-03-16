@@ -1,89 +1,203 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
-input,button,select{margin:5px;padding:8px;border:1px solid #6366f1;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
-button:hover{background:#6366f1}
-a{color:#6366f1;text-decoration:none}
-#output{margin-top:15px;padding:10px;background:#1a1a1a;border-radius:4px;min-height:50px}
-#endpoints{width:100%}
-.container{max-width:1200px;margin:0 auto}
-.endpoint-list{display:flex;flex-wrap:wrap;gap:10px}
-.endpoint-item{flex:1;min-width:200px;padding:10px;background:#1a1a1a;border:1px solid #6366f1;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
-.status-ok{color:#4ade80}
-.status-error{color:#f87171}
-.status-pending{color:#fbbf24}
-.clear-btn{background:#ef4444;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin-top:10px}
-.clear-btn:hover{background:#dc2626}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Status</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #0a0a0a;
+      color: #e4e4e4;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #6366f1;
+    }
+
+    .status {
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+      padding: 15px;
+      background-color: #1a1a1a;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+
+    .status.ok {
+      color: #4ade80;
+    }
+
+    .status.degraded {
+      color: #fbbf24;
+    }
+
+    .status.down {
+      color: #f87171;
+    }
+
+    .details {
+      font-size: 0.9rem;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .refresh-btn {
+      background-color: #6366f1;
+      color: #e4e4e4;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-top: 20px;
+    }
+
+    .refresh-btn:hover {
+      background-color: #4f46e5;
+    }
+
+    .refresh-btn:disabled {
+      background-color: #333;
+      cursor: not-allowed;
+    }
+
+    .error {
+      background-color: #7f1d1d;
+      border: 1px solid #991b1b;
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .container {
+        padding: 20px 10px;
+      }
+    }
+  </style>
 </head>
 <body>
-<h2>API Status Checker</h2>
-<div class="container">
-  <div id="endpoints"></div>
-  <div id="output">Checking...</div>
-  <button onclick="checkAll()">Check All</button>
-  <input type="text" id="urlInput" placeholder="Enter API URL (e.g., https://api.github.com)">
-  <button onclick="checkSingle()">Check Single</button>
-  <button onclick="reset()" class="clear-btn">Clear</button>
-</div>
+  <div class="container">
+    <h1>API Status</h1>
+    <div id="status-indicator" class="status loading">Checking status...</div>
+    <div id="status-details" class="details"></div>
+    <button id="refresh-btn" class="refresh-btn">Refresh</button>
+  </div>
 
-<script>
-const ENDPOINTS = [
-  { name: "GitHub API", url: "https://api.github.com" },
-  { name: "OpenAI API", url: "https://api.openai.com/v1" },
-  { name: "Stripe API", url: "https://api.stripe.com" },
-  { name: "Twilio API", url: "https://api.twilio.com" }
-];
+  <script>
+    const API_URL = 'https://api.example.com/status';
+    let isChecking = true;
 
-function checkAll() {
-  const output = document.getElementById("output");
-  output.innerHTML = "Checking all endpoints...<br>";
-  
-  ENDPOINTS.forEach(endpoint => {
-    fetch(endpoint.url, { method: "HEAD", timeout: 5000 })
-      .then(response => {
-        const status = response.status === 200 ? "OK" : `Error: ${response.status}`;
-        const statusClass = response.status === 200 ? "status-ok" : "status-error";
-        output.innerHTML += `<br>${endpoint.name}: ${status} (${endpoint.url}) <span class="${statusClass}"></span>`;
-      })
-      .catch(error => {
-        output.innerHTML += `<br>${endpoint.name}: ${error.message || "Failed"} (${endpoint.url})`;
-      });
-  });
-}
+    function updateStatus(status, message = '', error = false) {
+      const statusEl = document.getElementById('status-indicator');
+      const detailsEl = document.getElementById('status-details');
+      const refreshBtn = document.getElementById('refresh-btn');
 
-function checkSingle() {
-  const url = document.getElementById("urlInput").value.trim();
-  const output = document.getElementById("output");
-  
-  if (!url) {
-    output.innerHTML = "Error: Please enter a URL";
-    return;
-  }
-  
-  output.innerHTML = "Checking...";
-  
-  fetch(url, { method: "HEAD", timeout: 5000 })
-    .then(response => {
-      const status = response.status === 200 ? "OK" : `Error: ${response.status}`;
-      output.innerHTML = `${status} (${url})`;
-    })
-    .catch(error => {
-      output.innerHTML = `Error: ${error.message || "Failed"}`;
+      statusEl.innerHTML = '';
+      statusEl.className = 'status ' + (error ? 'error' : 'ok');
+
+      if (status === 'loading') {
+        statusEl.textContent = 'Checking status...';
+        statusEl.classList.add('loading');
+        detailsEl.textContent = '';
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = 'Checking...';
+      } else if (status === 'ok') {
+        statusEl.textContent = 'All systems operational';
+        statusEl.classList.remove('loading');
+        detailsEl.textContent = message;
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = 'Refresh';
+      } else if (status === 'degraded') {
+        statusEl.textContent = 'Some services are experiencing issues';
+        statusEl.classList.remove('loading');
+        detailsEl.textContent = message;
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = 'Refresh';
+      } else if (status === 'down') {
+        statusEl.textContent = 'API is currently unavailable';
+        statusEl.classList.remove('loading');
+        detailsEl.textContent = message;
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = 'Retry';
+      } else if (status === 'error') {
+        statusEl.textContent = 'Error checking status';
+        statusEl.classList.remove('loading');
+        detailsEl.textContent = error ? error : 'Unable to connect to API';
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = 'Retry';
+      }
+    }
+
+    async function checkStatus() {
+      updateStatus('loading');
+
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+
+        if (response.ok) {
+          if (data.status === 'operational') {
+            updateStatus('ok', data.message || 'All systems are operational');
+          } else if (data.status === 'degraded') {
+            updateStatus('degraded', data.message || 'Some services are degraded');
+          } else if (data.status === 'down') {
+            updateStatus('down', data.message || 'API is down');
+          }
+        } else {
+          updateStatus('error', response.statusText);
+        }
+      } catch (err) {
+        updateStatus('error', err.message);
+      }
+    }
+
+    document.getElementById('refresh-btn').addEventListener('click', checkStatus);
+
+    // Check status on page load
+    checkStatus();
+
+    // Keyboard shortcut: Enter to refresh
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !document.getElementById('refresh-btn').disabled) {
+        checkStatus();
+      }
     });
-}
 
-function reset() {
-  document.getElementById("output").innerHTML = "";
-  document.getElementById("urlInput").value = "";
-}
-
-// Add loading indicator
-document.getElementById("urlInput").value = "https://api.github.com";
-</script>
+    // Auto-refresh every 30 seconds
+    setInterval(checkStatus, 30000);
+  </script>
 </body>
 </html>
