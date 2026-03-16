@@ -5,26 +5,77 @@
 <title>URL Tester</title>
 <style>
 body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-input,button,select{padding:8px;margin:5px;border-radius:4px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4}
+input,button,select,textarea{padding:8px;margin:5px;border-radius:4px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4}
 button{background:#6366f1;color:#fff;border:none;cursor:pointer}
 button:hover{background:#5558e6}
 a{color:#6366f1;text-decoration:none}
+textarea{width:100%;min-height:60px;font-family:monospace;font-size:12px}
+.result-box{background:#1a1a1a;border:1px solid #333;padding:10px;border-radius:4px;min-height:100px;font-family:monospace;font-size:12px;white-space:pre-wrap}
+.method-select{width:120px}
 </style>
 </head>
 <body>
 <h1>URL Tester</h1>
 <p>Enter a URL to test:</p>
 <input type="text" id="urlInput" placeholder="https://example.com">
+<select id="methodSelect" class="method-select">
+  <option value="GET">GET</option>
+  <option value="POST">POST</option>
+  <option value="PUT">PUT</option>
+  <option value="DELETE">DELETE</option>
+  <option value="PATCH">PATCH</option>
+</select>
+<textarea id="bodyInput" placeholder="Request body (JSON, form data, etc.) - only for POST/PUT/PATCH"></textarea>
 <button onclick="testUrl()">Test</button>
 <div id="result"></div>
 <a href="index.html" style="color:#6366f1">Back to Home</a>
 <script>
 async function testUrl() {
   const url = document.getElementById('urlInput').value;
+  const method = document.getElementById('methodSelect').value;
+  const body = document.getElementById('bodyInput').value;
   const result = document.getElementById('result');
+  
+  // Only allow body for methods that support it
+  if (method === 'GET' || method === 'DELETE' || method === 'HEAD') {
+    document.getElementById('bodyInput').disabled = true;
+  } else {
+    document.getElementById('bodyInput').disabled = false;
+  }
+  
   try {
-    const response = await fetch(url);
-    result.innerHTML = `<strong>Status:</strong> ${response.status} | <strong>OK</strong>`;
+    const startTime = performance.now();
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: method === 'GET' || method === 'DELETE' || method === 'HEAD' ? null : body
+    });
+    const endTime = performance.now();
+    const duration = (endTime - startTime).toFixed(2);
+    
+    const statusText = response.statusText;
+    const status = response.status;
+    const contentType = response.headers.get('Content-Type') || 'N/A';
+    const location = response.headers.get('Location') || 'N/A';
+    
+    let resultHtml = `<strong>Status:</strong> ${status} ${statusText} | <strong>Time:</strong> ${duration}ms<br>`;
+    resultHtml += `<strong>Content-Type:</strong> ${contentType}<br>`;
+    
+    if (location !== 'N/A') {
+      resultHtml += `<strong>Redirects to:</strong> ${location}<br>`;
+    }
+    
+    // Try to read response body
+    try {
+      const text = await response.text();
+      resultHtml += `<strong>Response Body:</strong> ${text.substring(0, 500)}${text.length > 500 ? '...' : ''}`;
+    } catch (e) {
+      resultHtml += `<strong>Response Body:</strong> (empty or binary)`;
+    }
+    
+    result.innerHTML = resultHtml;
   } catch (e) {
     result.innerHTML = `<strong>Error:</strong> ${e.message}`;
   }
