@@ -1,552 +1,1047 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gwen Game - Word Puzzle Challenge</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #0a0a0a;
-      color: #e4e4e4;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .container {
-      max-width: 600px;
-      width: 100%;
-      background: #111;
-      border-radius: 16px;
-      padding: 30px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    }
-    h1 {
-      text-align: center;
-      color: #6366f1;
-      margin-bottom: 10px;
-      font-size: 2rem;
-    }
-    .subtitle {
-      text-align: center;
-      color: #888;
-      margin-bottom: 25px;
-      font-size: 0.95rem;
-    }
-    .game-area {
-      background: #1a1a1a;
-      border-radius: 12px;
-      padding: 25px;
-      margin-bottom: 20px;
-    }
-    .word-display {
-      font-size: 1.8rem;
-      letter-spacing: 8px;
-      text-align: center;
-      margin-bottom: 20px;
-      color: #e4e4e4;
-      font-family: 'Courier New', monospace;
-    }
-    .input-area {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    input[type="text"] {
-      flex: 1;
-      padding: 14px 18px;
-      font-size: 1.1rem;
-      border: 2px solid #333;
-      border-radius: 8px;
-      background: #1a1a1a;
-      color: #e4e4e4;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    input[type="text"]:focus {
-      border-color: #6366f1;
-    }
-    input[type="text"]::placeholder {
-      color: #666;
-    }
-    .btn {
-      padding: 14px 24px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-weight: 600;
-    }
-    .btn-primary {
-      background: #6366f1;
-      color: white;
-    }
-    .btn-primary:hover {
-      background: #5558e6;
-      transform: translateY(-2px);
-    }
-    .btn-secondary {
-      background: #333;
-      color: #e4e4e4;
-    }
-    .btn-secondary:hover {
-      background: #444;
-    }
-    .message {
-      text-align: center;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      font-weight: 500;
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .message.success {
-      background: rgba(107, 196, 88, 0.2);
-      color: #68d391;
-    }
-    .message.error {
-      background: rgba(225, 80, 80, 0.2);
-      color: #f87171;
-    }
-    .message.info {
-      background: rgba(99, 102, 241, 0.2);
-      color: #818cf8;
-    }
-    .stats {
-      display: flex;
-      justify-content: space-around;
-      padding: 20px;
-      background: #1a1a1a;
-      border-radius: 12px;
-      margin-bottom: 20px;
-    }
-    .stat-item {
-      text-align: center;
-    }
-    .stat-value {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #6366f1;
-    }
-    .stat-label {
-      font-size: 0.85rem;
-      color: #888;
-      margin-top: 5px;
-    }
-    .history {
-      max-height: 200px;
-      overflow-y: auto;
-      background: #1a1a1a;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .history-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 12px;
-      border-bottom: 1px solid #222;
-      font-size: 0.9rem;
-    }
-    .history-item:last-child {
-      border-bottom: none;
-    }
-    .history-item.correct {
-      color: #68d391;
-    }
-    .history-item.incorrect {
-      color: #f87171;
-    }
-    .history-word {
-      font-family: 'Courier New', monospace;
-      font-weight: 600;
-    }
-    .loading {
-      text-align: center;
-      padding: 20px;
-      color: #888;
-    }
-    .loading::after {
-      content: '';
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      margin-left: 10px;
-      border: 2px solid #6366f1;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .back-link {
-      display: block;
-      text-align: center;
-      margin-top: 20px;
-    }
-    .back-link a {
-      color: #6366f1;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .back-link a:hover {
-      text-decoration: underline;
-    }
-    .clear-btn {
-      background: transparent;
-      border: 1px solid #444;
-      color: #666;
-      padding: 8px 16px;
-      font-size: 0.8rem;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .clear-btn:hover {
-      border-color: #666;
-      color: #888;
-    }
-    .progress-bar {
-      height: 6px;
-      background: #222;
-      border-radius: 3px;
-      margin-bottom: 15px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6);
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    .level-indicator {
-      text-align: center;
-      color: #888;
-      font-size: 0.9rem;
-      margin-bottom: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Gwen's Realm</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;touch-action:none;user-select:none;font-family:'Segoe UI',system-ui,sans-serif}
+canvas{display:block}
+#ui{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
+#hud{position:absolute;top:10px;left:10px;color:#fff;font-size:14px;text-shadow:1px 1px 2px #000}
+#hud .bar{width:160px;height:14px;background:#222;border:1px solid #555;border-radius:3px;margin:3px 0;overflow:hidden}
+#hud .bar-fill{height:100%;transition:width 0.3s}
+#hud .hp-fill{background:linear-gradient(90deg,#dc2626,#ef4444)}
+#hud .xp-fill{background:linear-gradient(90deg,#eab308,#facc15)}
+#hud .mp-fill{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+#minimap{position:absolute;top:10px;right:10px;width:140px;height:140px;background:rgba(0,0,0,0.7);border:1px solid #555;border-radius:4px}
+#inventory{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:380px;max-width:90vw;background:rgba(10,10,30,0.95);border:1px solid #6366f1;border-radius:8px;padding:16px;display:none;pointer-events:auto;color:#e0e0e0;max-height:80vh;overflow-y:auto}
+#inventory h2{color:#6366f1;margin-bottom:12px;font-size:18px}
+.gear-slot{display:inline-block;width:52px;height:52px;background:#1a1a2e;border:1px solid #333;border-radius:4px;margin:3px;vertical-align:top;text-align:center;line-height:52px;font-size:11px;cursor:pointer;position:relative}
+.gear-slot.filled{border-color:#6366f1}
+.gear-slot .slot-label{position:absolute;bottom:-14px;left:0;right:0;font-size:9px;color:#888}
+.inv-item{display:inline-block;width:44px;height:44px;background:#1a1a2e;border:1px solid #333;border-radius:3px;margin:2px;text-align:center;line-height:44px;font-size:20px;cursor:pointer}
+.inv-item:hover{border-color:#6366f1}
+.rarity-common{border-color:#9ca3af}.rarity-uncommon{border-color:#22c55e}.rarity-rare{border-color:#3b82f6}.rarity-epic{border-color:#a855f7}.rarity-legendary{border-color:#f97316}
+#touch-left{position:absolute;bottom:20px;left:20px;width:120px;height:120px;pointer-events:auto;display:none}
+#touch-right{position:absolute;bottom:20px;right:20px;pointer-events:auto;display:none}
+.touch-btn{width:60px;height:60px;background:rgba(99,102,241,0.3);border:2px solid rgba(99,102,241,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:rgba(255,255,255,0.7);margin:4px}
+#class-select{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,5,15,0.97);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#e0e0e0}
+#class-select h1{color:#6366f1;font-size:32px;margin-bottom:8px}
+#class-select .subtitle{color:#888;margin-bottom:30px;font-size:14px}
+#class-select input{background:#1a1a2e;border:1px solid #6366f1;color:#e0e0e0;padding:10px 16px;border-radius:4px;font-size:16px;margin-bottom:20px;width:220px;text-align:center}
+.class-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.class-card{width:160px;padding:16px;background:#1a1a2e;border:2px solid #333;border-radius:8px;cursor:pointer;text-align:center;transition:border-color 0.2s}
+.class-card:hover{border-color:#6366f1}
+.class-card .icon{font-size:40px;margin-bottom:8px}
+.class-card h3{color:#6366f1;margin-bottom:4px}
+.class-card p{font-size:11px;color:#888}
+#death-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(20,0,0,0.9);z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;color:#e0e0e0}
+#death-screen h1{color:#dc2626;font-size:48px;margin-bottom:16px}
+#death-screen button{background:#6366f1;border:none;color:#fff;padding:12px 32px;border-radius:6px;font-size:16px;cursor:pointer;margin-top:16px}
+#zone-name{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:28px;font-weight:bold;text-shadow:0 0 20px rgba(99,102,241,0.8);opacity:0;transition:opacity 0.5s;pointer-events:none}
+#chat-box{position:absolute;bottom:55px;left:10px;pointer-events:auto;width:280px}
+#chat-messages{max-height:120px;overflow-y:auto;background:rgba(0,0,0,0.5);border-radius:4px;padding:4px 6px;font-size:11px;color:#ccc;margin-bottom:4px}
+#chat-messages div{padding:1px 0}
+#chat-input{width:100%;background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:4px 8px;border-radius:4px;font-size:12px;display:none}
+#mp-status{position:absolute;top:10px;left:50%;transform:translateX(-50%);color:#6366f1;font-size:11px;background:rgba(0,0,0,0.6);padding:2px 10px;border-radius:3px}
+#suggestion-box{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);pointer-events:auto;background:rgba(10,10,30,0.85);border:1px solid #6366f1;border-radius:6px;padding:8px 12px;display:flex;gap:6px;align-items:center}
+#suggestion-box input{background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:6px 10px;border-radius:4px;font-size:12px;width:200px}
+#suggestion-box button{background:#6366f1;border:none;color:#fff;padding:6px 12px;border-radius:4px;font-size:12px;cursor:pointer}
+#suggestion-box button:hover{background:#4f46e5}
+#suggestions-list{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);pointer-events:auto;background:rgba(10,10,30,0.9);border:1px solid #333;border-radius:6px;padding:8px;max-height:150px;overflow-y:auto;display:none;width:280px;font-size:11px;color:#ccc}
+.suggestion-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #222}
+.suggestion-item button{background:none;border:1px solid #6366f1;color:#6366f1;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>🧩 Gwen Game</h1>
-    <p class="subtitle">Word Puzzle Challenge - Guess the hidden word!</p>
-    
-    <div class="progress-bar">
-      <div class="progress-fill" id="progress"></div>
+<canvas id="game"></canvas>
+<div id="ui">
+  <div id="hud">
+    <div id="player-name" style="font-weight:bold;color:#6366f1"></div>
+    <div style="font-size:11px;color:#aaa">Lv.<span id="player-level">1</span> <span id="player-class"></span></div>
+    <div class="bar"><div class="bar-fill hp-fill" id="hp-bar" style="width:100%"></div></div>
+    <div class="bar"><div class="bar-fill mp-fill" id="mp-bar" style="width:100%"></div></div>
+    <div class="bar"><div class="bar-fill xp-fill" id="xp-bar" style="width:0%"></div></div>
+    <div style="font-size:11px;margin-top:4px">
+      <span id="zone-label" style="color:#6366f1"></span>
+      <span id="pvp-label" style="color:#dc2626;margin-left:8px;display:none">PVP</span>
     </div>
-    
-    <div class="level-indicator" id="levelIndicator">Level 1</div>
-    
-    <div class="game-area">
-      <div class="word-display" id="wordDisplay">_ _ _ _ _</div>
-      <div class="message" id="message"></div>
-      <div class="input-area">
-        <input type="text" id="guessInput" placeholder="Type your guess..." autocomplete="off">
-        <button class="btn btn-primary" id="guessBtn">Guess</button>
-      </div>
-      <div style="text-align: center;">
-        <button class="btn btn-secondary" id="hintBtn">💡 Get Hint</button>
-      </div>
-    </div>
-    
-    <div class="stats">
-      <div class="stat-item">
-        <div class="stat-value" id="guesses">0</div>
-        <div class="stat-label">Guesses</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="score">0</div>
-        <div class="stat-label">Score</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="streak">0</div>
-        <div class="stat-label">Streak</div>
-      </div>
-    </div>
-    
-    <div class="history">
-      <div style="color: #666; font-size: 0.85rem; margin-bottom: 10px;">Guess History:</div>
-      <div id="historyList"></div>
-    </div>
-    
-    <div style="text-align: center;">
-      <button class="clear-btn" id="clearHistory">Clear History</button>
-      <button class="clear-btn" id="resetGame">Reset Game</button>
-    </div>
-    
-    <div class="back-link">
-      <a href="index.html">Back to Home</a>
-    </div>
+    <div style="font-size:11px;color:#888;margin-top:2px">Gold: <span id="gold-display">0</span></div>
   </div>
-  
-  <script>
-    // Game state
-    let currentWord = '';
-    let guessedLetters = new Set();
-    let maxGuesses = 6;
-    let currentGuess = 0;
-    let score = 0;
-    let streak = 0;
-    let level = 1;
-    let gameActive = true;
-    
-    // Word bank (using randomuser for diverse names)
-    const wordBank = [
-      'python', 'javascript', 'html', 'css', 'react', 'node', 'vue', 'angular',
-      'docker', 'kubernetes', 'git', 'github', 'aws', 'azure', 'linux', 'unix',
-      'server', 'database', 'api', 'json', 'xml', 'yaml', 'dockerfile', 'nginx',
-      'terminal', 'command', 'script', 'function', 'variable', 'constant', 'array',
-      'object', 'string', 'number', 'boolean', 'null', 'undefined', 'promise',
-      'async', 'await', 'callback', 'event', 'listener', 'handler', 'module',
-      'package', 'import', 'export', 'require', 'include', 'filter', 'map',
-      'reduce', 'forEach', 'loop', 'iteration', 'sequence', 'pattern', 'match',
-      'search', 'replace', 'split', 'join', 'concat', 'slice', 'reverse',
-      'sort', 'length', 'index', 'position', 'offset', 'buffer', 'stream',
-      'socket', 'network', 'protocol', 'http', 'https', 'tcp', 'udp', 'ip',
-      'address', 'domain', 'host', 'port', 'path', 'file', 'folder', 'dir',
-      'root', 'home', 'user', 'admin', 'guest', 'system', 'kernel', 'process',
-      'thread', 'memory', 'storage', 'cache', 'disk', 'ram', 'cpu', 'gpu',
-      'hardware', 'software', 'application', 'program', 'tool', 'utility',
-      'feature', 'bug', 'error', 'exception', 'warning', 'alert', 'notice',
-      'info', 'debug', 'trace', 'log', 'console', 'browser', 'web', 'site',
-      'page', 'link', 'button', 'input', 'output', 'screen', 'display',
-      'monitor', 'keyboard', 'mouse', 'trackpad', 'touchscreen', 'tablet',
-      'phone', 'smartphone', 'computer', 'laptop', 'desktop', 'server',
-      'router', 'switch', 'firewall', 'gateway', 'bridge', 'hub', 'modem',
-      'antenna', 'cable', 'wire', 'fiber', 'satellite', 'cloud', 'data',
-      'cloud', 'server', 'cluster', 'grid', 'farm', 'pool', 'queue', 'stack',
-      'heap', 'buffer', 'cache', 'memory', 'storage', 'database', 'db', 'sql',
-      'nosql', 'mongodb', 'postgres', 'mysql', 'sqlite', 'redis', 'elasticsearch',
-      'kafka', 'rabbitmq', 'zeromq', 'grpc', 'rest', 'graphql', 'soap', 'xmlrpc',
-      'jsonrpc', 'api', 'endpoint', 'route', 'controller', 'model', 'view',
-      'middleware', 'plugin', 'extension', 'addon', 'theme', 'skin', 'style',
-      'template', 'layout', 'component', 'widget', 'element', 'node', 'tree',
-      'graph', 'network', 'mesh', 'cluster', 'grid', 'array', 'list', 'set',
-      'map', 'dictionary', 'hash', 'table', 'index', 'catalog', 'registry',
-      'config', 'settings', 'preferences', 'options', 'parameters', 'args',
-      'flags', 'switches', 'toggles', 'controls', 'inputs', 'outputs', 'ports'
-    ];
-    
-    // DOM elements
-    const wordDisplay = document.getElementById('wordDisplay');
-    const message = document.getElementById('message');
-    const guessInput = document.getElementById('guessInput');
-    const guessBtn = document.getElementById('guessBtn');
-    const hintBtn = document.getElementById('hintBtn');
-    const guessesEl = document.getElementById('guesses');
-    const scoreEl = document.getElementById('score');
-    const streakEl = document.getElementById('streak');
-    const historyList = document.getElementById('historyList');
-    const progressFill = document.getElementById('progress');
-    const levelIndicator = document.getElementById('levelIndicator');
-    const clearHistoryBtn = document.getElementById('clearHistory');
-    const resetGameBtn = document.getElementById('resetGame');
-    
-    // Initialize game
-    function initGame() {
-      currentWord = wordBank[Math.floor(Math.random() * wordBank.length)];
-      guessedLetters.clear();
-      currentGuess = 0;
-      gameActive = true;
-      currentWord = currentWord.toLowerCase();
-      
-      // Update UI
-      renderWord();
-      updateStats();
-      updateProgress();
-      clearHistory();
-      showMessage('Guess the word!', 'info');
-      guessInput.focus();
-      
-      // Load previous stats from localStorage
-      const savedStats = localStorage.getItem('gwenGameStats');
-      if (savedStats) {
-        const stats = JSON.parse(savedStats);
-        score = stats.score || 0;
-        streak = stats.streak || 0;
-        level = stats.level || 1;
-        updateStats();
-      }
-    }
-    
-    // Render the word with underscores
-    function renderWord() {
-      const display = currentWord.split('').map(letter => {
-        if (guessedLetters.has(letter)) {
-          return letter;
-        }
-        return '_';
-      }).join(' ');
-      wordDisplay.textContent = display;
-    }
-    
-    // Update statistics display
-    function updateStats() {
-      guessesEl.textContent = currentGuess;
-      scoreEl.textContent = score;
-      streakEl.textContent = streak;
-      levelIndicator.textContent = `Level ${level}`;
-    }
-    
-    // Update progress bar
-    function updateProgress() {
-      const progress = (currentGuess / maxGuesses) * 100;
-      progressFill.style.width = `${progress}%`;
-    }
-    
-    // Show message
-    function showMessage(text, type) {
-      message.textContent = text;
-      message.className = 'message ' + type;
-    }
-    
-    // Handle guess
-    function handleGuess() {
-      const guess = guessInput.value.trim().toLowerCase();
-      
-      if (!guess) {
-        showMessage('Please enter a word!', 'error');
-        return;
-      }
-      
-      if (guess.length !== currentWord.length) {
-        showMessage(`Word must be ${currentWord.length} letters!`, 'error');
-        return;
-      }
-      
-      // Check if word exists in bank
-      if (!wordBank.includes(guess)) {
-        showMessage('That word is not in our dictionary!', 'error');
-        return;
-      }
-      
-      // Check win/loss
-      if (guess === currentWord) {
-        handleWin();
-        return;
-      }
-      
-      // Check for letters
-      let foundLetters = false;
-      for (let i = 0; i < currentWord.length; i++) {
-        if (currentWord[i] === guess[i]) {
-          guessedLetters.add(guess[i]);
-          foundLetters = true;
-        }
-      }
-      
-      if (foundLetters) {
-        showMessage('Some letters are correct!', 'success');
+  <canvas id="minimap"></canvas>
+  <div id="inventory">
+    <h2>Inventory</h2>
+    <div id="gear-slots"></div>
+    <hr style="border-color:#333;margin:12px 0">
+    <div id="inv-items"></div>
+  </div>
+  <div id="touch-left"><canvas id="joystick-canvas" width="120" height="120"></canvas></div>
+  <div id="touch-right">
+    <div class="touch-btn" id="btn-attack">&#9876;</div>
+    <div class="touch-btn" id="btn-inv">&#128188;</div>
+  </div>
+  <div id="zone-name"></div>
+  <div id="mp-status"></div>
+  <div id="chat-box">
+    <div id="chat-messages"></div>
+    <input type="text" id="chat-input" placeholder="Press Enter to chat..." maxlength="100">
+  </div>
+  <div id="suggestion-box">
+    <input type="text" id="suggest-input" placeholder="Suggest a feature..." maxlength="200">
+    <button onclick="submitSuggestion()">Send</button>
+    <button onclick="toggleSuggestions()" style="background:#333">&#9650;</button>
+  </div>
+  <div id="suggestions-list"></div>
+</div>
+<div id="death-screen">
+  <h1>YOU DIED</h1>
+  <p>Lost some gold...</p>
+  <button onclick="respawn()">Respawn</button>
+</div>
+<div id="class-select">
+  <h1>Gwen's Realm</h1>
+  <div class="subtitle">A world that never stops growing</div>
+  <input type="text" id="name-input" placeholder="Enter your name" maxlength="16">
+  <div class="class-cards">
+    <div class="class-card" onclick="selectClass('warrior')"><div class="icon">&#9876;</div><h3>Warrior</h3><p>High HP, melee focus. Starts with Iron Sword.</p></div>
+    <div class="class-card" onclick="selectClass('ranger')"><div class="icon">&#127993;</div><h3>Ranger</h3><p>Fast, ranged focus. Starts with Short Bow.</p></div>
+    <div class="class-card" onclick="selectClass('mage')"><div class="icon">&#10024;</div><h3>Mage</h3><p>Powerful magic, low HP. Starts with Fire Staff.</p></div>
+  </div>
+</div>
+<script>
+// ============================================================
+// GAME DATA — Gwen evolves this section
+// Add new weapons, enemies, gear, zones by adding objects here
+// ============================================================
+const CLASSES = {
+  warrior: { name: 'Warrior', hp: 120, mp: 30, str: 12, dex: 6, int: 4, speed: 140, weapon: 'iron-sword', color: '#ef4444' },
+  ranger: { name: 'Ranger', hp: 80, mp: 50, str: 6, dex: 12, int: 6, speed: 170, weapon: 'short-bow', color: '#22c55e' },
+  mage: { name: 'Mage', hp: 60, mp: 100, str: 4, dex: 6, int: 14, speed: 150, weapon: 'fire-staff', color: '#6366f1' }
+};
+
+const WEAPONS = {
+  'wooden-sword': { name: 'Wooden Sword', type: 'melee', damage: 4, speed: 1.0, range: 38, rarity: 'common', icon: '&#9876;' },
+  'iron-sword': { name: 'Iron Sword', type: 'melee', damage: 10, speed: 0.9, range: 42, rarity: 'uncommon', icon: '&#9876;' },
+  'great-axe': { name: 'Great Axe', type: 'melee', damage: 18, speed: 0.5, range: 48, rarity: 'rare', icon: '&#129683;' },
+  'short-bow': { name: 'Short Bow', type: 'ranged', damage: 7, speed: 0.7, range: 220, projSpeed: 350, rarity: 'common', icon: '&#127993;' },
+  'longbow': { name: 'Longbow', type: 'ranged', damage: 14, speed: 0.55, range: 320, projSpeed: 450, rarity: 'rare', icon: '&#127993;' },
+  'fire-staff': { name: 'Fire Staff', type: 'magic', damage: 12, speed: 0.6, range: 250, projSpeed: 280, rarity: 'uncommon', icon: '&#10024;', element: 'fire', mpCost: 8 },
+  'ice-wand': { name: 'Ice Wand', type: 'magic', damage: 9, speed: 0.8, range: 200, projSpeed: 300, rarity: 'rare', icon: '&#10052;', element: 'ice', mpCost: 6 },
+  'shadow-dagger': { name: 'Shadow Dagger', type: 'melee', damage: 15, speed: 1.3, range: 32, rarity: 'epic', icon: '&#128481;' },
+  'thunder-staff': { name: 'Thunder Staff', type: 'magic', damage: 22, speed: 0.4, range: 280, projSpeed: 500, rarity: 'epic', icon: '&#9889;', element: 'lightning', mpCost: 15 }
+};
+
+const GEAR = {
+  'leather-cap': { name: 'Leather Cap', slot: 'head', def: 2, rarity: 'common', icon: '&#129506;' },
+  'iron-helm': { name: 'Iron Helm', slot: 'head', def: 5, hp: 10, rarity: 'uncommon', icon: '&#129506;' },
+  'leather-vest': { name: 'Leather Vest', slot: 'chest', def: 3, rarity: 'common', icon: '&#129507;' },
+  'chainmail': { name: 'Chainmail', slot: 'chest', def: 8, rarity: 'uncommon', icon: '&#129507;' },
+  'iron-plate': { name: 'Iron Plate', slot: 'chest', def: 14, hp: 20, rarity: 'rare', icon: '&#129507;' },
+  'leather-pants': { name: 'Leather Pants', slot: 'legs', def: 2, rarity: 'common', icon: '&#128086;' },
+  'iron-greaves': { name: 'Iron Greaves', slot: 'legs', def: 6, rarity: 'uncommon', icon: '&#128086;' },
+  'sandals': { name: 'Sandals', slot: 'boots', def: 1, speed: 10, rarity: 'common', icon: '&#128095;' },
+  'iron-boots': { name: 'Iron Boots', slot: 'boots', def: 4, rarity: 'uncommon', icon: '&#128095;' },
+  'swift-boots': { name: 'Swift Boots', slot: 'boots', def: 2, speed: 25, rarity: 'rare', icon: '&#128095;' },
+  'copper-ring': { name: 'Copper Ring', slot: 'ring', str: 2, rarity: 'common', icon: '&#128141;' },
+  'ruby-ring': { name: 'Ruby Ring', slot: 'ring', str: 5, hp: 15, rarity: 'rare', icon: '&#128141;' },
+  'mana-ring': { name: 'Mana Ring', slot: 'ring', int: 4, mp: 30, rarity: 'uncommon', icon: '&#128141;' },
+  'shadow-cloak': { name: 'Shadow Cloak', slot: 'chest', def: 10, dex: 6, rarity: 'epic', icon: '&#129507;' },
+  'dragon-helm': { name: 'Dragon Helm', slot: 'head', def: 12, str: 4, hp: 30, rarity: 'legendary', icon: '&#129506;' }
+};
+
+const ENEMIES = {
+  slime: { name: 'Slime', hp: 25, damage: 3, speed: 25, xp: 8, color: '#4ade80', size: 14, ai: 'wander', drops: [['leather-vest',0.08],['sandals',0.08],['copper-ring',0.05]] },
+  bat: { name: 'Cave Bat', hp: 15, damage: 5, speed: 70, xp: 6, color: '#a78bfa', size: 10, ai: 'swoop', drops: [['leather-cap',0.1]] },
+  skeleton: { name: 'Skeleton', hp: 50, damage: 10, speed: 40, xp: 20, color: '#e2e8f0', size: 16, ai: 'chase', drops: [['iron-sword',0.06],['iron-helm',0.08],['chainmail',0.05],['iron-greaves',0.06]] },
+  wolf: { name: 'Dark Wolf', hp: 40, damage: 12, speed: 65, xp: 18, color: '#94a3b8', size: 14, ai: 'chase', drops: [['swift-boots',0.04],['leather-pants',0.1]] },
+  golem: { name: 'Stone Golem', hp: 120, damage: 18, speed: 20, xp: 45, color: '#78716c', size: 24, ai: 'guard', drops: [['iron-plate',0.08],['iron-boots',0.1],['great-axe',0.04]] },
+  wraith: { name: 'Wraith', hp: 70, damage: 15, speed: 50, xp: 35, color: '#7c3aed', size: 18, ai: 'chase', drops: [['shadow-dagger',0.03],['shadow-cloak',0.02],['mana-ring',0.06]] },
+  dragon: { name: 'Elder Dragon', hp: 300, damage: 30, speed: 35, xp: 150, color: '#dc2626', size: 32, ai: 'boss', drops: [['dragon-helm',0.15],['thunder-staff',0.08],['longbow',0.1],['ruby-ring',0.1]] }
+};
+
+const ZONES = {
+  'starter-meadow': {
+    name: 'Starter Meadow', width: 50, height: 50, tileSize: 32,
+    bg: '#1a3a1a', wallColor: '#2d5a2d', floorColor: '#1a3a1a', accentColor: '#4ade80',
+    pvp: false, levelReq: 0,
+    enemies: [{ type: 'slime', count: 6, respawn: 20 }],
+    portals: [{ x: 49, y: 25, w: 1, h: 3, target: 'dark-forest', sx: 1, sy: 25, label: 'Dark Forest >' }],
+    obstacles: 0.04, trees: 0.06
+  },
+  'dark-forest': {
+    name: 'Dark Forest', width: 60, height: 60, tileSize: 32,
+    bg: '#0d1a0d', wallColor: '#1a2e1a', floorColor: '#0d1a0d', accentColor: '#94a3b8',
+    pvp: true, levelReq: 3,
+    enemies: [{ type: 'skeleton', count: 5, respawn: 25 }, { type: 'wolf', count: 4, respawn: 20 }],
+    portals: [
+      { x: 0, y: 25, w: 1, h: 3, target: 'starter-meadow', sx: 48, sy: 25, label: '< Meadow' },
+      { x: 59, y: 30, w: 1, h: 3, target: 'crystal-caves', sx: 1, sy: 15, label: 'Crystal Caves >' },
+      { x: 30, y: 0, w: 3, h: 1, target: 'cursed-ruins', sx: 15, sy: 28, label: '^ Cursed Ruins' }
+    ],
+    obstacles: 0.03, trees: 0.12
+  },
+  'crystal-caves': {
+    name: 'Crystal Caves', width: 50, height: 50, tileSize: 32,
+    bg: '#0d0d2e', wallColor: '#1a1a4e', floorColor: '#0d0d2e', accentColor: '#60a5fa',
+    pvp: false, levelReq: 5,
+    enemies: [{ type: 'bat', count: 6, respawn: 15 }, { type: 'golem', count: 3, respawn: 40 }],
+    portals: [{ x: 0, y: 15, w: 1, h: 3, target: 'dark-forest', sx: 58, sy: 30, label: '< Forest' }],
+    obstacles: 0.08, trees: 0
+  },
+  'cursed-ruins': {
+    name: 'Cursed Ruins', width: 70, height: 70, tileSize: 32,
+    bg: '#1a0a1a', wallColor: '#2e1a2e', floorColor: '#1a0a1a', accentColor: '#a855f7',
+    pvp: true, levelReq: 8,
+    enemies: [{ type: 'wraith', count: 5, respawn: 30 }, { type: 'skeleton', count: 4, respawn: 25 }, { type: 'dragon', count: 1, respawn: 120 }],
+    portals: [{ x: 15, y: 29, w: 3, h: 1, target: 'dark-forest', sx: 30, sy: 1, label: 'v Forest' }],
+    obstacles: 0.06, trees: 0.02
+  }
+};
+
+const RARITY_COLORS = { common: '#9ca3af', uncommon: '#22c55e', rare: '#3b82f6', epic: '#a855f7', legendary: '#f97316' };
+const XP_PER_LEVEL = lvl => Math.floor(50 * Math.pow(1.4, lvl - 1));
+const API_BASE = 'https://gwen-api.dearclawla1.workers.dev';
+
+// ============================================================
+// ENGINE
+// ============================================================
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const mmCanvas = document.getElementById('minimap');
+const mmCtx = mmCanvas.getContext('2d');
+const jCanvas = document.getElementById('joystick-canvas');
+const jCtx = jCanvas.getContext('2d');
+
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; mmCanvas.width = 140; mmCanvas.height = 140; }
+window.addEventListener('resize', resize); resize();
+
+const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || ('ontouchstart' in window && window.innerWidth < 1024);
+if (isMobile) { document.getElementById('touch-left').style.display = 'block'; document.getElementById('touch-right').style.display = 'block'; }
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let gameStarted = false, player = null, camera = { x: 0, y: 0 };
+let entities = [], projectiles = [], particles = [], floatingTexts = [], lootBags = [];
+let currentZone = null, zoneMap = null;
+let input = { x: 0, y: 0, attack: false, aimX: 0, aimY: 0 };
+let lastAttackTime = 0, inventoryOpen = false, deathScreenVisible = false;
+let remotePlayers = new Map(); // id -> { name, className, level, hp, maxHp, x, y, facing, color, weapon, hurtTimer, invincible }
+let ws = null, wsReady = false, lastSendTime = 0, myServerId = null, chatOpen = false;
+const PARTYKIT_HOST = 'gwens-realm.dearclawla1.partykit.dev';
+
+// ============================================================
+// PLAYER
+// ============================================================
+function createPlayer(name, className) {
+  const cls = CLASSES[className];
+  return {
+    name, className, level: 1, xp: 0, gold: 0,
+    x: 0, y: 0, vx: 0, vy: 0,
+    hp: cls.hp, maxHp: cls.hp, mp: cls.mp, maxMp: cls.mp,
+    str: cls.str, dex: cls.dex, int: cls.int,
+    baseSpeed: cls.speed, color: cls.color,
+    weapon: cls.weapon,
+    equipped: { head: null, chest: null, legs: null, boots: null, ring: null },
+    inventory: [], attackCooldown: 0, hurtTimer: 0, invincible: 0,
+    facing: { x: 0, y: 1 }, kills: 0, deaths: 0
+  };
+}
+
+function getPlayerStats() {
+  const p = player;
+  let def = 0, bonusHp = 0, bonusMp = 0, bonusStr = 0, bonusDex = 0, bonusInt = 0, bonusSpeed = 0;
+  for (const slot of Object.keys(p.equipped)) {
+    const itemId = p.equipped[slot];
+    if (!itemId) continue;
+    const g = GEAR[itemId];
+    if (!g) continue;
+    def += g.def || 0; bonusHp += g.hp || 0; bonusMp += g.mp || 0;
+    bonusStr += g.str || 0; bonusDex += g.dex || 0; bonusInt += g.int || 0; bonusSpeed += g.speed || 0;
+  }
+  const cls = CLASSES[p.className];
+  return { maxHp: cls.hp + bonusHp + (p.level - 1) * 8, maxMp: cls.mp + bonusMp + (p.level - 1) * 4,
+    str: p.str + bonusStr, dex: p.dex + bonusDex, int: p.int + bonusInt, def, speed: p.baseSpeed + bonusSpeed + p.dex * 1.5 };
+}
+
+function getWeaponDamage() {
+  const w = WEAPONS[player.weapon]; if (!w) return 5;
+  const stats = getPlayerStats();
+  let base = w.damage;
+  if (w.type === 'melee') base += stats.str * 0.8;
+  else if (w.type === 'ranged') base += stats.dex * 0.6;
+  else if (w.type === 'magic') base += stats.int * 1.0;
+  return Math.floor(base * (1 + player.level * 0.05));
+}
+
+// ============================================================
+// ZONE GENERATION
+// ============================================================
+function generateZone(zoneId) {
+  const z = ZONES[zoneId]; if (!z) return;
+  currentZone = z; zoneMap = [];
+  let seed = 0;
+  for (let i = 0; i < zoneId.length; i++) seed = ((seed << 5) - seed + zoneId.charCodeAt(i)) | 0;
+  const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  for (let y = 0; y < z.height; y++) {
+    zoneMap[y] = [];
+    for (let x = 0; x < z.width; x++) {
+      let tile = 0;
+      if (x === 0 || y === 0 || x === z.width - 1 || y === z.height - 1) {
+        let isPortal = false;
+        for (const p of z.portals) { if (x >= p.x && x < p.x + p.w && y >= p.y && y < p.y + p.h) { isPortal = true; break; } }
+        if (!isPortal) tile = 1;
       } else {
-        showMessage('No correct letters!', 'error');
+        const r = rng();
+        if (z.trees > 0 && r < z.trees) tile = 1;
+        else if (z.obstacles > 0 && r < z.obstacles + z.trees) tile = 1;
       }
-      
-      currentGuess++;
-      updateStats();
-      updateProgress();
-      renderWord();
-      guessInput.value = '';
-      guessInput.focus();
-      
-      // Check if game over
-      if (currentGuess >= maxGuesses) {
-        handleLoss();
+      zoneMap[y][x] = tile;
+    }
+  }
+  const cx = Math.floor(z.width / 2), cy = Math.floor(z.height / 2);
+  for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+    const ny = cy + dy, nx = cx + dx;
+    if (ny >= 0 && ny < z.height && nx >= 0 && nx < z.width) zoneMap[ny][nx] = 0;
+  }
+  for (const p of z.portals) for (let dy = -1; dy <= p.h; dy++) for (let dx = -1; dx <= p.w; dx++) {
+    const ny = p.y + dy, nx = p.x + dx;
+    if (ny >= 0 && ny < z.height && nx >= 0 && nx < z.width) zoneMap[ny][nx] = 0;
+  }
+  entities = [];
+  for (const esp of z.enemies) for (let i = 0; i < esp.count; i++) spawnEnemy(esp.type, z, rng);
+  showZoneName(z.name);
+  document.getElementById('zone-label').textContent = z.name;
+  document.getElementById('pvp-label').style.display = z.pvp ? 'inline' : 'none';
+}
+
+function spawnEnemy(type, zone, rng) {
+  const e = ENEMIES[type]; if (!e) return;
+  let ex, ey, tries = 0;
+  do { ex = Math.floor((rng ? rng() : Math.random()) * (zone.width - 4)) + 2; ey = Math.floor((rng ? rng() : Math.random()) * (zone.height - 4)) + 2; tries++; }
+  while (tries < 50 && zoneMap[ey] && zoneMap[ey][ex] !== 0);
+  entities.push({ type, ...e, id: Math.random().toString(36).slice(2),
+    x: ex * zone.tileSize + zone.tileSize / 2, y: ey * zone.tileSize + zone.tileSize / 2,
+    maxHp: e.hp, hp: e.hp, vx: 0, vy: 0, wanderAngle: Math.random() * Math.PI * 2,
+    wanderTimer: 0, attackCooldown: 0, respawnType: type, respawnTime: 0, dead: false });
+}
+
+// ============================================================
+// ZONE TRANSITIONS
+// ============================================================
+function checkPortals() {
+  if (!currentZone) return;
+  const ts = currentZone.tileSize;
+  const px = Math.floor(player.x / ts), py = Math.floor(player.y / ts);
+  for (const p of currentZone.portals) {
+    if (px >= p.x && px < p.x + p.w && py >= p.y && py < p.y + p.h) {
+      const tz = ZONES[p.target]; if (!tz) continue;
+      if (player.level < tz.levelReq) {
+        addFloatingText(player.x, player.y - 20, `Need Lv.${tz.levelReq}`, '#dc2626');
+        player.x -= player.facing.x * ts; player.y -= player.facing.y * ts; return;
+      }
+      enterZone(p.target, p.sx * tz.tileSize + tz.tileSize / 2, p.sy * tz.tileSize + tz.tileSize / 2); return;
+    }
+  }
+}
+
+function enterZone(zoneId, spawnX, spawnY) {
+  generateZone(zoneId);
+  player.x = spawnX || currentZone.width * currentZone.tileSize / 2;
+  player.y = spawnY || currentZone.height * currentZone.tileSize / 2;
+  projectiles = []; particles = []; lootBags = []; floatingTexts = [];
+  connectToZone(zoneId);
+}
+
+// ============================================================
+// COMBAT
+// ============================================================
+function playerAttack() {
+  const w = WEAPONS[player.weapon]; if (!w) return;
+  const now = performance.now() / 1000;
+  if (now - lastAttackTime < (1 / w.speed)) return;
+  if (w.mpCost && player.mp < w.mpCost) return;
+  if (w.mpCost) player.mp -= w.mpCost;
+  lastAttackTime = now;
+  sendAttack();
+  const fx = player.facing.x, fy = player.facing.y;
+  const len = Math.sqrt(fx * fx + fy * fy) || 1;
+  const dx = fx / len, dy = fy / len;
+  if (w.type === 'melee') {
+    const dmg = getWeaponDamage();
+    for (const e of entities) {
+      if (e.dead) continue;
+      const ex = e.x - player.x, ey = e.y - player.y;
+      const dist = Math.sqrt(ex * ex + ey * ey);
+      if (dist > w.range) continue;
+      const dot = (ex * dx + ey * dy) / dist;
+      if (dot < 0.4) continue;
+      damageEntity(e, dmg);
+    }
+    for (let i = 0; i < 5; i++) {
+      const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.2;
+      const dist = w.range * (0.5 + Math.random() * 0.5);
+      particles.push({ x: player.x + Math.cos(angle) * dist, y: player.y + Math.sin(angle) * dist,
+        vx: Math.cos(angle) * 30, vy: Math.sin(angle) * 30, life: 0.2, maxLife: 0.2, color: '#fff', size: 3 });
+    }
+  } else {
+    const dmg = getWeaponDamage();
+    const pColor = w.element === 'fire' ? '#ef4444' : w.element === 'ice' ? '#60a5fa' : w.element === 'lightning' ? '#fbbf24' : '#e2e8f0';
+    projectiles.push({ x: player.x + dx * 16, y: player.y + dy * 16, vx: dx * w.projSpeed, vy: dy * w.projSpeed,
+      damage: dmg, range: w.range, traveled: 0, owner: 'player', color: pColor, size: w.type === 'magic' ? 6 : 4, element: w.element || null });
+  }
+}
+
+function damageEntity(e, dmg) {
+  const finalDmg = Math.max(1, Math.floor(dmg * (0.8 + Math.random() * 0.4)));
+  e.hp -= finalDmg; e.hurtTimer = 0.15;
+  addFloatingText(e.x, e.y - e.size, `-${finalDmg}`, '#ef4444');
+  if (e.hp <= 0) killEnemy(e);
+}
+
+function killEnemy(e) {
+  e.dead = true;
+  e.respawnTime = performance.now() / 1000 + (ENEMIES[e.respawnType]?.respawn || 30) + Math.random() * 10;
+  player.xp += e.xp; player.kills++;
+  addFloatingText(e.x, e.y - 20, `+${e.xp} XP`, '#eab308');
+  const drops = ENEMIES[e.respawnType]?.drops || [];
+  for (const [itemId, chance] of drops) {
+    if (Math.random() < chance) {
+      lootBags.push({ x: e.x + (Math.random() - 0.5) * 20, y: e.y + (Math.random() - 0.5) * 20, itemId, timer: 30, bobPhase: Math.random() * Math.PI * 2 });
+    }
+  }
+  const goldAmt = Math.floor(e.xp * (0.5 + Math.random()));
+  if (goldAmt > 0) { player.gold += goldAmt; addFloatingText(e.x + 15, e.y - 10, `+${goldAmt}g`, '#fbbf24'); }
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    particles.push({ x: e.x, y: e.y, vx: Math.cos(angle) * (40 + Math.random() * 60), vy: Math.sin(angle) * (40 + Math.random() * 60),
+      life: 0.5, maxLife: 0.5, color: e.color, size: 3 });
+  }
+  checkLevelUp();
+}
+
+function checkLevelUp() {
+  let needed = XP_PER_LEVEL(player.level);
+  while (player.xp >= needed) {
+    player.xp -= needed; player.level++;
+    const stats = getPlayerStats();
+    player.maxHp = stats.maxHp; player.hp = player.maxHp; player.maxMp = stats.maxMp; player.mp = player.maxMp;
+    addFloatingText(player.x, player.y - 30, `LEVEL UP! Lv.${player.level}`, '#6366f1');
+    for (let i = 0; i < 20; i++) {
+      const angle = (i / 20) * Math.PI * 2;
+      particles.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 80, vy: Math.sin(angle) * 80, life: 0.8, maxLife: 0.8, color: '#6366f1', size: 4 });
+    }
+    needed = XP_PER_LEVEL(player.level);
+  }
+}
+
+function damagePlayer(amount) {
+  if (player.invincible > 0) return;
+  const stats = getPlayerStats();
+  const reduced = Math.max(1, Math.floor(amount * (1 - stats.def * 0.02)));
+  player.hp -= reduced; player.hurtTimer = 0.2; player.invincible = 0.5;
+  addFloatingText(player.x, player.y - 20, `-${reduced}`, '#dc2626');
+  if (player.hp <= 0) playerDeath();
+}
+
+function playerDeath() {
+  player.deaths++;
+  player.gold = Math.floor(player.gold * 0.9);
+  deathScreenVisible = true;
+  document.getElementById('death-screen').style.display = 'flex';
+}
+
+function respawn() {
+  deathScreenVisible = false;
+  document.getElementById('death-screen').style.display = 'none';
+  const stats = getPlayerStats();
+  player.hp = stats.maxHp; player.mp = stats.maxMp; player.invincible = 3;
+  enterZone('starter-meadow');
+}
+
+// ============================================================
+// LOOT
+// ============================================================
+function checkLootPickup() {
+  for (let i = lootBags.length - 1; i >= 0; i--) {
+    const b = lootBags[i];
+    const dx = player.x - b.x, dy = player.y - b.y;
+    if (dx * dx + dy * dy < 900) {
+      if (player.inventory.length >= 20) { addFloatingText(b.x, b.y - 10, 'Full!', '#dc2626'); continue; }
+      if (WEAPONS[b.itemId]) player.inventory.push({ id: b.itemId, type: 'weapon' });
+      else if (GEAR[b.itemId]) player.inventory.push({ id: b.itemId, type: 'gear' });
+      const item = WEAPONS[b.itemId] || GEAR[b.itemId];
+      if (item) addFloatingText(b.x, b.y - 10, item.name, RARITY_COLORS[item.rarity] || '#fff');
+      lootBags.splice(i, 1);
+    }
+  }
+}
+
+// ============================================================
+// ENEMY AI
+// ============================================================
+function updateEnemies(dt) {
+  const now = performance.now() / 1000;
+  for (const e of entities) {
+    if (e.dead) { if (now >= e.respawnTime) { e.dead = false; e.hp = e.maxHp; const z = currentZone; let ex, ey, tries = 0;
+      do { ex = Math.floor(Math.random() * (z.width - 4)) + 2; ey = Math.floor(Math.random() * (z.height - 4)) + 2; tries++; }
+      while (tries < 30 && zoneMap[ey] && zoneMap[ey][ex] !== 0);
+      e.x = ex * z.tileSize + z.tileSize / 2; e.y = ey * z.tileSize + z.tileSize / 2; } continue; }
+    e.hurtTimer = Math.max(0, (e.hurtTimer || 0) - dt);
+    const dx = player.x - e.x, dy = player.y - e.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (e.ai === 'wander') {
+      e.wanderTimer -= dt;
+      if (dist < 150) { e.vx = (dx / dist) * e.speed; e.vy = (dy / dist) * e.speed; }
+      else if (e.wanderTimer <= 0) { e.wanderAngle += (Math.random() - 0.5) * 2; e.wanderTimer = 1 + Math.random() * 2;
+        e.vx = Math.cos(e.wanderAngle) * e.speed * 0.4; e.vy = Math.sin(e.wanderAngle) * e.speed * 0.4; }
+    } else if (e.ai === 'chase') {
+      if (dist < 300) { e.vx = (dx / dist) * e.speed; e.vy = (dy / dist) * e.speed; } else { e.vx *= 0.9; e.vy *= 0.9; }
+    } else if (e.ai === 'swoop') {
+      if (dist < 200) { const angle = Math.atan2(dy, dx) + 0.05; e.vx = Math.cos(angle) * e.speed; e.vy = Math.sin(angle) * e.speed;
+        if (dist < 60) { e.vx = (dx / dist) * e.speed * 1.5; e.vy = (dy / dist) * e.speed * 1.5; } }
+      else { e.wanderTimer -= dt; if (e.wanderTimer <= 0) { e.wanderAngle += (Math.random() - 0.5) * 3; e.wanderTimer = 0.5 + Math.random(); }
+        e.vx = Math.cos(e.wanderAngle) * e.speed; e.vy = Math.sin(e.wanderAngle) * e.speed; }
+    } else if (e.ai === 'guard') {
+      if (dist < 100) { e.vx = (dx / dist) * e.speed; e.vy = (dy / dist) * e.speed; } else { e.vx *= 0.85; e.vy *= 0.85; }
+    } else if (e.ai === 'boss') {
+      if (dist < 400) { e.vx = (dx / dist) * e.speed; e.vy = (dy / dist) * e.speed;
+        if (dist < 200 && Math.random() < 0.005) { e.vx = (dx / dist) * e.speed * 3; e.vy = (dy / dist) * e.speed * 3; } }
+      else { e.vx *= 0.9; e.vy *= 0.9; }
+    }
+    moveWithCollision(e, dt);
+    if (!e.dead && dist < e.size + 14) { e.attackCooldown -= dt; if (e.attackCooldown <= 0) { damagePlayer(e.damage); e.attackCooldown = 1.0; } }
+  }
+}
+
+// ============================================================
+// COLLISION
+// ============================================================
+function moveWithCollision(ent, dt) {
+  if (!currentZone || !zoneMap) return;
+  const ts = currentZone.tileSize;
+  const newX = ent.x + ent.vx * dt, newY = ent.y + ent.vy * dt;
+  const tileX = Math.floor(newX / ts), tileY = Math.floor(ent.y / ts);
+  if (tileX >= 0 && tileX < currentZone.width && tileY >= 0 && tileY < currentZone.height && zoneMap[tileY][tileX] === 0) ent.x = newX;
+  const tileX2 = Math.floor(ent.x / ts), tileY2 = Math.floor(newY / ts);
+  if (tileX2 >= 0 && tileX2 < currentZone.width && tileY2 >= 0 && tileY2 < currentZone.height && zoneMap[tileY2][tileX2] === 0) ent.y = newY;
+  ent.x = Math.max(12, Math.min(currentZone.width * ts - 12, ent.x));
+  ent.y = Math.max(12, Math.min(currentZone.height * ts - 12, ent.y));
+}
+
+// ============================================================
+// PROJECTILES
+// ============================================================
+function updateProjectiles(dt) {
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i];
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.traveled += Math.sqrt(p.vx * p.vx + p.vy * p.vy) * dt;
+    const ts = currentZone.tileSize;
+    const tx = Math.floor(p.x / ts), ty = Math.floor(p.y / ts);
+    if (tx < 0 || ty < 0 || tx >= currentZone.width || ty >= currentZone.height || (zoneMap[ty] && zoneMap[ty][tx] !== 0)) { projectiles.splice(i, 1); continue; }
+    if (p.traveled > p.range) { projectiles.splice(i, 1); continue; }
+    if (p.owner === 'player') {
+      for (const e of entities) {
+        if (e.dead) continue;
+        const dx = p.x - e.x, dy = p.y - e.y;
+        if (dx * dx + dy * dy < (e.size + p.size) * (e.size + p.size)) {
+          damageEntity(e, p.damage); projectiles.splice(i, 1);
+          for (let j = 0; j < 4; j++) particles.push({ x: p.x, y: p.y, vx: (Math.random() - 0.5) * 80, vy: (Math.random() - 0.5) * 80,
+            life: 0.3, maxLife: 0.3, color: p.color, size: 2 });
+          break;
+        }
       }
     }
-    
-    // Handle win
-    function handleWin() {
-      gameActive = false;
-      score += 100 + (streak * 10);
-      streak = 0;
-      level++;
-      
-      // Save progress
-      const stats = {
-        score,
-        streak,
-        level
-      };
-      localStorage.setItem('gwenGameStats', JSON.stringify(stats));
-      
-      showMessage(`🎉 Correct! Word was: ${currentWord}`, 'success');
-      renderWord();
-      
-      // Show next word after delay
-      setTimeout(() => {
-        initGame();
-      }, 2000);
-    }
-    
-    // Handle loss
-    function handleLoss() {
-      gameActive = false;
-      showMessage(`❌ Game Over! Word was: ${currentWord}`, 'error');
-      renderWord();
-      
-      // Show next word after delay
-      setTimeout(() => {
-        initGame();
-      }, 3000);
-    }
-    
-    // Get hint
-    function getHint() {
-      const hint = currentWord.charAt(0);
-      showMessage(`Hint: Word starts with "${hint}"`, 'info');
-    }
-    
-    // Clear history
-    function clearHistory() {
-      historyList.innerHTML = '';
-    }
-    
-    // Add history item
-    function addHistoryItem(guess, correct) {
-      const item = document.createElement('div');
-      item.className = 'history-item ' + (correct ? 'correct' : 'incorrect');
-      item.innerHTML = `
-        <span class="history-word">${guess}</span>
-        <span>${correct ? '✓' : '✗'}</span>
-      `;
-      historyList.appendChild(item);
-    }
-    
-    // Event listeners
-    guessBtn.addEventListener('click', handleGuess);
-    hintBtn.addEventListener('click', getHint);
-    clearHistoryBtn.addEventListener('click', clearHistory);
-    resetGameBtn.addEventListener('click', () => {
-      localStorage.removeItem('gwenGameStats');
-      initGame();
-    });
-    
-    guessInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        handleGuess();
+  }
+}
+
+// ============================================================
+// PARTICLES & TEXT
+// ============================================================
+function addFloatingText(x, y, text, color) { floatingTexts.push({ x, y, text, color, life: 1.2, maxLife: 1.2 }); }
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.95; p.vy *= 0.95; p.life -= dt; if (p.life <= 0) particles.splice(i, 1); }
+  for (let i = floatingTexts.length - 1; i >= 0; i--) { const t = floatingTexts[i]; t.y -= 30 * dt; t.life -= dt; if (t.life <= 0) floatingTexts.splice(i, 1); }
+}
+
+// ============================================================
+// INPUT
+// ============================================================
+const keys = {};
+window.addEventListener('keydown', e => { if (chatOpen) return; keys[e.key.toLowerCase()] = true; if (e.key.toLowerCase() === 'i') toggleInventory(); if (e.key === 'Escape' && inventoryOpen) toggleInventory(); });
+window.addEventListener('keyup', e => { if (chatOpen) return; keys[e.key.toLowerCase()] = false; });
+canvas.addEventListener('mousedown', e => { if (!inventoryOpen) input.attack = true; });
+canvas.addEventListener('mouseup', () => { input.attack = false; });
+canvas.addEventListener('mousemove', e => { input.aimX = e.clientX; input.aimY = e.clientY; });
+
+let joystickTouch = null, joystickCenter = { x: 60, y: 60 }, joystickPos = { x: 0, y: 0 };
+document.getElementById('touch-left').addEventListener('touchstart', e => { e.preventDefault(); const t = e.touches[0]; const rect = e.currentTarget.getBoundingClientRect();
+  joystickTouch = t.identifier; joystickCenter = { x: t.clientX - rect.left, y: t.clientY - rect.top }; }, { passive: false });
+document.addEventListener('touchmove', e => { for (const t of e.changedTouches) { if (t.identifier === joystickTouch) {
+  const rect = document.getElementById('touch-left').getBoundingClientRect();
+  const dx = t.clientX - rect.left - joystickCenter.x, dy = t.clientY - rect.top - joystickCenter.y;
+  const dist = Math.sqrt(dx * dx + dy * dy), maxDist = 40;
+  if (dist > 0) { joystickPos.x = (dx / dist) * Math.min(dist, maxDist) / maxDist; joystickPos.y = (dy / dist) * Math.min(dist, maxDist) / maxDist; }
+} } }, { passive: false });
+document.addEventListener('touchend', e => { for (const t of e.changedTouches) { if (t.identifier === joystickTouch) { joystickTouch = null; joystickPos = { x: 0, y: 0 }; } } });
+document.getElementById('btn-attack').addEventListener('touchstart', e => { e.preventDefault(); input.attack = true; }, { passive: false });
+document.getElementById('btn-attack').addEventListener('touchend', () => { input.attack = false; });
+document.getElementById('btn-inv').addEventListener('touchstart', e => { e.preventDefault(); toggleInventory(); }, { passive: false });
+
+function processInput() {
+  input.x = 0; input.y = 0;
+  if (keys['w'] || keys['arrowup']) input.y = -1;
+  if (keys['s'] || keys['arrowdown']) input.y = 1;
+  if (keys['a'] || keys['arrowleft']) input.x = -1;
+  if (keys['d'] || keys['arrowright']) input.x = 1;
+  if (Math.abs(joystickPos.x) > 0.1 || Math.abs(joystickPos.y) > 0.1) { input.x = joystickPos.x; input.y = joystickPos.y; }
+  if (isMobile) { if (Math.abs(input.x) > 0.1 || Math.abs(input.y) > 0.1) { player.facing.x = input.x; player.facing.y = input.y; } }
+  else { const aimDx = input.aimX - W / 2, aimDy = input.aimY - H / 2; const aimLen = Math.sqrt(aimDx * aimDx + aimDy * aimDy);
+    if (aimLen > 5) { player.facing.x = aimDx / aimLen; player.facing.y = aimDy / aimLen; } }
+}
+
+// ============================================================
+// INVENTORY UI
+// ============================================================
+function toggleInventory() { inventoryOpen = !inventoryOpen; document.getElementById('inventory').style.display = inventoryOpen ? 'block' : 'none'; if (inventoryOpen) renderInventory(); }
+
+function renderInventory() {
+  const slotsDiv = document.getElementById('gear-slots'), itemsDiv = document.getElementById('inv-items');
+  const slotNames = ['head', 'chest', 'legs', 'boots', 'ring'];
+  let slotsHtml = '<div style="margin-bottom:8px;font-size:12px;color:#888">Equipped</div>';
+  const w = WEAPONS[player.weapon];
+  slotsHtml += `<div class="gear-slot filled" style="border-color:${RARITY_COLORS[w?.rarity]||'#333'}" title="${w?.name||'None'}"><span>${w?.icon||'?'}</span><span class="slot-label">Weapon</span></div>`;
+  for (const s of slotNames) {
+    const itemId = player.equipped[s]; const g = itemId ? GEAR[itemId] : null;
+    slotsHtml += `<div class="gear-slot ${g?'filled':''}" style="border-color:${g?RARITY_COLORS[g.rarity]||'#333':'#333'}" onclick="unequipGear('${s}')" title="${g?.name||s}"><span>${g?.icon||''}</span><span class="slot-label">${s}</span></div>`;
+  }
+  slotsDiv.innerHTML = slotsHtml;
+  let itemsHtml = `<div style="margin-bottom:8px;font-size:12px;color:#888">Backpack (${player.inventory.length}/20)</div>`;
+  player.inventory.forEach((item, idx) => {
+    const data = item.type === 'weapon' ? WEAPONS[item.id] : GEAR[item.id];
+    if (!data) return;
+    itemsHtml += `<div class="inv-item rarity-${data.rarity}" onclick="equipItem(${idx})" title="${data.name}">${data.icon || '?'}</div>`;
+  });
+  itemsDiv.innerHTML = itemsHtml;
+}
+
+function equipItem(idx) {
+  const item = player.inventory[idx]; if (!item) return;
+  if (item.type === 'weapon') { const old = player.weapon; player.weapon = item.id; player.inventory.splice(idx, 1); if (old) player.inventory.push({ id: old, type: 'weapon' }); }
+  else if (item.type === 'gear') { const g = GEAR[item.id]; if (!g) return; const old = player.equipped[g.slot]; player.equipped[g.slot] = item.id;
+    player.inventory.splice(idx, 1); if (old) player.inventory.push({ id: old, type: 'gear' });
+    const stats = getPlayerStats(); player.maxHp = stats.maxHp; player.maxMp = stats.maxMp; }
+  renderInventory();
+}
+
+function unequipGear(slot) {
+  const itemId = player.equipped[slot]; if (!itemId) return;
+  if (player.inventory.length >= 20) { addFloatingText(player.x, player.y - 20, 'Full!', '#dc2626'); return; }
+  player.inventory.push({ id: itemId, type: 'gear' }); player.equipped[slot] = null;
+  const stats = getPlayerStats(); player.maxHp = stats.maxHp; player.maxMp = stats.maxMp; renderInventory();
+}
+
+// ============================================================
+// SUGGESTIONS (player feedback to Gwen)
+// ============================================================
+let suggestionsVisible = false;
+function submitSuggestion() {
+  const inp = document.getElementById('suggest-input');
+  const text = inp.value.trim(); if (!text || text.length < 5) return;
+  fetch(`${API_BASE}/api/suggestions`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, game: 'realm' }) }).then(() => { inp.value = ''; addFloatingText(player.x, player.y - 30, 'Suggestion sent!', '#6366f1'); }).catch(() => {});
+}
+function toggleSuggestions() {
+  suggestionsVisible = !suggestionsVisible;
+  const list = document.getElementById('suggestions-list');
+  list.style.display = suggestionsVisible ? 'block' : 'none';
+  if (suggestionsVisible) loadSuggestions();
+}
+function loadSuggestions() {
+  fetch(`${API_BASE}/api/suggestions?limit=10`).then(r => r.json()).then(data => {
+    const items = data.results || data || [];
+    const list = document.getElementById('suggestions-list');
+    if (items.length === 0) { list.innerHTML = '<div style="color:#888;padding:4px">No suggestions yet</div>'; return; }
+    list.innerHTML = items.map(s => {
+      const d = typeof s.data === 'string' ? JSON.parse(s.data) : s.data;
+      return `<div class="suggestion-item"><span>${d.text || ''}</span><button onclick="voteSuggestion('${s.id}')">&#9650; ${d.votes || 0}</button></div>`;
+    }).join('');
+  }).catch(() => {});
+}
+function voteSuggestion(id) { fetch(`${API_BASE}/api/suggestions/vote/${id}`, { method: 'POST' }).then(() => loadSuggestions()).catch(() => {}); }
+
+// ============================================================
+// MULTIPLAYER NETWORKING
+// ============================================================
+function connectToZone(zoneId) {
+  if (ws) { ws.close(); ws = null; wsReady = false; }
+  remotePlayers.clear();
+  const url = `wss://${PARTYKIT_HOST}/party/${zoneId}`;
+  document.getElementById('mp-status').textContent = 'Connecting...';
+  ws = new WebSocket(url);
+  ws.onopen = () => {
+    wsReady = true;
+    document.getElementById('mp-status').textContent = '';
+    ws.send(JSON.stringify({ type: 'join', player: {
+      id: myServerId || undefined, name: player.name, className: player.className,
+      level: player.level, hp: player.hp, maxHp: getPlayerStats().maxHp,
+      x: player.x, y: player.y, facing: player.facing, color: player.color,
+      weapon: player.weapon, zone: zoneId, lastUpdate: Date.now()
+    }}));
+  };
+  ws.onmessage = (ev) => { handleServerMessage(ev.data); };
+  ws.onclose = () => { wsReady = false; document.getElementById('mp-status').textContent = 'Disconnected'; };
+  ws.onerror = () => { wsReady = false; };
+}
+
+function handleServerMessage(raw) {
+  let msg;
+  try { msg = JSON.parse(raw); } catch { return; }
+  switch (msg.type) {
+    case 'state':
+      myServerId = msg.you;
+      for (const [id, p] of Object.entries(msg.players)) {
+        if (id === myServerId) continue;
+        remotePlayers.set(id, { ...p, hurtTimer: 0, invincible: 0, targetX: p.x, targetY: p.y });
       }
-    });
-    
-    // Initialize on load
-    initGame();
-    
-    // Usage tracking
-    fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
-        params: [location.pathname.split('/').pop(), 'load', new Date().toISOString()]
-      })
-    }).catch(() => {});
-  </script>
+      updateMpStatus();
+      break;
+    case 'player-join':
+      if (msg.player.id === myServerId) break;
+      remotePlayers.set(msg.player.id, { ...msg.player, hurtTimer: 0, invincible: 0, targetX: msg.player.x, targetY: msg.player.y });
+      addChatMessage(`${msg.player.name} joined`, '#6366f1');
+      updateMpStatus();
+      break;
+    case 'player-leave':
+      { const rp = remotePlayers.get(msg.id);
+        if (rp) addChatMessage(`${rp.name} left`, '#888');
+        remotePlayers.delete(msg.id); }
+      updateMpStatus();
+      break;
+    case 'player-move':
+      { const rp = remotePlayers.get(msg.id);
+        if (rp) { rp.targetX = msg.x; rp.targetY = msg.y; rp.facing = msg.facing; } }
+      break;
+    case 'player-attack':
+      { const rp = remotePlayers.get(msg.id);
+        if (rp) { rp.facing = msg.facing;
+          // Show attack visual for remote player
+          const w = WEAPONS[msg.weapon];
+          if (w && w.type === 'melee') {
+            const len = Math.sqrt(msg.facing.x * msg.facing.x + msg.facing.y * msg.facing.y) || 1;
+            const dx = msg.facing.x / len, dy = msg.facing.y / len;
+            for (let i = 0; i < 3; i++) {
+              const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.0;
+              const dist = (w.range || 40) * (0.5 + Math.random() * 0.5);
+              particles.push({ x: rp.x + Math.cos(angle) * dist, y: rp.y + Math.sin(angle) * dist,
+                vx: Math.cos(angle) * 20, vy: Math.sin(angle) * 20, life: 0.15, maxLife: 0.15, color: '#ccc', size: 2 });
+            }
+          }
+        } }
+      break;
+    case 'projectile':
+      { const p = msg.proj;
+        if (p.ownerId !== myServerId) {
+          projectiles.push({ x: p.x, y: p.y, vx: p.vx, vy: p.vy, damage: p.damage, range: p.range,
+            traveled: p.traveled || 0, owner: 'remote', ownerId: p.ownerId, color: p.color, size: p.size });
+        } }
+      break;
+    case 'player-damage':
+      if (msg.id === myServerId) {
+        player.hp = msg.hp; player.hurtTimer = 0.2; player.invincible = 0.5;
+        addFloatingText(player.x, player.y - 20, `-${msg.damage}`, '#dc2626');
+        if (player.hp <= 0) playerDeath();
+      } else {
+        const rp = remotePlayers.get(msg.id);
+        if (rp) { rp.hp = msg.hp; rp.hurtTimer = 0.2;
+          addFloatingText(rp.x, rp.y - 20, `-${msg.damage}`, '#ef4444'); }
+      }
+      break;
+    case 'player-death':
+      if (msg.id === myServerId) {
+        const killer = remotePlayers.get(msg.killerId);
+        addChatMessage(`Killed by ${killer?.name || 'unknown'}!`, '#dc2626');
+        playerDeath();
+      } else {
+        const rp = remotePlayers.get(msg.id);
+        if (rp) { rp.hp = 0; addChatMessage(`${rp.name} was slain!`, '#dc2626'); }
+      }
+      break;
+    case 'chat':
+      if (msg.id !== myServerId) addChatMessage(`${msg.name}: ${msg.text}`, '#e0e0e0');
+      break;
+    case 'pong':
+      document.getElementById('mp-status').textContent = `${msg.playerCount} online`;
+      break;
+  }
+}
+
+function sendMove() {
+  if (!wsReady || !ws) return;
+  const now = Date.now();
+  if (now - lastSendTime < 50) return; // 20 updates/sec max
+  lastSendTime = now;
+  ws.send(JSON.stringify({ type: 'move', x: player.x, y: player.y, facing: player.facing }));
+}
+
+function sendAttack() {
+  if (!wsReady || !ws) return;
+  const w = WEAPONS[player.weapon]; if (!w) return;
+  ws.send(JSON.stringify({ type: 'attack', facing: player.facing, weapon: player.weapon, damage: getWeaponDamage() }));
+  // For ranged/magic, also send projectile
+  if (w.type !== 'melee') {
+    const fx = player.facing.x, fy = player.facing.y;
+    const len = Math.sqrt(fx * fx + fy * fy) || 1;
+    const dx = fx / len, dy = fy / len;
+    const pColor = w.element === 'fire' ? '#ef4444' : w.element === 'ice' ? '#60a5fa' : w.element === 'lightning' ? '#fbbf24' : '#e2e8f0';
+    ws.send(JSON.stringify({ type: 'projectile', proj: {
+      id: Math.random().toString(36).slice(2), ownerId: myServerId,
+      x: player.x + dx * 16, y: player.y + dy * 16, vx: dx * w.projSpeed, vy: dy * w.projSpeed,
+      damage: getWeaponDamage(), range: w.range, traveled: 0, color: pColor, size: w.type === 'magic' ? 6 : 4
+    }}));
+  }
+}
+
+function sendHitPlayer(targetId, damage) {
+  if (!wsReady || !ws) return;
+  ws.send(JSON.stringify({ type: 'hit-player', targetId, damage }));
+}
+
+function sendChat(text) {
+  if (!wsReady || !ws) return;
+  ws.send(JSON.stringify({ type: 'chat', text }));
+  addChatMessage(`${player.name}: ${text}`, '#e0e0e0');
+}
+
+function sendPing() { if (wsReady && ws) ws.send(JSON.stringify({ type: 'ping' })); }
+setInterval(sendPing, 5000);
+
+function updateMpStatus() {
+  const count = remotePlayers.size + 1;
+  document.getElementById('mp-status').textContent = `${count} in zone`;
+}
+
+function updateRemotePlayers(dt) {
+  for (const [, rp] of remotePlayers) {
+    // Interpolate position smoothly
+    rp.x += (rp.targetX - rp.x) * Math.min(1, dt * 10);
+    rp.y += (rp.targetY - rp.y) * Math.min(1, dt * 10);
+    rp.hurtTimer = Math.max(0, (rp.hurtTimer || 0) - dt);
+    rp.invincible = Math.max(0, (rp.invincible || 0) - dt);
+  }
+}
+
+function checkPvpHits() {
+  if (!currentZone?.pvp) return;
+  // Check local projectiles hitting remote players
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i];
+    if (p.owner !== 'player') continue;
+    for (const [id, rp] of remotePlayers) {
+      const dx = p.x - rp.x, dy = p.y - rp.y;
+      if (dx * dx + dy * dy < (14 + p.size) * (14 + p.size)) {
+        sendHitPlayer(id, p.damage);
+        projectiles.splice(i, 1);
+        for (let j = 0; j < 4; j++) particles.push({ x: p.x, y: p.y, vx: (Math.random() - 0.5) * 80, vy: (Math.random() - 0.5) * 80,
+          life: 0.3, maxLife: 0.3, color: p.color, size: 2 });
+        break;
+      }
+    }
+  }
+  // Check melee hits on remote players
+  if (input.attack && WEAPONS[player.weapon]?.type === 'melee') {
+    const w = WEAPONS[player.weapon];
+    const fx = player.facing.x, fy = player.facing.y;
+    const len = Math.sqrt(fx * fx + fy * fy) || 1;
+    const ndx = fx / len, ndy = fy / len;
+    for (const [id, rp] of remotePlayers) {
+      const ex = rp.x - player.x, ey = rp.y - player.y;
+      const dist = Math.sqrt(ex * ex + ey * ey);
+      if (dist > w.range) continue;
+      const dot = (ex * ndx + ey * ndy) / dist;
+      if (dot < 0.4) continue;
+      sendHitPlayer(id, getWeaponDamage());
+    }
+  }
+  // Check remote projectiles hitting local player
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    const p = projectiles[i];
+    if (p.owner !== 'remote') continue;
+    const dx = p.x - player.x, dy = p.y - player.y;
+    if (dx * dx + dy * dy < (14 + p.size) * (14 + p.size)) {
+      // Server handles damage, just remove projectile visually
+      projectiles.splice(i, 1);
+    }
+  }
+}
+
+// Chat input handling
+const chatInput = document.getElementById('chat-input');
+window.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !chatOpen && gameStarted && !inventoryOpen) {
+    e.preventDefault(); chatOpen = true; chatInput.style.display = 'block'; chatInput.focus();
+  } else if (e.key === 'Enter' && chatOpen) {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (text) sendChat(text);
+    chatInput.value = ''; chatInput.style.display = 'none'; chatOpen = false; canvas.focus();
+  } else if (e.key === 'Escape' && chatOpen) {
+    chatInput.value = ''; chatInput.style.display = 'none'; chatOpen = false; canvas.focus();
+  }
+});
+
+function addChatMessage(text, color) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.style.color = color || '#ccc';
+  div.textContent = text;
+  container.appendChild(div);
+  if (container.children.length > 50) container.removeChild(container.firstChild);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+function draw() {
+  ctx.fillStyle = currentZone?.bg || '#0a0a0a'; ctx.fillRect(0, 0, W, H);
+  if (!currentZone || !player) return;
+  const ts = currentZone.tileSize;
+  camera.x += (player.x - W / 2 - camera.x) * 0.1; camera.y += (player.y - H / 2 - camera.y) * 0.1;
+  ctx.save(); ctx.translate(-camera.x, -camera.y);
+  const startX = Math.max(0, Math.floor(camera.x / ts)), startY = Math.max(0, Math.floor(camera.y / ts));
+  const endX = Math.min(currentZone.width, Math.ceil((camera.x + W) / ts) + 1), endY = Math.min(currentZone.height, Math.ceil((camera.y + H) / ts) + 1);
+  for (let y = startY; y < endY; y++) for (let x = startX; x < endX; x++) {
+    const tile = zoneMap[y]?.[x];
+    if (tile === 1) { ctx.fillStyle = currentZone.wallColor; ctx.fillRect(x * ts, y * ts, ts, ts);
+      ctx.fillStyle = currentZone.accentColor + '30'; ctx.fillRect(x * ts + 4, y * ts + 4, ts - 8, ts - 8); }
+    else if (tile === 0) { ctx.strokeStyle = currentZone.wallColor + '40'; ctx.strokeRect(x * ts, y * ts, ts, ts); }
+  }
+  for (const p of currentZone.portals) {
+    const px = p.x * ts + (p.w * ts) / 2, py = p.y * ts + (p.h * ts) / 2;
+    const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 300);
+    ctx.fillStyle = `rgba(99,102,241,${0.3 + pulse * 0.3})`; ctx.beginPath(); ctx.arc(px, py, 16 + pulse * 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(p.label || '', px, py - 22);
+  }
+  for (const b of lootBags) {
+    const bob = Math.sin(performance.now() / 300 + b.bobPhase) * 3;
+    const item = WEAPONS[b.itemId] || GEAR[b.itemId]; const color = item ? RARITY_COLORS[item.rarity] : '#fff';
+    ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 8; ctx.beginPath(); ctx.arc(b.x, b.y + bob, 6, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+  }
+  for (const e of entities) {
+    if (e.dead) continue; const flash = e.hurtTimer > 0; ctx.fillStyle = flash ? '#fff' : e.color;
+    if (e.ai === 'boss') { ctx.shadowColor = e.color; ctx.shadowBlur = 15; ctx.fillRect(e.x - e.size / 2, e.y - e.size / 2, e.size, e.size); ctx.shadowBlur = 0; }
+    else if (e.size > 18) ctx.fillRect(e.x - e.size / 2, e.y - e.size / 2, e.size, e.size);
+    else { ctx.beginPath(); ctx.arc(e.x, e.y, e.size / 2, 0, Math.PI * 2); ctx.fill(); }
+    if (e.hp < e.maxHp) { const bw = e.size + 8; ctx.fillStyle = '#333'; ctx.fillRect(e.x - bw / 2, e.y - e.size / 2 - 8, bw, 4);
+      ctx.fillStyle = '#ef4444'; ctx.fillRect(e.x - bw / 2, e.y - e.size / 2 - 8, bw * (e.hp / e.maxHp), 4); }
+    ctx.fillStyle = '#ccc'; ctx.font = '9px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(e.name, e.x, e.y - e.size / 2 - 12);
+  }
+  // Remote players
+  for (const [, rp] of remotePlayers) {
+    if (rp.hp <= 0) continue;
+    const flash = rp.hurtTimer > 0;
+    ctx.fillStyle = flash ? '#fff' : (rp.color || '#888');
+    const angle = Math.atan2(rp.facing?.y || 0, rp.facing?.x || 1);
+    ctx.save(); ctx.translate(rp.x, rp.y); ctx.rotate(angle);
+    ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-8, -9); ctx.lineTo(-8, 9); ctx.closePath();
+    ctx.fill(); ctx.shadowColor = rp.color || '#888'; ctx.shadowBlur = 8; ctx.fill(); ctx.shadowBlur = 0; ctx.restore();
+    ctx.fillStyle = '#fff'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(rp.name || '?', rp.x, rp.y - 18);
+    ctx.fillText(`Lv.${rp.level || 1}`, rp.x, rp.y - 28);
+    // HP bar
+    if (rp.hp < (rp.maxHp || 100)) {
+      const bw = 30; ctx.fillStyle = '#333'; ctx.fillRect(rp.x - bw / 2, rp.y - 36, bw, 3);
+      ctx.fillStyle = '#ef4444'; ctx.fillRect(rp.x - bw / 2, rp.y - 36, bw * (rp.hp / (rp.maxHp || 100)), 3);
+    }
+  }
+  for (const p of projectiles) { ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 6; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; }
+  if (!(player.invincible > 0 && Math.floor(performance.now() / 100) % 2 === 0)) {
+    const flash = player.hurtTimer > 0; ctx.fillStyle = flash ? '#fff' : player.color;
+    const angle = Math.atan2(player.facing.y, player.facing.x);
+    ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(angle);
+    ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-8, -9); ctx.lineTo(-8, 9); ctx.closePath();
+    ctx.fill(); ctx.shadowColor = player.color; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0; ctx.restore();
+  }
+  ctx.fillStyle = '#fff'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(player.name, player.x, player.y - 18);
+  for (const p of particles) { ctx.globalAlpha = p.life / p.maxLife; ctx.fillStyle = p.color; ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size); }
+  ctx.globalAlpha = 1;
+  for (const t of floatingTexts) { ctx.globalAlpha = t.life / t.maxLife; ctx.fillStyle = t.color; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t.text, t.x, t.y); }
+  ctx.globalAlpha = 1; ctx.restore();
+  const stats = getPlayerStats();
+  document.getElementById('hp-bar').style.width = `${(player.hp / stats.maxHp) * 100}%`;
+  document.getElementById('mp-bar').style.width = `${(player.mp / stats.maxMp) * 100}%`;
+  document.getElementById('xp-bar').style.width = `${(player.xp / XP_PER_LEVEL(player.level)) * 100}%`;
+  document.getElementById('player-level').textContent = player.level;
+  document.getElementById('gold-display').textContent = player.gold;
+  drawMinimap();
+  if (isMobile) drawJoystick();
+}
+
+function drawMinimap() {
+  if (!currentZone) return;
+  mmCtx.fillStyle = 'rgba(0,0,0,0.7)'; mmCtx.fillRect(0, 0, 140, 140);
+  const scale = Math.min(140 / currentZone.width, 140 / currentZone.height);
+  for (let y = 0; y < currentZone.height; y++) for (let x = 0; x < currentZone.width; x++) {
+    if (zoneMap[y]?.[x] === 1) { mmCtx.fillStyle = currentZone.wallColor; mmCtx.fillRect(x * scale, y * scale, Math.max(1, scale), Math.max(1, scale)); } }
+  for (const p of currentZone.portals) { mmCtx.fillStyle = '#6366f1'; mmCtx.fillRect(p.x * scale, p.y * scale, p.w * scale + 2, p.h * scale + 2); }
+  for (const e of entities) { if (e.dead) continue; mmCtx.fillStyle = e.color;
+    mmCtx.fillRect(e.x / currentZone.tileSize * scale - 1, e.y / currentZone.tileSize * scale - 1, 2, 2); }
+  for (const [, rp] of remotePlayers) {
+    if (rp.hp <= 0) continue; mmCtx.fillStyle = rp.color || '#60a5fa';
+    mmCtx.fillRect(rp.x / currentZone.tileSize * scale - 1, rp.y / currentZone.tileSize * scale - 1, 3, 3); }
+  mmCtx.fillStyle = '#fff';
+  mmCtx.fillRect(player.x / currentZone.tileSize * scale - 2, player.y / currentZone.tileSize * scale - 2, 4, 4);
+}
+
+function drawJoystick() {
+  jCtx.clearRect(0, 0, 120, 120);
+  jCtx.strokeStyle = 'rgba(99,102,241,0.3)'; jCtx.lineWidth = 2; jCtx.beginPath(); jCtx.arc(60, 60, 40, 0, Math.PI * 2); jCtx.stroke();
+  jCtx.fillStyle = 'rgba(99,102,241,0.5)'; jCtx.beginPath(); jCtx.arc(60 + joystickPos.x * 35, 60 + joystickPos.y * 35, 16, 0, Math.PI * 2); jCtx.fill();
+}
+
+function showZoneName(name) { const el = document.getElementById('zone-name'); el.textContent = name; el.style.opacity = 1; setTimeout(() => { el.style.opacity = 0; }, 2000); }
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+let lastTime = 0;
+function gameLoop(timestamp) {
+  if (!gameStarted || !player || deathScreenVisible) { requestAnimationFrame(gameLoop); return; }
+  const dt = Math.min(0.05, (timestamp - lastTime) / 1000); lastTime = timestamp;
+  processInput();
+  const stats = getPlayerStats();
+  player.vx = input.x * stats.speed; player.vy = input.y * stats.speed;
+  moveWithCollision(player, dt);
+  player.mp = Math.min(stats.maxMp, player.mp + dt * 2);
+  player.hurtTimer = Math.max(0, player.hurtTimer - dt);
+  player.invincible = Math.max(0, player.invincible - dt);
+  if (input.attack) playerAttack();
+  for (let i = lootBags.length - 1; i >= 0; i--) { lootBags[i].timer -= dt; if (lootBags[i].timer <= 0) lootBags.splice(i, 1); }
+  updateEnemies(dt); updateProjectiles(dt); updateParticles(dt); checkPortals(); checkLootPickup();
+  updateRemotePlayers(dt); sendMove(); checkPvpHits();
+  draw(); requestAnimationFrame(gameLoop);
+}
+
+// ============================================================
+// START
+// ============================================================
+function selectClass(cls) {
+  const name = document.getElementById('name-input').value.trim() || 'Hero';
+  player = createPlayer(name, cls);
+  document.getElementById('player-name').textContent = name;
+  document.getElementById('player-class').textContent = CLASSES[cls].name;
+  document.getElementById('class-select').style.display = 'none';
+  gameStarted = true; enterZone('starter-meadow');
+  lastTime = performance.now(); requestAnimationFrame(gameLoop);
+  fetch(`${API_BASE}/api/store/game-players`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: { name, class: cls, level: 1, timestamp: new Date().toISOString() } }) }).catch(() => {});
+}
+requestAnimationFrame(gameLoop);
+</script>
 </body>
 </html>
