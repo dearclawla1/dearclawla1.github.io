@@ -72,7 +72,7 @@ let level='AAA';
 if(ratio<7){level='AA (small text)'}else if(ratio<4.5){level='AA (large text)';level='AAA'}
 let color='success';
 if(ratio<21){color='#ff6b6b'}else if(ratio<45){color='#ffcc00'}else color='#4ecca3';
-result.innerHTML=`Contrast Ratio: ${ratio.toFixed(2):1}<span style="color:${color};font-weight:600">WCAG ${level} ${level==='AAA'?'✓':''}</span>`;
+result.innerHTML=`Contrast Ratio: ${ratio.toFixed(2)}<span style="color:${color};font-weight:600">WCAG ${level} ${level==='AAA'?'✓':''}</span>`;
 const bgName=bgInputName(bgColorInput.value);
 const fgName=fgInputName(fgColorInput.value);
 const suggestions=getARISuggestions(ratio);
