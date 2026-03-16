@@ -2,31 +2,143 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>URL Validator</title>
 <style>
-body{font-family:system-ui;margin:0;background:#0a0a0a;color:#e4e4e4;padding:2rem}
-input,select,button{padding:0.5rem;margin:0.5rem 0;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;border-radius:4px;outline:none}
-button{cursor:pointer}
-a{font-size:0.9rem}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a0a0a;color:#e4e4e4;padding:2rem;min-height:100vh;display:flex;flex-direction:column;gap:1rem}
+.container{max-width:800px;margin:0 auto;width:100%}
+h1{font-size:1.8rem;font-weight:600;margin-bottom:1rem;color:#6366f1;text-align:center}
+.input-group{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem}
+input[type="text"]{padding:0.75rem 1rem;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;border-radius:6px;font-size:1rem;outline:none;transition:border-color 0.2s}
+input[type="text"]:focus{border-color:#6366f1}
+input[type="text"]::placeholder{color:#666}
+button{padding:0.75rem 1rem;background:#6366f1;border:none;color:#fff;border-radius:6px;font-size:1rem;font-weight:500;cursor:pointer;transition:background 0.2s;outline:none}
+button:hover{background:#5558e6}
+button:active{transform:scale(0.98)}
+button.secondary{background:#1a1a1a;border:1px solid #333;color:#e4e4e4}
+button.secondary:hover{background:#2a2a2a}
+.result-box{padding:1rem;background:#1a1a1a;border-radius:6px;border:1px solid #333;font-size:1rem;line-height:1.6;margin-bottom:1rem}
+.result-box.valid{border-color:#4ade80}
+.result-box.invalid{border-color:#f87171}
+.result-box.valid .status{color:#4ade80}
+.result-box.invalid .status{color:#f87171}
+.status{font-weight:600;display:block;margin-bottom:0.5rem}
+.details{font-size:0.9rem;color:#888}
+.copy-btn{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:0.5rem 0.75rem;border-radius:4px;font-size:0.85rem;cursor:pointer;transition:all 0.2s;outline:none}
+.copy-btn:hover{background:#2a2a2a;border-color:#444}
+.copy-btn:active{transform:scale(0.95)}
+.shortcuts{font-size:0.8rem;color:#666;margin-top:1rem;padding-top:1rem;border-top:1px solid #333}
+.shortcuts span{display:inline-block;margin-right:1rem}
+.back-link{display:inline-block;color:#6366f1;text-decoration:none;font-size:0.9rem}
+.back-link:hover{text-decoration:underline}
+@media(max-width:600px){
+body{padding:1rem}
+h1{font-size:1.5rem}
+input[type="text"]{font-size:0.9rem}
+button{font-size:0.9rem;padding:0.6rem 0.8rem}
+}
 </style>
 </head>
 <body>
+<div class="container">
 <h1>URL Validator</h1>
-<input id="urlInput" placeholder="Enter URL (e.g., https://example.com)">
+<div class="input-group">
+<input type="text" id="urlInput" placeholder="Enter URL (e.g., https://example.com)" autocomplete="off">
+</div>
+<div class="input-group">
 <button onclick="validate()">Validate</button>
-<div id="result"></div>
-<a href="index.html" style="color:#6366f1">Back to Home</a>
+<button class="secondary" onclick="copyToClipboard()">Copy Result</button>
+</div>
+<div id="result" class="result-box" style="display:none">
+<span class="status"></span>
+<span class="details"></span>
+</div>
+<div class="shortcuts">
+<span>⌨️ Press <kbd>Ctrl+Enter</kbd> to validate</span>
+<span>⌨️ Press <kbd>Ctrl+C</kbd> to copy</span>
+</div>
+<a href="index.html" class="back-link">Back to Home</a>
+</div>
 <script>
+const urlInput=document.getElementById('urlInput');
+const result=document.getElementById('result');
+let lastResult='';
+
 function validate(){
-const url=document.getElementById('urlInput').value;
-const res=document.getElementById('result');
+const url=urlInput.value.trim();
+if(!url){
+showResult('Please enter a URL',false);
+return;
+}
 try{
-new URL(url);
-res.innerHTML='<span style="color:#4ade80">Valid URL</span>';
+const parsed=new URL(url);
+const isValid=!!parsed.hostname;
+const normalized=parsed.toString();
+lastResult=normalized;
+showResult(isValid?'Valid URL':'Invalid URL',isValid,normalized);
 }catch(e){
-res.innerHTML='<span style="color:#f87171">Invalid URL</span>';
+showResult('Invalid URL format',false);
 }
 }
+
+function showResult(message,isValid,normalized=null){
+result.style.display='block';
+result.className='result-box'+(isValid?' valid':' invalid');
+result.querySelector('.status').textContent=message;
+result.querySelector('.details').textContent=normalized||'';
+}
+
+function copyToClipboard(){
+if(!lastResult){
+showResult('Nothing to copy. Validate first.',false);
+return;
+}
+navigator.clipboard.writeText(lastResult).then(()=>{
+showResult('Copied to clipboard!',true,lastResult);
+}).catch(()=>{
+showResult('Failed to copy',false);
+});
+}
+
+// Live preview on input
+urlInput.addEventListener('input',(e)=>{
+if(e.target.value.length>0){
+result.style.display='block';
+result.className='result-box';
+result.querySelector('.status').textContent='Preview';
+result.querySelector('.details').textContent=e.target.value;
+}
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown',(e)=>{
+if(e.ctrlKey&&e.key==='Enter'){
+e.preventDefault();
+validate();
+}
+if(e.ctrlKey&&e.key==='c'){
+e.preventDefault();
+copyToClipboard();
+}
+});
+
+// Enter key in input
+urlInput.addEventListener('keydown',(e)=>{
+if(e.key==='Enter'){
+validate();
+}
+});
+
+// Validate on focus for better UX
+urlInput.addEventListener('focus',()=>{
+if(urlInput.value.length>0){
+result.style.display='block';
+result.className='result-box';
+result.querySelector('.status').textContent='Preview';
+result.querySelector('.details').textContent=urlInput.value;
+}
+});
 </script>
 </body>
 </html>
