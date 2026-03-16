@@ -33,69 +33,129 @@ a{display:block;text-align:center;margin-top:15px;font-size:0.9rem}
 <button id="reset">Reset</button>
 </div>
 <div class="info" id="status">Ready</div>
-<a href="https://github.com" target="_blank">View on GitHub</a>
-</div>
+<a href="https://gwen-api.dearclawla1.workers.dev/api/store/timers" target="_blank" rel="noopener">Export Timer Data</a>
 <script>
-const display = document.getElementById('display');
+(function(){
 const minutesInput = document.getElementById('minutes');
-const modeInput = document.getElementById('mode');
+const modeSelect = document.getElementById('mode');
+const display = document.getElementById('display');
 const startBtn = document.getElementById('start');
 const pauseBtn = document.getElementById('pause');
 const resetBtn = document.getElementById('reset');
-const status = document.getElementById('status');
+const statusEl = document.getElementById('status');
 
+let timerInterval = null;
 let totalSeconds = 0;
+let remainingSeconds = 0;
 let isRunning = false;
-let interval = null;
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
 
 function updateDisplay() {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    display.textContent = formatTime(remainingSeconds);
 }
 
 function startTimer() {
+    if (isRunning) return;
+    
     const mins = parseInt(minutesInput.value) || 25;
-    totalSeconds = mins * 60;
-    updateDisplay();
+    const mode = modeSelect.value;
+    
+    let secondsPerMode = {
+        focus: mins * 60,
+        short: 5 * 60,
+        long: 15 * 60
+    };
+    
+    totalSeconds = secondsPerMode[mode];
+    remainingSeconds = totalSeconds;
     isRunning = true;
-    startBtn.disabled = true;
-    pauseBtn.disabled = false;
-    interval = setInterval(() => {
-        if (totalSeconds > 0) {
-            totalSeconds--;
+    
+    statusEl.textContent = 'Running';
+    updateDisplay();
+    
+    timerInterval = setInterval(() => {
+        if (remainingSeconds > 0) {
+            remainingSeconds--;
             updateDisplay();
         } else {
+            clearInterval(timerInterval);
             isRunning = false;
-            startBtn.disabled = false;
-            pauseBtn.disabled = true;
-            status.textContent = "Timer Complete!";
+            statusEl.textContent = 'Completed!';
         }
     }, 1000);
-    status.textContent = "Running...";
 }
 
 function pauseTimer() {
+    if (!isRunning) return;
+    
+    clearInterval(timerInterval);
     isRunning = false;
-    startBtn.disabled = false;
-    pauseBtn.disabled = true;
-    status.textContent = "Paused";
+    statusEl.textContent = 'Paused';
 }
 
 function resetTimer() {
-    clearInterval(interval);
-    interval = null;
+    clearInterval(timerInterval);
     isRunning = false;
-    totalSeconds = 0;
+    
+    const mins = parseInt(minutesInput.value) || 25;
+    const mode = modeSelect.value;
+    let secondsPerMode = {
+        focus: mins * 60,
+        short: 5 * 60,
+        long: 15 * 60
+    };
+    
+    remainingSeconds = secondsPerMode[mode];
+    totalSeconds = remainingSeconds;
+    
+    statusEl.textContent = 'Ready';
     updateDisplay();
-    startBtn.disabled = false;
-    pauseBtn.disabled = true;
-    status.textContent = "Ready";
 }
 
 startBtn.addEventListener('click', startTimer);
 pauseBtn.addEventListener('click', pauseTimer);
 resetBtn.addEventListener('click', resetTimer);
+
+// Save timer data to localStorage for persistence
+function saveTimerData() {
+    const timerData = {
+        minutes: minutesInput.value,
+        mode: modeSelect.value,
+        remainingSeconds: remainingSeconds,
+        totalSeconds: totalSeconds,
+        isRunning: isRunning,
+        timestamp: new Date().toISOString()
+    };
+    localStorage.setItem('focus-timer-data', JSON.stringify(timerData));
+}
+
+// Load saved timer data on page load
+function loadTimerData() {
+    const saved = localStorage.getItem('focus-timer-data');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            minutesInput.value = data.minutes || '25';
+            modeSelect.value = data.mode || 'focus';
+            remainingSeconds = data.remainingSeconds || 0;
+            totalSeconds = data.totalSeconds || 0;
+            isRunning = data.isRunning || false;
+            statusEl.textContent = data.isRunning ? 'Running' : 'Ready';
+            updateDisplay();
+        } catch (e) {
+            console.error('Failed to load timer data:', e);
+        }
+    }
+}
+
+loadTimerData();
+saveTimerData();
+})();
 </script>
 </body>
 </html>
