@@ -4,32 +4,176 @@
 <meta charset="UTF-8">
 <title>React Component Previewer</title>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
-a{color:#6366f1;text-decoration:none}
-input,select,button{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:8px;margin:5px 0;border-radius:4px}
-button:hover{border-color:#6366f1}
-textarea{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;width:90%;height:150px;margin:5px 0}
-#output{background:#1a1a1a;border:1px solid #333;padding:10px;min-height:100px;white-space:pre-wrap}
-label{display:block;margin:5px 0 2px}
+*{box-sizing:border-box}
+body{background:#0a0a0a;color:#e4e4e4;font-family:'JetBrains Mono',monospace;margin:0;padding:20px;min-height:100vh;display:flex;flex-direction:column;gap:15px}
+.container{display:grid;grid-template-columns:1fr;gap:15px;flex:1}
+@media(min-width:900px){.container{grid-template-columns:1fr 1fr}}
+header{display:flex;align-items:center;gap:15px;padding:10px;background:#111;border-radius:8px}
+h1{margin:0;font-size:1.3rem;color:#6366f1}
+a{color:#6366f1;text-decoration:none;font-size:0.9rem}
+a:hover{text-decoration:underline}
+.card{background:#111;border-radius:8px;padding:15px;border:1px solid #222;box-shadow:0 4px 6px rgba(0,0,0,0.3)}
+.card h2{margin:0 0 10px;font-size:1.1rem;color:#e4e4e4;border-bottom:1px solid #222;padding-bottom:8px}
+input,select,button{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:10px;margin:8px 0;border-radius:6px;font-family:inherit;font-size:0.95rem;transition:all 0.2s}
+input:focus,select:focus,button:focus{outline:2px solid #6366f1;outline-offset:2px}
+input::placeholder{color:#666}
+button{cursor:pointer;font-weight:500}
+button:hover{border-color:#6366f1;transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+button.primary{background:#6366f1;color:#fff;border-color:#6366f1}
+button.primary:hover{background:#5558e6}
+button.secondary{background:#2a2a2a;border-color:#333}
+button.secondary:hover{border-color:#6366f1;background:#2a2a2a}
+textarea{background:#1a1a1a;color:#e4e4e4;border:1px solid #333;padding:12px;width:98%;height:250px;margin:8px 0;border-radius:6px;font-family:inherit;font-size:0.9rem;resize:vertical}
+#output{background:#0d0d0d;border:1px solid #2a2a2a;padding:15px;min-height:250px;white-space:pre-wrap;font-family:inherit;font-size:0.9rem;overflow:auto;max-height:400px}
+#output pre{margin:0;white-space:pre-wrap;word-break:break-word}
+.stats{display:flex;gap:15px;font-size:0.85rem;color:#888;margin:10px 0 15px;padding:8px;background:#151515;border-radius:6px}
+.stats span{display:flex;align-items:center;gap:5px}
+.badge{background:#2a2a2a;padding:2px 8px;border-radius:4px;font-size:0.75rem;color:#888}
+.badge.success{background:#0a3d0a;color:#6366f1}
+.badge.error{background:#3d0a0a;color:#ff6b6b}
+#copyBtn{width:100%;margin:10px 0 0;padding:10px;font-size:0.9rem}
+#clearBtn{background:#2a2a2a;border-color:#333}
+#clearBtn:hover{border-color:#ff6b6b}
+#previewBtn{background:#6366f1;color:#fff;border-color:#6366f1}
+#previewBtn:hover{background:#5558e6}
+#name{width:100%;padding:10px;font-size:0.95rem}
+#code{width:98%;height:250px;padding:12px;font-size:0.9rem;resize:vertical}
+#output{background:#0d0d0d;border:1px solid #2a2a2a;padding:15px;min-height:250px;white-space:pre-wrap;font-family:inherit;font-size:0.9rem;overflow:auto;max-height:400px}
+#output pre{margin:0;white-space:pre-wrap;word-break:break-word}
 </style>
 </head>
 <body>
+<header>
 <a href="index.html" style="color:#6366f1">Back to Home</a>
 <h1>React Component Previewer</h1>
-<label>Input Component Code:</label>
-<textarea id="code"></textarea>
+</header>
+<div class="container">
+<div class="card">
+<h2>Component Input</h2>
+<div class="stats">
+<span class="badge" id="charCount">0 chars</span>
+<span class="badge" id="lineCount">0 lines</span>
+<span class="badge" id="previewStatus">Ready</span>
+</div>
 <label>Component Name:</label>
 <input type="text" id="name" placeholder="MyComponent">
-<button id="previewBtn">Preview</button>
+<label>Input Component Code:</label>
+<textarea id="code" placeholder="// Paste your React component code here...
+export default function MyComponent() {
+  return &lt;div&gt;Hello&lt;/div&gt;;
+}"></textarea>
+<div style="display:flex;gap:10px;margin:10px 0 15px">
+<button id="clearBtn" class="secondary">Clear</button>
+<button id="previewBtn" class="primary">Preview</button>
+</div>
+<label id="outputLabel">Preview Output:</label>
 <div id="output"></div>
+<button id="copyBtn" class="secondary">Copy Output</button>
+</div>
+<div class="card">
+<h2>Quick Tips</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.85rem;color:#888">
+<div>
+<strong>Auto-Preview:</strong> Press Ctrl+Enter or click Preview
+</div>
+<div>
+<strong>Copy Output:</strong> Click Copy to copy to clipboard
+</div>
+<div>
+<strong>Clear:</strong> Remove all input fields
+</div>
+<div>
+<strong>Stats:</strong> Character and line count
+</div>
+</div>
+</div>
+</div>
 <script>
-document.getElementById('previewBtn').addEventListener('click',function(){
-const code=document.getElementById('code').value;
-const name=document.getElementById('name').value||'Anonymous';
-const output=document.getElementById('output');
-if(!code.trim()){output.textContent='Please enter component code.';return}
-output.textContent=`// Preview: ${name}\\n${code}\\n// Component ready for React integration`;
+const codeEl=document.getElementById('code');
+const nameEl=document.getElementById('name');
+const outputEl=document.getElementById('output');
+const previewBtn=document.getElementById('previewBtn');
+const clearBtn=document.getElementById('clearBtn');
+const copyBtn=document.getElementById('copyBtn');
+const charCount=document.getElementById('charCount');
+const lineCount=document.getElementById('lineCount');
+const previewStatus=document.getElementById('previewStatus');
+const outputLabel=document.getElementById('outputLabel');
+
+// Update stats
+function updateStats(){
+const text=codeEl.value;
+charCount.textContent=`${text.length} chars`;
+const lines=text.split('\\n').length;
+lineCount.textContent=`${lines} lines`;
+}
+
+// Preview function
+function preview(){
+const code=codeEl.value;
+const name=nameEl.value.trim()||'Anonymous';
+if(!code.trim()){
+outputEl.innerHTML=`<span style="color:#ff6b6b">Please enter component code.</span>`;
+outputLabel.textContent='Preview Output:';
+previewStatus.textContent='Empty';
+previewStatus.className='badge error';
+return;
+}
+const previewText=`// Preview: ${name}\\n${code}\\n// Component ready for React integration`;
+outputEl.innerHTML=previewText;
+outputLabel.textContent='Preview Output:';
+previewStatus.textContent='Ready';
+previewStatus.className='badge success';
+}
+
+// Copy function
+function copyOutput(){
+const text=outputEl.innerText;
+if(!text){return}
+navigator.clipboard.writeText(text).then(()=>{
+const originalText=copyBtn.textContent;
+copyBtn.textContent='Copied!';
+copyBtn.style.background='#0a3d0a';
+copyBtn.style.borderColor='#0a3d0a';
+setTimeout(()=>{
+copyBtn.textContent=originalText;
+copyBtn.style.background='';
+copyBtn.style.borderColor='';
+},1500);
+}).catch(err=>{
+outputEl.innerHTML+=`<div style="color:#ff6b6b;margin-top:10px">Copy failed: ${err.message}</div>`;
 });
+}
+
+// Clear function
+function clearAll(){
+codeEl.value='';
+nameEl.value='';
+updateStats();
+preview();
+}
+
+// Event listeners
+previewBtn.addEventListener('click',preview);
+clearBtn.addEventListener('click',clearAll);
+copyBtn.addEventListener('click',copyOutput);
+
+// Auto-update stats
+codeEl.addEventListener('input',updateStats);
+nameEl.addEventListener('input',updateStats);
+
+// Keyboard shortcut: Ctrl+Enter to preview
+document.addEventListener('keydown',function(e){
+if(e.ctrlKey&&e.key==='Enter'){
+e.preventDefault();
+preview();
+}
+});
+
+// Initialize
+updateStats();
+preview();
 </script>
 </body>
 </html>
