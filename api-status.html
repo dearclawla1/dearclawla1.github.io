@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
 input,button,select{margin:5px;padding:8px;border:1px solid #6366f1;border-radius:4px;background:#1a1a1a;color:#e4e4e4}
@@ -9,56 +10,80 @@ button:hover{background:#6366f1}
 a{color:#6366f1;text-decoration:none}
 #output{margin-top:15px;padding:10px;background:#1a1a1a;border-radius:4px;min-height:50px}
 #endpoints{width:100%}
+.container{max-width:1200px;margin:0 auto}
+.endpoint-list{display:flex;flex-wrap:wrap;gap:10px}
+.endpoint-item{flex:1;min-width:200px;padding:10px;background:#1a1a1a;border:1px solid #6366f1;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
+.status-ok{color:#4ade80}
+.status-error{color:#f87171}
+.status-pending{color:#fbbf24}
+.clear-btn{background:#ef4444;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin-top:10px}
+.clear-btn:hover{background:#dc2626}
 </style>
 </head>
 <body>
 <h2>API Status Checker</h2>
-<select id="endpoints" onchange="checkEndpoints()">
-  <option value="">Select API Endpoint...</option>
-  <option value="/api/health">/api/health</option>
-  <option value="/api/status">/api/status</option>
-  <option value="/api/version">/api/version</option>
-</select>
-<button onclick="checkEndpoints()">Check Status</button>
-<button onclick="clearOutput()">Clear</button>
-<div id="output"></div>
+<div class="container">
+  <div id="endpoints"></div>
+  <div id="output">Checking...</div>
+  <button onclick="checkAll()">Check All</button>
+  <input type="text" id="urlInput" placeholder="Enter API URL (e.g., https://api.github.com)">
+  <button onclick="checkSingle()">Check Single</button>
+  <button onclick="reset()" class="clear-btn">Clear</button>
+</div>
+
 <script>
-function checkEndpoints() {
-  const endpoint = document.getElementById('endpoints').value;
-  const output = document.getElementById('output');
+const ENDPOINTS = [
+  { name: "GitHub API", url: "https://api.github.com" },
+  { name: "OpenAI API", url: "https://api.openai.com/v1" },
+  { name: "Stripe API", url: "https://api.stripe.com" },
+  { name: "Twilio API", url: "https://api.twilio.com" }
+];
+
+function checkAll() {
+  const output = document.getElementById("output");
+  output.innerHTML = "Checking all endpoints...<br>";
   
-  if (!endpoint) {
-    output.innerHTML = '<span style="color:#e4e4e4">Please select an endpoint first.</span>';
+  ENDPOINTS.forEach(endpoint => {
+    fetch(endpoint.url, { method: "HEAD", timeout: 5000 })
+      .then(response => {
+        const status = response.status === 200 ? "OK" : `Error: ${response.status}`;
+        const statusClass = response.status === 200 ? "status-ok" : "status-error";
+        output.innerHTML += `<br>${endpoint.name}: ${status} (${endpoint.url}) <span class="${statusClass}"></span>`;
+      })
+      .catch(error => {
+        output.innerHTML += `<br>${endpoint.name}: ${error.message || "Failed"} (${endpoint.url})`;
+      });
+  });
+}
+
+function checkSingle() {
+  const url = document.getElementById("urlInput").value.trim();
+  const output = document.getElementById("output");
+  
+  if (!url) {
+    output.innerHTML = "Error: Please enter a URL";
     return;
   }
   
-  output.innerHTML = '<span style="color:#6366f1">Checking ' + endpoint + '...</span>';
+  output.innerHTML = "Checking...";
   
-  fetch(endpoint)
+  fetch(url, { method: "HEAD", timeout: 5000 })
     .then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw new Error('Status: ' + response.status);
-      }
-    })
-    .then(data => {
-      output.innerHTML = '<span style="color:#e4e4e4">Response: ' + JSON.stringify(data) + '</span>';
+      const status = response.status === 200 ? "OK" : `Error: ${response.status}`;
+      output.innerHTML = `${status} (${url})`;
     })
     .catch(error => {
-      output.innerHTML = '<span style="color:#ff6b6b">Error: ' + error.message + '</span>';
+      output.innerHTML = `Error: ${error.message || "Failed"}`;
     });
 }
 
-function clearOutput() {
-  document.getElementById('output').innerHTML = '';
+function reset() {
+  document.getElementById("output").innerHTML = "";
+  document.getElementById("urlInput").value = "";
 }
 
-document.addEventListener('keydown', function(event) {
-  if (event.key === 'Enter') {
-    checkEndpoints();
-  }
-});
+// Add loading indicator
+document.getElementById("urlInput").value = "https://api.github.com";
 </script>
 </body>
 </html>
