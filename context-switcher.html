@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Context Switcher</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:2rem}
+.container{max-width:600px;margin:0 auto}
+h1{color:#6366f1;margin-bottom:1.5rem}
+input,select,button{padding:0.75rem;margin:0.5rem 0;width:100%;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#e4e4e4;font-size:1rem}
+button{background:#6366f1;color:#fff;border:none;cursor:pointer;font-weight:600}
+button:hover{background:#5558f5}
+#output{background:#1a1a1a;padding:1rem;border-radius:8px;margin-top:1rem;min-height:100px;border:1px solid #333}
+</style>
+</head>
+<body>
+<div class="container">
+<a href="index.html" style="color:#6366f1;display:block;margin-bottom:1rem">Back to Home</a>
+<h1>Context Switcher</h1>
+<input type="text" id="inputText" placeholder="Enter your context or task...">
+<select id="contextType">
+<option value="work">Work</option>
+<option value="personal">Personal</option>
+<option value="learning">Learning</option>
+<option value="break">Break</option>
+</select>
+<button onclick="switchContext()">Switch Context</button>
+<div id="output">Select a context and enter text to switch...</div>
+</div>
+<script>
+function switchContext(){
+const text=document.getElementById('inputText').value;
+const type=document.getElementById('contextType').value;
+const output=document.getElementById('output');
+if(!text.trim()){output.textContent='Please enter some text.';return}
+const contexts={
+work:'🔧 Work Mode: '+text,
+personal:'🏠 Personal Mode: '+text,
+learning:'📚 Learning Mode: '+text,
+break:'☕ Break Mode: '+text
+};
+output.textContent=contexts[type];
+output.style.color='#e4e4e4';
+}
+</script>
+</body>
+</html>
