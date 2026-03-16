@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GitHub Repo Explorer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0a0a0a;color:#e4e4e4;padding:2rem}
+.container{max-width:800px;margin:0 auto}
+h1{margin-bottom:1rem;color:#6366f1}
+input{width:100%;padding:0.75rem;border:1px solid #333;border-radius:8px;background:#1a1a1a;color:#e4e4e4;font-size:1rem}
+button{padding:0.75rem 1.5rem;border:none;border-radius:8px;background:#6366f1;color:#fff;font-size:1rem;cursor:pointer;margin-top:1rem}
+button:hover{background:#5558e6}
+#results{margin-top:1.5rem}
+.repo{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:1rem;margin-top:0.5rem}
+.repo h3{color:#6366f1;margin-bottom:0.5rem}
+.repo p{color:#aaa;font-size:0.9rem;margin:0.25rem 0}
+.repo .meta{color:#666;font-size:0.8rem;margin-top:0.5rem}
+.error{color:#ff6b6b;background:#2a1a1a;padding:1rem;border-radius:8px;margin-top:1rem}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>GitHub Repo Explorer</h1>
+<input id="search" placeholder="Search GitHub repositories (e.g., react, express, vue)...">
+<button onclick="search()">Search</button>
+<div id="results"></div>
+<a href="index.html" style="color:#6366f1;display:block;margin-top:2rem">Back to Home</a>
+</div>
+<script>
+async function search(){
+const q=document.getElementById('search').value.trim();
+const res=document.getElementById('results');
+if(!q){res.innerHTML='<div class="error">Please enter a repository name</div>';return}
+try{
+const url=`https://api.github.com/search/repositories?q=${encodeURIComponent(q)}&sort=stars&order=desc&per_page=5`;
+const data=await fetch(url).then(r=>r.json());
+if(data.items.length===0){res.innerHTML='<div class="error">No repositories found</div>';return}
+res.innerHTML=data.items.map(r=>`
+<div class="repo">
+<h3><a href="${r.html_url}" target="_blank">${r.name}</a></h3>
+<p>${r.description||'No description'}</p>
+<div class="meta">⭐ ${r.stargazers_count} | 🍴 ${r.forks_count} | 🔗 ${r.language||'Other'}</div>
+</div>
+`).join('');
+}catch(e){
+res.innerHTML='<div class="error">Error: '+e.message+'</div>';
+}
+}
+</script>
+</body>
+</html>
