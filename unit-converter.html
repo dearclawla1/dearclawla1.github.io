@@ -27,8 +27,20 @@ button:hover{background:#5558ff}
 <select id="lengthTo">
 <option value="m">Meters</option><option value="km">Kilometers</option><option value="cm">Centimeters</option><option value="mm">Millimeters</option><option value="mi">Miles</option><option value="yd">Yards</option><option value="ft">Feet</option><option value="in">Inches</option>
 </select>
-<button onclick="convertLength()">Convert</button>
-<div class="result" id="lengthResult"></div>
+<button onclick="convert('length')">Convert</button>
+<div id="lengthResult" class="result"></div>
+</section>
+<section>
+<h2>Weight</h2>
+<input id="weightValue" type="number" placeholder="Enter value">
+<select id="weightFrom">
+<option value="kg">Kilograms</option><option value="g">Grams</option><option value="lb">Pounds</option><option value="oz">Ounces</option><option value="t">Metric Tons</option><option value="st">Stone</option>
+</select>
+<select id="weightTo">
+<option value="kg">Kilograms</option><option value="g">Grams</option><option value="lb">Pounds</option><option value="oz">Ounces</option><option value="t">Metric Tons</option><option value="st">Stone</option>
+</select>
+<button onclick="convert('weight')">Convert</button>
+<div id="weightResult" class="result"></div>
 </section>
 <section>
 <h2>Temperature</h2>
@@ -39,41 +51,70 @@ button:hover{background:#5558ff}
 <select id="tempTo">
 <option value="c">Celsius</option><option value="f">Fahrenheit</option><option value="k">Kelvin</option>
 </select>
-<button onclick="convertTemp()">Convert</button>
-<div class="result" id="tempResult"></div>
+<button onclick="convert('temp')">Convert</button>
+<div id="tempResult" class="result"></div>
 </section>
+<section>
+<h2>Area</h2>
+<input id="areaValue" type="number" placeholder="Enter value">
+<select id="areaFrom">
+<option value="m2">Square Meters</option><option value="km2">Square Kilometers</option><option value="ha">Hectares</option><option value="ac">Acres</option><option value="sqmi">Square Miles</option><option value="sqft">Square Feet</option><option value="sqyd">Square Yards</option>
+</select>
+<select id="areaTo">
+<option value="m2">Square Meters</option><option value="km2">Square Kilometers</option><option value="ha">Hectares</option><option value="ac">Acres</option><option value="sqmi">Square Miles</option><option value="sqft">Square Feet</option><option value="sqyd">Square Yards</option>
+</select>
+<button onclick="convert('area')">Convert</button>
+<div id="areaResult" class="result"></div>
+</section>
+<section>
+<h2>Volume</h2>
+<input id="volumeValue" type="number" placeholder="Enter value">
+<select id="volumeFrom">
+<option value="l">Liters</option><option value="ml">Milliliters</option><option value="gal">Gallons</option><option value="qt">Quarts</option><option value="pt">Pints</option><option value="fl_oz">Fluid Ounces</option><option value="m3">Cubic Meters</option>
+</select>
+<select id="volumeTo">
+<option value="l">Liters</option><option value="ml">Milliliters</option><option value="gal">Gallons</option><option value="qt">Quarts</option><option value="pt">Pints</option><option value="fl_oz">Fluid Ounces</option><option value="m3">Cubic Meters</option>
+</select>
+<button onclick="convert('volume')">Convert</button>
+<div id="volumeResult" class="result"></div>
+</section>
+</div>
 <script>
-function convertLength(){
-const val=document.getElementById('lengthValue').value;
-const from=document.getElementById('lengthFrom').value;
-const to=document.getElementById('lengthTo').value;
-let result=val;
-if(from==='km')result=val/1000;
-else if(from==='cm')result=val/100;
-else if(from==='mm')result=val/10;
-else if(from==='mi')result=val*1609.34;
-else if(from==='yd')result=val*0.9144;
-else if(from==='ft')result=val*0.3048;
-else if(from==='in')result=val*0.0254;
-if(to==='km')result=result*1000;
-else if(to==='cm')result=result*100;
-else if(to==='mm')result=result*10;
-else if(to==='mi')result=result/1609.34;
-else if(to==='yd')result=result/0.9144;
-else if(to==='ft')result=result/0.3048;
-else if(to==='in')result=result/0.0254;
-document.getElementById('lengthResult').textContent=val+' '+from.toUpperCase()+' = '+result.toFixed(2)+' '+to.toUpperCase();
-}
-function convertTemp(){
-const val=document.getElementById('tempValue').value;
-const from=document.getElementById('tempFrom').value;
-const to=document.getElementById('tempTo').value;
-let celsius=val;
-if(from==='f')celsius=(val-32)*5/9;
-else if(from==='k')celsius=val-273.15;
-if(to==='f')celsius=celsius*9/5+32;
-else if(to==='k')celsius=celsius+273.15;
-document.getElementById('tempResult').textContent=val+' '+from.toUpperCase()+' = '+celsius.toFixed(2)+' '+to.toUpperCase();
+const conversionRates = {
+    length: { m: 1, km: 0.001, cm: 100, mm: 1000, mi: 1609.34, yd: 0.9144, ft: 0.3048, in: 0.0254 },
+    weight: { kg: 1, g: 1000, lb: 2.20462, oz: 35.274, t: 1000, st: 6.35029 },
+    temp: { c: 0, f: 32, k: 273.15 },
+    area: { m2: 1, km2: 0.000001, ha: 0.0001, ac: 0.000247105, sqmi: 0.00000258999, sqft: 0.092903, sqyd: 0.836127 },
+    volume: { l: 1, ml: 1000, gal: 0.264172, qt: 1.05669, pt: 2.11338, fl_oz: 9.46353, m3: 0.001 }
+};
+
+function convert(type) {
+    const value = parseFloat(document.getElementById(type + 'Value').value);
+    const from = document.getElementById(type + 'From').value;
+    const to = document.getElementById(type + 'To').value;
+    const resultDiv = document.getElementById(type + 'Result');
+    
+    if (isNaN(value)) {
+        resultDiv.textContent = '';
+        return;
+    }
+    
+    let result;
+    if (type === 'temp') {
+        let celsius;
+        if (from === 'c') celsius = value;
+        else if (from === 'f') celsius = (value - 32) * 5/9;
+        else if (from === 'k') celsius = value - 273.15;
+        
+        if (to === 'c') result = celsius;
+        else if (to === 'f') result = celsius * 9/5 + 32;
+        else if (to === 'k') result = celsius + 273.15;
+    } else {
+        const baseValue = value / conversionRates[type][from];
+        result = baseValue * conversionRates[type][to];
+    }
+    
+    resultDiv.textContent = result.toFixed(4);
 }
 </script>
 </body>
