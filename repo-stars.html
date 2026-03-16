@@ -38,6 +38,8 @@ async function fetchRepo(){
 const repo = document.getElementById('repo').value.trim();
 if(!repo)return alert('Please enter a repo.');
 try{
+// Usage tracking
+fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:[location.pathname.split('/').pop(),'load',new Date().toISOString()]})}).catch(()=>{});
 const parts = repo.split('/');
 const owner = parts[0], name = parts[1] || parts[0];
 const url = `https://api.github.com/repos/${owner}/${name}`;
