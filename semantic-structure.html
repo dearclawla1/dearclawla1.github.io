@@ -66,20 +66,20 @@ const charCount = url.length;
 const hierarchy = doc.querySelector('html') ? 'HTML structure detected' : 'No HTML root';
 
 const output = `
-dY"` SEMANTIC FLOW:
+<h3>SEMANTIC FLOW:</h3>
 ${hierarchy || 'No tags detected'}
 
-dY"? CONTENT METRICS:
+<h3>CONTENT METRICS:</h3>
 <div class="stats">
 <div class="stat"><span class="stat-label">Words:</span><span class="stat-value">${wordCount}</span></div>
 <div class="stat"><span class="stat-label">Characters:</span><span class="stat-value">${charCount}</span></div>
 </div>
 
-dYZ_ KEY SECTIONS FOUND:
-${foundSemantic.length > 0 ? `�o. ${foundSemantic.join(', ')}` : '�s��,? No major semantic elements detected'}
+<h3>KEY SECTIONS FOUND:</h3>
+${foundSemantic.length > 0 ? foundSemantic.join(', ') : 'No major semantic elements detected'}
 
-dY'� RECOMMENDATIONS:
-${missingSemantic.length > 0 ? `Consider adding: ${missingSemantic.slice(0, 3).join(', ')}` : 'Structure looks good!'}
+<h3>RECOMMENDATIONS:</h3>
+${missingSemantic.length > 0 ? 'Consider adding: ' + missingSemantic.slice(0, 3).join(', ') : 'Structure looks good!'}
 `;
 
 document.getElementById('output').innerHTML = output;
