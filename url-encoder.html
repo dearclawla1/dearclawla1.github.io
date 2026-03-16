@@ -15,51 +15,122 @@ button:active{background:#3a3a3a}
 .result-box{background:#141414;padding:10px;border-radius:4px;min-height:50px;margin-top:5px;overflow:auto;max-height:100px}
 label{display:block;margin:5px 0 5px;cursor:pointer}
 .controls{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}
+.error-message{color:#ff6b6b;background:#3a1a1a;padding:8px;border-radius:4px;margin-top:10px;display:none}
 </style></head>
 <body>
 <div class="container">
 <div class="header"><a href="index.html" style="display:inline-block;margin-bottom:10px;">Home</a>URL Encoder/Decoder</div>
 <div class="controls">
+<button onclick="encodeUrl()">Encode URL</button>
+<button onclick="decodeUrl()">Decode URL</button>
 <button onclick="encodeBase64()">Encode Base64</button>
 <button onclick="decodeBase64()">Decode Base64</button>
 <button onclick="encodeHtml()">Encode HTML</button>
 <button onclick="decodeHtml()">Decode HTML</button>
-<button onclick="encodeUrl()">Encode URL</button>
-<button onclick="decodeUrl()">Decode URL</button>
+<button onclick="encodeUnicode()">Encode Unicode</button>
+<button onclick="decodeUnicode()">Decode Unicode</button>
 </div>
-<div class="input-row"><label>Text:</label><textarea id="inputText" placeholder="Enter or paste text here..."></textarea></div>
-<div class="input-row" style="margin-top:0"><label>Method:</label><select id="method"><option value="base64">Base64</option><option value="html">HTML Entity</option><option value="url">URL Encoded</option></select></div>
-<div class="input-row"><label>Action:</label><select id="action"><option value="encode">Encode</option><option value="decode">Decode</option></select></div>
+<div class="input-row">
+<textarea id="input" placeholder="Enter text to encode/decode..."></textarea>
+</div>
 <div class="result-box" id="result"></div>
+<div class="error-message" id="error"></div>
 </div>
 <script>
-const input=document.getElementById('inputText');
-const method=document.getElementById('method');
-const action=document.getElementById('action');
-const result=document.getElementById('result');
-function applyOp() {
-const text=input.value;
-const op=method.value;
-const ac=action.value;
-try {
-result.textContent=ac==='encode'?encode(op,text):decode(op,text);
-} catch(e) {
-result.textContent='Error: '+e.message;
+function showError(msg) {
+    const errorEl = document.getElementById('error');
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
 }
+function clearError() {
+    const errorEl = document.getElementById('error');
+    errorEl.style.display = 'none';
 }
-function encode(op,text) {
-if(op==='base64')return btoa(encodeURIComponent(text));
-if(op==='html')return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
-return encodeURIComponent(text);
+function encodeUrl() {
+    const input = document.getElementById('input').value;
+    clearError();
+    try {
+        const encoded = encodeURIComponent(input);
+        document.getElementById('result').textContent = encoded;
+    } catch (e) {
+        showError('Error encoding URL. Please try again.');
+    }
 }
-function decode(op,text) {
-if(op==='base64')try {return decodeURIComponent(atob(text));} catch {return text;};
-if(op==='html')try {return text.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#x27;/g,"'");} catch {return text;};
-try {return decodeURIComponent(text);} catch {return text;};
+function decodeUrl() {
+    const input = document.getElementById('input').value;
+    clearError();
+    try {
+        const decoded = decodeURIComponent(input);
+        document.getElementById('result').textContent = decoded;
+    } catch (e) {
+        showError('Error decoding URL. Invalid characters detected.');
+    }
 }
-input.addEventListener('input',applyOp);
-method.addEventListener('change',applyOp);
-action.addEventListener('change',applyOp);
+function encodeBase64() {
+    const input = document.getElementById('input').value;
+    clearError();
+    try {
+        const encoded = btoa(input);
+        document.getElementById('result').textContent = encoded;
+    } catch (e) {
+        showError('Error encoding Base64. Input may contain invalid characters.');
+    }
+}
+function decodeBase64() {
+    const input = document.getElementById('input').value;
+    clearError();
+    try {
+        const decoded = atob(input);
+        document.getElementById('result').textContent = decoded;
+    } catch (e) {
+        showError('Error decoding Base64. Invalid Base64 string.');
+    }
+}
+function encodeHtml() {
+    const input = document.getElementById('input').value;
+    clearError();
+    try {
+        const encoded = input.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+        document.getElementById('result').textContent = encoded;
+    } catch (e) {
+        showError('Error encoding HTML. Please try again.');
+    }
+}
+function decodeHtml() {
+    const input = document.getElementById('input').value;
+    clearError();
+    try {
+        const decoded = input.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#x27;/g, "'");
+        document.getElementById('result').textContent = decoded;
+    } catch (e) {
+        showError('Error decoding HTML. Invalid HTML entities detected.');
+    }
+}
+function encodeUnicode() {
+    const input = document.getElementById('input').value;
+    clearError();
+    try {
+        const encoded = input.split('').map(char => {
+            const code = char.charCodeAt(0).toString(16);
+            return '&#x' + code + ';';
+        }).join('');
+        document.getElementById('result').textContent = encoded;
+    } catch (e) {
+        showError('Error encoding Unicode. Please try again.');
+    }
+}
+function decodeUnicode() {
+    const input = document.getElementById('input').value;
+    clearError();
+    try {
+        const decoded = input.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+        });
+        document.getElementById('result').textContent = decoded;
+    } catch (e) {
+        showError('Error decoding Unicode. Invalid Unicode entities detected.');
+    }
+}
 </script>
 </body>
 </html>
