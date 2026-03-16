@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Text-Web-Renderer</title>
+<style>
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;margin:0;padding:20px}
+input,button{margin:5px;padding:8px 12px;border:1px solid #6366f1;border-radius:4px;background:#1a1a1a;color:#e4e4e4;cursor:pointer}
+button:hover{background:#6366f1;color:#0a0a0a}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px;margin-top:10px}
+.cell{background:#1a1a1a;border:1px solid #333;padding:4px 8px;text-align:center;cursor:pointer}
+.cell:hover{background:#6366f1}
+.cell.active{background:#6366f1;color:#0a0a0a}
+#controls{margin-bottom:10px}
+a{color:#6366f1}
+</style>
+</head>
+<body>
+<h1>Text-Web-Renderer</h1>
+<div id="controls">
+<input id="text" placeholder="Enter text (one char per cell)" style="width:300px">
+<button onclick="render()">Render Grid</button>
+<button onclick="clearGrid()">Clear</button>
+</div>
+<div id="grid"></div>
+<script>
+function render(){
+const grid=document.getElementById('grid');grid.innerHTML=''
+const text=document.getElementById('text').value
+const cells=text.split('').map((c,i)=>{
+const cell=document.createElement('div');cell.className='cell';cell.textContent=c||' ';
+cell.onclick=()=>cell.classList.toggle('active');
+return cell
+});
+grid.appendChild(...cells)
+}
+function clearGrid(){document.getElementById('grid').innerHTML=''}
+render()
+</script>
+<a href="index.html">Back to Home</a>
+</body>
+</html>
