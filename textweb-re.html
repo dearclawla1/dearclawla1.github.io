@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextWeb-RE - Text Editor with Real-Time Web Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #e4e4e4;
+            font-weight: 600;
+        }
+
+        .header a {
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            min-height: 600px;
+        }
+
+        .panel {
+            background: #111;
+            border-radius: 12px;
+            border: 1px solid #222;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #161616;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #a0a0a0;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5558e3;
+        }
+
+        .btn-secondary {
+            background: #222;
+            color: #e4e4e4;
+            border: 1px solid #333;
+        }
+
+        .btn-secondary:hover {
+            background: #333;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        textarea {
+            flex: 1;
+            background: #111;
+            color: #e4e4e4;
+            border: none;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        textarea:focus {
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        }
+
+        .preview-frame {
+            flex: 1;
+            background: white;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .status-bar {
+            padding: 10px 16px;
+            border-top: 1px solid #222;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .status-dot.loading {
+            background: #6366f1;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-dot.error {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #161616;
+            border-bottom: 1px solid #222;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-btn {
+            padding: 6px 10px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #a0a0a0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: #333;
+            color: #e4e4e4;
+        }
+
+        .toolbar-btn.active {
+            background: #6366f1;
+            color: white;
+            border-color: #6366f1;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #888;
+        }
+
+        .empty-state p {
+            font-size: 13px;
+            max-width: 300px;
+            line-height: 1.5;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            background: #10b981;
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification.error {
+            background: #ef4444;
+        }
+
+        .notification.info {
+            background: #6366f1;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            padding: 0 16px;
+            background: #161616;
+            border-bottom: 1px solid #222;
+        }
+
+        .tab {
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            color: #666;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: #222;
+            color: #a0a0a0;
+        }
+
+        .tab.active {
+            background: #111;
+            color: #e4e4e4;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #161616;
+            border-bottom: 1px solid #222;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            padding: 6px 10px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #a0a0a0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-action-btn:hover {
+            background: #333;
+            color: #e4e4e4;
+        }
+
+        .quick-action-btn.primary {
+            background: #6366f1;
+            color: white;
+            border-color: #6366f1;
+        }
+
+        .quick-action-btn.primary:hover {
+            background: #5558e3;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #161616;
+            border-bottom: 1px solid #222;
+            flex-wrap: wrap;
+        }
+
+        .action-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TextWeb-RE</h1>
+            <a href="index.html">Back to Home</a>
+        </div>
+
+        <div class="toolbar">
+            <button class="toolbar-btn" onclick="insertText('Heading 1', '# ')">Heading 1</button>
+            <button class="toolbar-btn" onclick="insertText('Heading 2', '## ')">Heading 2</button>
+            <button class="toolbar-btn" onclick="insertText('Heading 3', '### ')">Heading 3</button>
+            <button class="toolbar-btn" onclick="insertText('Bold', '**')">Bold</button>
+            <button class="toolbar-btn" onclick="insertText('Italic', '*')">Italic</button>
+            <button class="toolbar-btn" onclick="insertText('Link', '[text](url)')">Link</button>
+            <button class="toolbar-btn" onclick="insertText('Code', '`')">Code</button>
+            <button class="toolbar-btn" onclick="insertText('Quote', '> ')">Quote</button>
+            <button class="toolbar-btn" onclick="insertText('List', '- ')">List</button>
+            <button class="toolbar-btn" onclick="insertText('Horizontal Rule', '---')">HR</button>
+        </div>
+
+        <div class="quick-actions">
+            <button class="quick-action-btn primary" onclick="loadSample('welcome')">Load Welcome</button>
+            <button class="quick-action-btn" onclick="loadSample('markdown')">Load Markdown</button>
+            <button class="quick-action-btn" onclick="loadSample('html')">Load HTML</button>
+            <button class="quick-action-btn" onclick="loadSample('json')">Load JSON</button>
+            <button class="quick-action-btn" onclick="loadSample('css')">Load CSS</button>
+            <button class="quick-action-btn" onclick="loadSample('javascript')">Load JavaScript</button>
+            <button class="quick-action-btn" onclick="loadSample('sql')">Load SQL</button>
+            <button class="quick-action-btn" onclick="clearEditor()">Clear</button>
+        </div>
+
+        <div class="code-actions">
+            <span class="action-label">Code Actions</span>
+            <button class="toolbar-btn" onclick="formatCode()">Format</button>
+            <button class="toolbar-btn" onclick="minifyCode()">Minify</button>
+            <button class="toolbar-btn" onclick="validateMarkdown()">Validate MD</button>
+            <button class="toolbar-btn" onclick="copyToClipboard()">Copy</button>
+            <button class="toolbar-btn" onclick="saveToLocal()">Save Local</button>
+            <button class="toolbar-btn" onclick="loadFromLocal()">Load Local</button>
+        </div>
+
+        <div class="editor-container">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Source Code</span>
+                    <div class="panel-actions">
+                        <button class="btn btn-secondary" onclick="toggleLineNumbers()">Toggle Line Numbers</button>
+                    </div>
+                </div>
+                <div class="toolbar">
+                    <button class="toolbar-btn" onclick="togglePreview()">Preview</button>
+                    <button class="toolbar-btn" onclick="toggleSource()">Source</button>
+                </div>
+                <div id="editor-container">
+                    <textarea id="source-editor" placeholder="Start typing your markdown here...
+
+# Welcome to TextWeb-RE
+
+This is a powerful text editor with real-time web preview.
+
+## Features
+
+- **Live Preview**: See your markdown rendered instantly
+- **Quick Actions**: Insert common markdown elements
+- **Code Formatting**: Format, minify, and validate code
+- **Local Storage**: Save and load your work locally
+- **Sample Content**: Load pre-written samples
+
+## How to Use
+
+1. Type markdown in the source editor
+2. Click "Preview" to see rendered output
+3. Use toolbar buttons for quick insertions
+4. Save your work to local storage
+
+## Markdown Tips
+
+- Use `#` for headings
+- Use `**` for bold text
+- Use `*` for italic text
+- Use `[text](url)` for links
+- Use `` ` `` for code
+
+---
+
+Enjoy writing!
+" rows="15" spellcheck="false" id="source"></textarea>
+                </div>
+                <div class="status-bar">
+                    <div class="status-item">
+                        <div class="status-dot" id="status-dot"></div>
+                        <span id="status-text">Ready</span>
+                    </div>
+                    <span id="char-count">0 characters</span>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Web Preview</span>
+                    <div class="panel-actions">
+                        <button class="btn btn-secondary" onclick="toggleLineNumbers()">Toggle Line Numbers</button>
+                    </div>
+                </div>
+                <div class="toolbar">
+                    <button class="toolbar-btn" onclick="togglePreview()">Preview</button>
+                    <button class="toolbar-btn" onclick="toggleSource()">Source</button>
+                </div>
+                <div id="preview-container">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <h3>Preview Area</h3>
+                        <p>Click "Preview" to see your markdown rendered as HTML. This area will display the live preview of your source code.</p>
+                    </div>
+                </div>
+                <div class="status-bar">
+                    <div class="status-item">
+                        <div class="status-dot" id="preview-status-dot"></div>
+                        <span id="preview-status-text">Waiting for preview</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('editor')">Editor</button>
+            <button class="tab" onclick="switchTab('history')">History</button>
+            <button class="tab" onclick="switchTab('settings')">Settings</button>
+        </div>
+
+        <div class="tab-content active" id="editor-tab">
+            <div class="editor-container">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Source Code</span>
+                    </div>
+                    <div id="editor-container">
+                        <textarea id="source-editor" placeholder="Start typing your markdown here..." rows="20" spellcheck="false"></textarea>
+                    </div>
+                    <div class="status-bar">
+                        <div class="status-item">
+                            <div class="status-dot" id="status-dot"></div>
+                            <span id="status-text">Ready</span>
+                        </div>
+                        <span id="char-count">0 characters</span>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Web Preview</span>
+                    </div>
+                    <div id="preview-container">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <h3>Preview Area</h3>
+                            <p>Click "Preview" to see your markdown rendered as HTML. This area will display the live preview of your source code.</p>
+                        </div>
+                    </div>
+                    <div class="status-bar">
+                        <div class="status-item">
+                            <div class="status-dot" id="preview-status-dot"></div>
+                            <span id="preview-status-text">Waiting for preview</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="history-tab">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Saved History</span>
+                </div>
+                <div id="history-list" style="padding: 16px; overflow-y: auto; flex: 1;">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <h3>No History Yet</h3>
+                        <p>Save your work to local storage to see it appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="settings-tab">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Settings</span>
+                </div>
+                <div style="padding: 16px;">
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Font Size</label>
+                        <input type="range" id="font-size" min="12" max="24" value="14" onchange="updateFontSize(this.value)">
+                        <span id="font-size-value">14px</span>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Line Numbers</label>
+                        <button class="toolbar-btn" onclick="toggleLineNumbers()">Toggle</button>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Auto-Preview</label>
+                        <button class="toolbar-btn" onclick="toggleAutoPreview()">Toggle</button>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Clear All Data</label>
+                        <button class="btn btn-danger" onclick="clearAllData()">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notification" id="notification"></div>
+    </div>
+
+    <script>
+        const sourceEditor = document.getElementById('source-editor');
+        const previewContainer = document.getElementById('preview-container');
+        const editorContainer = document.getElementById('editor-container');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const previewStatusDot = document.getElementById('preview-status-dot');
+        const previewStatusText = document.getElementById('preview-status-text');
+        const charCount = document.getElementById('char-count');
+        const historyList = document.getElementById('history-list');
+        const fontSizeRange = document.getElementById('font-size');
+        const fontSizeValue = document.getElementById('font-size-value');
+
+        let lineNumbersEnabled = true;
+        let autoPreviewEnabled = true;
+        let previewMode = false;
+
+        // Load saved data on init
+        function init() {
+            const savedContent = localStorage.getItem('textweb-re-content');
+            if (savedContent) {
+                sourceEditor.value = savedContent;
+                updateCharCount();
+            }
+
+            const savedFontSize = localStorage.getItem('textweb-re-fontsize');
+            if (savedFontSize) {
+                fontSizeRange.value = savedFontSize;
+                fontSizeValue.textContent = savedFontSize + 'px';
+                sourceEditor.style.fontSize = savedFontSize + 'px';
+            }
+
+            const lineNumbersSaved = localStorage.getItem('textweb-re-linenums');
+            if (lineNumbersSaved === 'false') {
+                lineNumbersEnabled = false;
+                toggleLineNumbers();
+            }
+
+            const autoPreviewSaved = localStorage.getItem('textweb-re-autopreview');
+            if (autoPreviewSaved === 'false') {
+                autoPreviewEnabled = false;
+                toggleAutoPreview();
+            }
+
+            loadHistory();
+            setupAutoSave();
+            setupAutoPreview();
+        }
+
+        // Setup auto-save
+        function setupAutoSave() {
+            sourceEditor.addEventListener('input', () => {
+                localStorage.setItem('textweb-re-content', sourceEditor.value);
+                updateCharCount();
+            });
+        }
+
+        // Setup auto-preview
+        function setupAutoPreview() {
+            sourceEditor.addEventListener('input', () => {
+                if (autoPreviewEnabled) {
+                    updatePreview();
+                }
+            });
+        }
+
+        // Update preview
+        function updatePreview() {
+            const content = sourceEditor.value;
+            previewStatusDot.className = 'status-dot loading';
+            previewStatusText.textContent = 'Updating...';
+
+            setTimeout(() => {
+                try {
+                    const html = marked.parse(content);
+                    previewContainer.innerHTML = html;
+                    previewStatusDot.className = 'status-dot';
+                    previewStatusText.textContent = 'Preview Ready';
+                } catch (e) {
+                    previewContainer.innerHTML = '<div style="padding: 20px; color: #ef4444;">Error rendering preview. Check your markdown syntax.</div>';
+                    previewStatusDot.className = 'status-dot error';
+                    previewStatusText.textContent = 'Error';
+                }
+            }, 100);
+        }
+
+        // Toggle preview mode
+        function togglePreview() {
+            previewMode = !previewMode;
+            if (previewMode) {
+                previewContainer.style.display = 'block';
+                editorContainer.style.display = 'none';
+                previewStatusDot.className = 'status-dot';
+                previewStatusText.textContent = 'Preview Active';
+            } else {
+                previewContainer.style.display = 'none';
+                editorContainer.style.display = 'block';
+                previewStatusDot.className = 'status-dot';
+                previewStatusText.textContent = 'Waiting for preview';
+            }
+            localStorage.setItem('textweb-re-preview', previewMode ? 'true' : 'false');
+        }
+
+        // Toggle source mode
+        function toggleSource() {
+            previewMode = !previewMode;
+            if (previewMode) {
+                previewContainer.style.display = 'block';
+                editorContainer.style.display = 'none';
+            } else {
+                previewContainer.style.display = 'none';
+                editorContainer.style.display = 'block';
+            }
+            localStorage.setItem('textweb-re-preview', previewMode ? 'true' : 'false');
+        }
+
+        // Toggle line numbers
+        function toggleLineNumbers() {
+            lineNumbersEnabled = !lineNumbersEnabled;
+            if (lineNumbersEnabled) {
+                sourceEditor.style.borderRight = '1px solid #333';
+                sourceEditor.style.paddingRight = '40px';
+                localStorage.setItem('textweb-re-linenums', 'true');
+            } else {
+                sourceEditor.style.borderRight = 'none';
+                sourceEditor.style.paddingRight = '16px';
+                localStorage.setItem('textweb-re-linenums', 'false');
+            }
+        }
+
+        // Update font size
+        function updateFontSize(size) {
+            fontSizeRange.value = size;
+            fontSizeValue.textContent = size + 'px';
+            sourceEditor.style.fontSize = size + 'px';
+            localStorage.setItem('textweb-re-fontsize', size);
+        }
+
+        // Toggle auto-preview
+        function toggleAutoPreview() {
+            autoPreviewEnabled = !autoPreviewEnabled;
+            localStorage.setItem('textweb-re-autopreview', autoPreviewEnabled ? 'true' : 'false');
+            showNotification(autoPreviewEnabled ? 'Auto-preview enabled' : 'Auto-preview disabled', 'info');
+        }
+
+        // Update character count
+        function updateCharCount() {
+            const count = sourceEditor.value.length;
+            charCount.textContent = count + ' characters';
+        }
+
+        // Clear editor
+        function clearEditor() {
+            if (confirm('Clear all content?')) {
+                sourceEditor.value = '';
+                updateCharCount();
+                localStorage.removeItem('textweb-re-content');
+                showNotification('Editor cleared', 'info');
+            }
+        }
+
+        // Load sample content
+        function loadSample(type) {
+            const samples = {
+                welcome: `# Welcome to TextWeb-RE
+
+This is a powerful text editor with real-time web preview.
+
+## Features
+
+- **Live Preview**: See your markdown rendered instantly
+- **Quick Actions**: Insert common markdown elements
+- **Code Formatting**: Format, minify, and validate code
+- **Local Storage**: Save and load your work locally
+- **Sample Content**: Load pre-written samples
+
+## How to Use
+
+1. Type markdown in the source editor
+2. Click "Preview" to see rendered output
+3. Use toolbar buttons for quick insertions
+4. Save your work to local storage
+
+## Markdown Tips
+
+- Use \`# \` for headings
+- Use \`**\` for bold text
+- Use \`*\` for italic text
+- Use \`[text](url)\` for links
+- Use \` \` for code
+
+---
+
+Enjoy writing!`,
+                markdown: `# Markdown Demo
+
+This is a sample markdown document.
+
+## Headings
+
+# Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+
+## Text Formatting
+
+**Bold text** and *italic text*
+
+~~Strikethrough~~
+
+`[Link text](https://example.com)`
+
+`Inline \`code\``
+
+## Lists
+
+### Unordered List
+
+- Item 1
+- Item 2
+- Item 3
+
+### Ordered List
+
+1. First item
+2. Second item
+3. Third item
+
+## Blockquote
+
+> This is a blockquote.
+> It can span multiple lines.
+
+## Code Blocks
+
+\`\`\`javascript
+function hello() {
+  console.log('Hello, World!');
+}
+\`\`\`
+
+## Tables
+
+| Name | Age | City |
+|------|-----|------|
+| John | 28  | NYC  |
+| Jane | 24  | LA   |`,
+                html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Sample</title>
+</head>
+<body>
+    <h1>HTML Sample Document</h1>
+    <p>This is a sample HTML document.</p>
+    <div class="container">
+        <h2>Content</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+    </div>
+</body>
+</html>`,
+                json: `{
+  "name": "John Doe",
+  "age": 30,
+  "city": "New York",
+  "skills": ["JavaScript", "Python", "HTML", "CSS"],
+  "active": true,
+  "address": {
+    "street": "123 Main St",
+    "zip": "10001"
+  },
+  "contact": {
+    "email": "john@example.com",
+    "phone": "555-1234"
+  }
+}`,
+                css: `/* CSS Sample */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h1 {
+    color: #333;
+    border-bottom: 2px solid #6366f1;
+    padding-bottom: 10px;
+}
+
+p {
+    line-height: 1.6;
+    color: #666;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.button:hover {
+    background: #5558e3;
+}`,
+                javascript: `// JavaScript Sample
+
+function greet(name) {
+    console.log(\`Hello, \${name}!\`);
+}
+
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);
+
+console.log(doubled);
+
+// Async function
+async function fetchData() {
+    try {
+        const response = await fetch('https://api.example.com/data');
+        const data = await response.json();
+        console.log(data);
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}`,
+                sql: `-- SQL Sample
+
+SELECT name, age, city
+FROM users
+WHERE age > 18
+ORDER BY name ASC;
+
+-- Insert statement
+INSERT INTO users (name, age, city)
+VALUES ('John Doe', 30, 'New York');
+
+-- Update statement
+UPDATE users
+SET age = 31
+WHERE name = 'John Doe';
+
+-- Delete statement
+DELETE FROM users
+WHERE age < 18;`,
+            };
+
+            sourceEditor.value = samples[type] || '';
+            updateCharCount();
+            if (autoPreviewEnabled) {
+                updatePreview();
+            }
+            showNotification(\`Loaded \${type} sample\`, 'info');
+        }
+
+        // Insert text
+        function insertText(text, prefix) {
+            const start = sourceEditor.selectionStart;
+            const end = sourceEditor.selectionEnd;
+            const before = sourceEditor.value.substring(0, start);
+            const after = sourceEditor.value.substring(end);
+            sourceEditor.value = before + prefix + text + after;
+            sourceEditor.selectionStart = sourceEditor.selectionEnd = start + prefix.length;
+            updateCharCount();
+            if (autoPreviewEnabled) {
+                updatePreview();
+            }
+        }
+
+        // Format code
+        function formatCode() {
+            try {
+                const content = sourceEditor.value;
+                const formatted = prettier.format(content, { parser: 'markdown' });
+                sourceEditor.value = formatted;
+                updateCharCount();
+                showNotification('Code formatted', 'success');
+            } catch (e) {
+                showNotification('Formatting failed', 'error');
+            }
+        }
+
+        // Minify code
+        function minifyCode() {
+            try {
+                const content = sourceEditor.value;
+                const minified = JSON.stringify(JSON.parse(content), null, 0);
+                sourceEditor.value = minified;
+                updateCharCount();
+                showNotification('Code minified', 'success');
+            } catch (e) {
+                showNotification('Minification failed', 'error');
+            }
+        }
+
+        // Validate markdown
+        function validateMarkdown() {
+            try {
+                const content = sourceEditor.value;
+                marked.parse(content);
+                showNotification('Markdown is valid', 'success');
+            } catch (e) {
+                showNotification('Markdown validation failed', 'error');
+            }
+        }
+
+        // Copy to clipboard
+        function copyToClipboard() {
+            navigator.clipboard.writeText(sourceEditor.value).then(() => {
+                showNotification('Copied to clipboard', 'success');
+            }).catch(() => {
+                showNotification('Failed to copy', 'error');
+            });
+        }
+
+        // Save to local storage
+        function saveToLocal() {
+            localStorage.setItem('textweb-re-content', sourceEditor.value);
+            showNotification('Saved to local storage', 'success');
+        }
+
+        // Load from local storage
+        function loadFromLocal() {
+            const saved = localStorage.getItem('textweb-re-content');
+            if (saved) {
+                sourceEditor.value = saved;
+                updateCharCount();
+                showNotification('Loaded from local storage', 'success');
+            } else {
+                showNotification('No saved content found', 'info');
+            }
+        }
+
+        // Load history
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('textweb-re-history') || '[]');
+            if (history.length === 0) {
+                historyList.innerHTML = \`<div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <h3>No History Yet</h3>
+                    <p>Save your work to local storage to see it appear here.</p>
+                </div>\`;
+                return;
+            }
+
+            historyList.innerHTML = history.map((item, index) => \`
+                <div style="background: #161616; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #222;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 500; color: #e4e4e4;">\${item.title}</span>
+                        <span style="font-size: 11px; color: #666;">\${item.timestamp}</span>
+                    </div>
+                    <div style="font-size: 12px; color: #888; white-space: pre-wrap;">
+                        \${item.content.substring(0, 200)}...
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button class="btn btn-secondary" style="font-size: 11px;" onclick="loadFromHistory(\${index})">Load</button>
+                        <button class="btn btn-danger" style="font-size: 11px;" onclick="deleteFromHistory(\${index})">Delete</button>
+                    </div>
+                </div>
+            \`).join('');
+        }
+
+        // Save to history
+        function saveToHistory() {
+            const history = JSON.parse(localStorage.getItem('textweb-re-history') || '[]');
+            history.push({
+                title: 'Untitled',
+                content: sourceEditor.value,
+                timestamp: new Date().toLocaleString()
+            });
+            localStorage.setItem('textweb-re-history', JSON.stringify(history));
+            loadHistory();
+        }
+
+        // Load from history
+        function loadFromHistory(index) {
+            const history = JSON.parse(localStorage.getItem('textweb-re-history') || '[]');
+            sourceEditor.value = history[index].content;
+            updateCharCount();
+            showNotification('Loaded from history', 'success');
+        }
+
+        // Delete from history
+        function deleteFromHistory(index) {
+            const history = JSON.parse(localStorage.getItem('textweb-re-history') || '[]');
+            history.splice(index, 1);
+            localStorage.setItem('textweb-re-history', JSON.stringify(history));
+            loadHistory();
+            showNotification('Deleted from history', 'success');
+        }
+
+        // Switch tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification show ' + type;
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Clear all data including history?')) {
+                localStorage.clear();
+                sourceEditor.value = '';
+                updateCharCount();
+                loadHistory();
+                showNotification('All data cleared', 'info');
+            }
+        }
+
+        // Setup auto-save
+        function setupAutoSave() {
+            sourceEditor.addEventListener('input', () => {
+                localStorage.setItem('textweb-re-content', sourceEditor.value);
+                updateCharCount();
+            });
+        }
+
+        // Setup auto-preview
+        function setupAutoPreview() {
+            sourceEditor.addEventListener('input', () => {
+                if (autoPreviewEnabled) {
+                    updatePreview();
+                }
+            });
+        }
+
+        // Initialize
+        init();
+
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:['textweb-re','load',new Date().toISOString()]})}).catch(()=>{});
+    </script>
+</body>
+</html>
