@@ -33,6 +33,19 @@ document.getElementById('shortcuts').prepend(div);
 document.getElementById('key').value='';
 document.getElementById('desc').value='';
 }
+function loadShortcuts(){
+const saved=localStorage.getItem('shortcuts');
+if(saved){
+const shortcuts=JSON.parse(saved);
+shortcuts.forEach(item=>{
+const div=document.createElement('div');
+div.className='shortcut-item';
+div.innerHTML=`<span class="shortcut-key">${item.key}</span><span class="shortcut-desc">${item.desc}</span>`;
+document.getElementById('shortcuts').prepend(div);
+});
+}
+}
+window.onload=loadShortcuts;
 </script>
 </body>
 </html>
