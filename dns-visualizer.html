@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Visualizer - Professional DNS Record Explorer</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #121212;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #e4e4e4;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --accent: #6366f1;
+            --accent-hover: #5558e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #2a2a2a;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --radius: 8px;
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent-hover);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Search Section */
+        .search-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .search-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 14px 18px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-btn {
+            padding: 14px 24px;
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .search-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .search-btn:active {
+            transform: scale(0.98);
+        }
+
+        .search-btn:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+        }
+
+        .record-type-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .type-checkbox {
+            display: none;
+        }
+
+        .type-label {
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .type-checkbox:checked + .type-label {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .type-checkbox:checked + .type-label:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Results Section */
+        .results-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            min-height: 500px;
+        }
+
+        .results-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        /* DNS Record Display */
+        .record-display {
+            display: none;
+        }
+
+        .record-display.active {
+            display: block;
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .record-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .record-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .action-btn.copy-btn {
+            background: var(--bg-tertiary);
+        }
+
+        .action-btn.copy-btn:hover {
+            background: var(--border);
+        }
+
+        .record-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 15px;
+        }
+
+        .info-card h3 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .info-card p {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        /* Record Details */
+        .record-details {
+            margin-top: 20px;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section h3 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-section h3::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            word-break: break-all;
+            max-width: 60%;
+            text-align: right;
+        }
+
+        /* Record Visualization */
+        .record-viz {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .record-viz h3 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+
+        .viz-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .viz-node {
+            padding: 12px 18px;
+            background: var(--accent);
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .viz-connector {
+            width: 2px;
+            height: 30px;
+            background: var(--border);
+        }
+
+        .viz-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 5px;
+        }
+
+        /* History Section */
+        .history-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        .history-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: var(--accent);
+        }
+
+        .history-domain {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .history-type {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .history-time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .history-delete {
+            background: none;
+            border: none;
+            color: var(--error);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .history-delete:hover {
+            opacity: 1;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state.active {
+            display: block;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 15px 20px;
+            margin-top: 10px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .toast-icon {
+            font-size: 1.2rem;
+        }
+
+        .toast-message {
+            flex: 1;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        .stats-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: var(--radius);
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Keyboard Shortcuts Help */
+        .shortcuts-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        .shortcuts-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .shortcuts-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+        }
+
+        .shortcut-key {
+            background: var(--accent);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .shortcut-action {
+            color: var(--text-secondary);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .search-input-group {
+                flex-direction: column;
+            }
+
+            .record-info {
+                grid-template-columns: 1fr;
+            }
+
+            .viz-container {
+                flex-direction: column;
+            }
+
+            .viz-connector {
+                width: 30px;
+                height: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>DNS Visualizer</h1>
+            <p>Professional DNS record explorer and visualizer. Query DNS records, view detailed information, and track your history. Supports A, AAAA, CNAME, MX, TXT, NS, and SOA records.</p>
+            <a href="index.html" class="back-link">← Back to Home</a>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Search Section -->
+            <section class="search-section">
+                <h2>Query DNS Records</h2>
+                
+                <div class="search-input-group">
+                    <input type="text" id="domainInput" class="search-input" placeholder="Enter domain (e.g., example.com)" autocomplete="off">
+                    <button id="searchBtn" class="search-btn">Query DNS</button>
+                </div>
+
+                <div class="record-type-selector">
+                    <input type="checkbox" id="typeA" class="type-checkbox" checked>
+                    <label for="typeA" class="type-label">A Record</label>
+
+                    <input type="checkbox" id="typeAAAA" class="type-checkbox">
+                    <label for="typeAAAA" class="type-label">AAAA Record</label>
+
+                    <input type="checkbox" id="typeCNAME" class="type-checkbox">
+                    <label for="typeCNAME" class="type-label">CNAME Record</label>
+
+                    <input type="checkbox" id="typeMX" class="type-checkbox">
+                    <label for="typeMX" class="type-label">MX Record</label>
+
+                    <input type="checkbox" id="typeTXT" class="type-checkbox">
+                    <label for="typeTXT" class="type-label">TXT Record</label>
+
+                    <input type="checkbox" id="typeNS" class="type-checkbox">
+                    <label for="typeNS" class="type-label">NS Record</label>
+
+                    <input type="checkbox" id="typeSOA" class="type-checkbox">
+                    <label for="typeSOA" class="type-label">SOA Record</label>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p class="loading-text">Querying DNS servers...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <p>Enter a domain name to start querying DNS records</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px; color: var(--text-muted);">
+                        Try: example.com, google.com, yourdomain.org
+                    </p>
+                </div>
+
+                <!-- Results Display -->
+                <div id="results" class="record-display">
+                    <!-- Results will be populated here -->
+                </div>
+
+                <!-- History Section -->
+                <section class="history-section">
+                    <h2>Query History</h2>
+                    <div id="historyList" class="history-list">
+                        <!-- History items will be populated here -->
+                    </div>
+                    <button id="clearHistoryBtn" class="action-btn" style="margin-top: 10px; width: 100%;">Clear History</button>
+                </section>
+
+                <!-- Stats Section -->
+                <section class="stats-section">
+                    <h2>Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalQueries">0</div>
+                            <div class="stat-label">Total Queries</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="uniqueDomains">0</div>
+                            <div class="stat-label">Unique Domains</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="recordTypes">0</div>
+                            <div class="stat-label">Record Types</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avgRecords">0</div>
+                            <div class="stat-label">Avg Records/Query</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Keyboard Shortcuts -->
+                <section class="shortcuts-section">
+                    <h2>Keyboard Shortcuts</h2>
+                    <div class="shortcuts-list">
+                        <div class="shortcut-item">
+                            <span class="shortcut-key">Ctrl</span>
+                            <span class="shortcut-key">K</span>
+                            <span class="shortcut-action">Focus search</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="shortcut-key">Ctrl</span>
+                            <span class="shortcut-key">C</span>
+                            <span class="shortcut-action">Copy record</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="shortcut-key">Ctrl</span>
+                            <span class="shortcut-key">H</span>
+                            <span class="shortcut-action">Clear history</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="shortcut-key">Ctrl</span>
+                            <span class="shortcut-key">S</span>
+                            <span class="shortcut-action">Export data</span>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>DNS Visualizer - Professional DNS Record Explorer</p>
+        <p style="font-size: 0.8rem; margin-top: 5px;">Powered by Cloudflare DNS API</p>
+    </footer>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        // DNS Visualizer - Main Application
+        (function() {
+            'use strict';
+
+            // DOM Elements
+            const domainInput = document.getElementById('domainInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const loading = document.getElementById('loading');
+            const emptyState = document.getElementById('emptyState');
+            const results = document.getElementById('results');
+            const historyList = document.getElementById('historyList');
+            const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+            const toastContainer = document.getElementById('toastContainer');
+
+            // Statistics Elements
+            const totalQueriesEl = document.getElementById('totalQueries');
+            const uniqueDomainsEl = document.getElementById('uniqueDomains');
+            const recordTypesEl = document.getElementById('recordTypes');
+            const avgRecordsEl = document.getElementById('avgRecords');
+
+            // Record Type Checkboxes
+            const typeCheckboxes = {
+                A: document.getElementById('typeA'),
+                AAAA: document.getElementById('typeAAAA'),
+                CNAME: document.getElementById('typeCNAME'),
+                MX: document.getElementById('typeMX'),
+                TXT: document.getElementById('typeTXT'),
+                NS: document.getElementById('typeNS'),
+                SOA: document.getElementById('typeSOA')
+            };
+
+            // Storage Keys
+            const STORAGE_KEYS = {
+                HISTORY: 'dns_history',
+                STATS: 'dns_stats',
+                RECORDS: 'dns_records'
+            };
+
+            // Statistics Data
+            let stats = {
+                totalQueries: 0,
+                uniqueDomains: new Set(),
+                recordTypes: new Set(),
+                totalRecords: 0
+            };
+
+            // Initialize from localStorage
+            function init() {
+                try {
+                    const savedHistory = localStorage.getItem(STORAGE_KEYS.HISTORY);
+                    if (savedHistory) {
+                        const history = JSON.parse(savedHistory);
+                        renderHistory(history);
+                    }
+
+                    const savedStats = localStorage.getItem(STORAGE_KEYS.STATS);
+                    if (savedStats) {
+                        stats = JSON.parse(savedStats);
+                        updateStatsDisplay();
+                    }
+                } catch (e) {
+                    console.error('Error initializing:', e);
+                }
+            }
+
+            // Update Statistics Display
+            function updateStatsDisplay() {
+                totalQueriesEl.textContent = stats.totalQueries;
+                uniqueDomainsEl.textContent = stats.uniqueDomains.size;
+                recordTypesEl.textContent = stats.recordTypes.size;
+                const avg = stats.totalQueries > 0 ? Math.round(stats.totalRecords / stats.totalQueries) : 0;
+                avgRecordsEl.textContent = avg;
+            }
+
+            // Render History
+            function renderHistory(history) {
+                historyList.innerHTML = '';
+                history.slice(-10).reverse().forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    div.innerHTML = `
+                        <div>
+                            <div class="history-domain">${escapeHtml(item.domain)}</div>
+                            <div class="history-type">${item.type} Record</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="history-time">${formatTime(item.timestamp)}</span>
+                            <button class="history-delete" onclick="deleteHistoryItem('${item.id}')">×</button>
+                        </div>
+                    `;
+                    div.addEventListener('click', (e) => {
+                        if (!e.target.classList.contains('history-delete')) {
+                            domainInput.value = item.domain;
+                            loadRecord(item.type, item.domain);
+                        }
+                    });
+                    historyList.appendChild(div);
+                });
+            }
+
+            // Delete History Item
+            function deleteHistoryItem(id) {
+                let history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+                history = history.filter(item => item.id !== id);
+                localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+                renderHistory(history);
+                showToast('History item deleted', 'success');
+            }
+
+            // Clear History
+            clearHistoryBtn.addEventListener('click', () => {
+                localStorage.removeItem(STORAGE_KEYS.HISTORY);
+                renderHistory([]);
+                showToast('History cleared', 'success');
+            });
+
+            // Search Button Click
+            searchBtn.addEventListener('click', handleSearch);
+
+            // Enter Key
+            domainInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+
+            // Handle Search
+            async function handleSearch() {
+                const domain = domainInput.value.trim();
+                if (!domain) {
+                    showToast('Please enter a domain name', 'error');
+                    return;
+                }
+
+                // Show loading
+                loading.classList.add('active');
+                emptyState.classList.remove('active');
+                results.classList.remove('active');
+
+                // Get selected record types
+                const selectedTypes = [];
+                Object.keys(typeCheckboxes).forEach(type => {
+                    if (typeCheckboxes[type].checked) {
+                        selectedTypes.push(type);
+                    }
+                });
+
+                // Query DNS
+                try {
+                    const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${selectedTypes.join(',')}`, {
+                        headers: {
+                            'Accept': 'application/dns-json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('DNS query failed');
+                    }
+
+                    const data = await response.json();
+                    displayResults(data, domain);
+
+                    // Update stats
+                    updateStats(domain, data);
+
+                    // Save to history
+                    addToHistory(domain, selectedTypes.join(','));
+
+                } catch (error) {
+                    console.error('DNS query error:', error);
+                    showToast(`Query failed: ${error.message}`, 'error');
+                } finally {
+                    loading.classList.remove('active');
+                }
+            }
+
+            // Display Results
+            function displayResults(data, domain) {
+                results.classList.add('active');
+                results.innerHTML = '';
+
+                if (data.Status === 'NoError' && data.Answer) {
+                    // Display individual records
+                    data.Answer.forEach(record => {
+                        const recordDiv = document.createElement('div');
+                        recordDiv.className = 'record-item';
+                        recordDiv.innerHTML = `
+                            <div class="record-header">
+                                <div class="record-title">${record.type} Record</div>
+                                <div class="record-actions">
+                                    <button class="action-btn copy-btn" onclick="copyRecord('${JSON.stringify(record).replace(/'/g, "&#39;")}')">Copy</button>
+                                </div>
+                            </div>
+                            <div class="record-info">
+                                <div class="info-card">
+                                    <h3>Domain</h3>
+                                    <p>${escapeHtml(domain)}</p>
+                                </div>
+                                <div class="info-card">
+                                    <h3>Type</h3>
+                                    <p>${record.type}</p>
+                                </div>
+                                <div class="info-card">
+                                    <h3>Value</h3>
+                                    <p>${escapeHtml(record.data || record.target || record.exchange || record.target || record.data || 'N/A')}</p>
+                                </div>
+                            </div>
+                            <div class="record-details">
+                                ${getRecordDetails(record)}
+                            </div>
+                        `;
+                        results.appendChild(recordDiv);
+                    });
+                } else if (data.Status === 'NXDOMAIN') {
+                    results.innerHTML = `
+                        <div class="empty-state active">
+                            <div class="empty-state-icon">❌</div>
+                            <p>${escapeHtml(domain)} does not exist</p>
+                            <p style="font-size: 0.9rem; margin-top: 10px; color: var(--text-muted);">
+                                The domain name could not be resolved
+                            </p>
+                        </div>
+                    `;
+                } else if (data.Status === 'SERVFAIL') {
+                    results.innerHTML = `
+                        <div class="empty-state active">
+                            <div class="empty-state-icon">⚠️</div>
+                            <p>Server failure</p>
+                            <p style="font-size: 0.9rem; margin-top: 10px; color: var(--text-muted);">
+                                DNS server returned a failure
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="empty-state active">
+                            <div class="empty-state-icon">🔍</div>
+                            <p>No records found for ${escapeHtml(domain)}</p>
+                            <p style="font-size: 0.9rem; margin-top: 10px; color: var(--text-muted);">
+                                Try different record types or check if the domain exists
+                            </p>
+                        </div>
+                    `;
+                }
+            }
+
+            // Get Record Details
+            function getRecordDetails(record) {
+                const details = [];
+                
+                if (record.type === 'A') {
+                    details.push(`<div class="detail-item"><span class="detail-label">IPv4 Address</span><span class="detail-value">${escapeHtml(record.data || 'N/A')}</span></div>`);
+                } else if (record.type === 'AAAA') {
+                    details.push(`<div class="detail-item"><span class="detail-label">IPv6 Address</span><span class="detail-value">${escapeHtml(record.data || 'N/A')}</span></div>`);
+                } else if (record.type === 'CNAME') {
+                    details.push(`<div class="detail-item"><span class="detail-label">Canonical Name</span><span class="detail-value">${escapeHtml(record.data || 'N/A')}</span></div>`);
+                } else if (record.type === 'MX') {
+                    details.push(`<div class="detail-item"><span class="detail-label">Mail Server</span><span class="detail-value">${escapeHtml(record.exchange || 'N/A')}</span></div>`);
+                    details.push(`<div class="detail-item"><span class="detail-label">Priority</span><span class="detail-value">${record.priority || 'N/A'}</span></div>`);
+                } else if (record.type === 'TXT') {
+                    details.push(`<div class="detail-item"><span class="detail-label">Text Data</span><span class="detail-value">${escapeHtml(record.data || 'N/A')}</span></div>`);
+                } else if (record.type === 'NS') {
+                    details.push(`<div class="detail-item"><span class="detail-label">Name Server</span><span class="detail-value">${escapeHtml(record.data || 'N/A')}</span></div>`);
+                } else if (record.type === 'SOA') {
+                    details.push(`<div class="detail-item"><span class="detail-label">MNAME</span><span class="detail-value">${escapeHtml(record.mname || 'N/A')}</span></div>`);
+                    details.push(`<div class="detail-item"><span class="detail-label">RNAME</span><span class="detail-value">${escapeHtml(record.rname || 'N/A')}</span></div>`);
+                    details.push(`<div class="detail-item"><span class="detail-label">Serial</span><span class="detail-value">${record.serial || 'N/A'}</span></div>`);
+                }
+
+                return details.join('');
+            }
+
+            // Update Statistics
+            function updateStats(domain, data) {
+                stats.totalQueries++;
+                stats.uniqueDomains.add(domain);
+                data.Answer?.forEach(record => {
+                    stats.recordTypes.add(record.type);
+                    stats.totalRecords++;
+                });
+                localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(stats));
+                updateStatsDisplay();
+            }
+
+            // Add to History
+            function addToHistory(domain, types) {
+                const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+                const newRecord = {
+                    id: Date.now().toString(),
+                    domain: domain,
+                    type: types,
+                    timestamp: new Date().toISOString()
+                };
+                history.unshift(newRecord);
+                if (history.length > 50) {
+                    history.pop();
+                }
+                localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+                renderHistory(history);
+            }
+
+            // Copy Record
+            window.copyRecord = function(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Record copied to clipboard', 'success');
+                }).catch(err => {
+                    showToast('Failed to copy', 'error');
+                });
+            };
+
+            // Show Toast
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <span class="toast-icon">${getToastIcon(type)}</span>
+                    <span class="toast-message">${escapeHtml(message)}</span>
+                `;
+                toastContainer.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            function getToastIcon(type) {
+                const icons = {
+                    success: '✓',
+                    error: '✕',
+                    warning: '⚠',
+                    info: 'ℹ'
+                };
+                return icons[type] || 'ℹ';
+            }
+
+            // Format Time
+            function formatTime(isoString) {
+                const date = new Date(isoString);
+                return date.toLocaleTimeString();
+            }
+
+            // Escape HTML
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey) {
+                    switch (e.key.toLowerCase()) {
+                        case 'k':
+                            e.preventDefault();
+                            domainInput.focus();
+                            break;
+                        case 'c':
+                            e.preventDefault();
+                            // Copy last record if available
+                            break;
+                        case 'h':
+                            e.preventDefault();
+                            localStorage.removeItem(STORAGE_KEYS.HISTORY);
+                            renderHistory([]);
+                            showToast('History cleared', 'success');
+                            break;
+                        case 's':
+                            e.preventDefault();
+                            exportData();
+                            break;
+                    }
+                }
+            });
+
+            // Export Data
+            function exportData() {
+                const data = {
+                    stats: stats,
+                    history: JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]')
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `dns-export-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Data exported', 'success');
+            }
+
+            // Initialize
+            init();
+        })();
+
+        // Usage Tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+                params: ['dns-visualizer', 'load', new Date().toISOString()]
+            })
+        }).catch(() => {});
+    </script>
+</body>
+</html>
