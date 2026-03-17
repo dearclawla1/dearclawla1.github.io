@@ -77,8 +77,23 @@ export default class GameRoom implements Server {
   private connectionMap = new Map<string, Connection>();
   private playerConnMap = new Map<string, string>();
 
+  // Damage validation tracking
+  private damageCooldowns = new Map<string, number>();
+  private damageCaps = new Map<string, number>();
+  private weaponDamageMultipliers = new Map<string, number>();
+
   constructor(roomId: string) {
-    // Room initialization
+    // Initialize weapon damage caps and multipliers
+    this.weaponDamageMultipliers.set("sword", 1.0);
+    this.weaponDamageMultipliers.set("axe", 1.2);
+    this.weaponDamageMultipliers.set("bow", 0.8);
+    this.weaponDamageMultipliers.set("staff", 1.1);
+    this.weaponDamageMultipliers.set("dagger", 0.9);
+    this.damageCaps.set("sword", 50);
+    this.damageCaps.set("axe", 75);
+    this.damageCaps.set("bow", 40);
+    this.damageCaps.set("staff", 60);
+    this.damageCaps.set("dagger", 35);
   }
 
   onConnect(conn: Connection, ctx: ConnectionContext): void {
@@ -230,50 +245,236 @@ export default class GameRoom implements Server {
             // Update victim stats
             target.stats.deaths += 1;
             target.stats.lastDeathTime = Date.now();
-          } else {
-            // Record damage
-            target.stats.damageTaken += damage;
           }
           
+          // Broadcast damage
           this.broadcast({
-            type: "state",
-            players: Array.from(this.players.values()),
-            you: target,
+            type: "player-damage",
+            id: targetId,
+            damage: damage,
+            hp: target.hp,
           });
         }
       },
 
       chat: (conn, { text }) => {
-        // Handle chat
+        const player = this.players.get(conn.id);
+        if (player) {
+          this.broadcast({
+            type: "chat",
+            id: conn.id,
+            name: player.name,
+            text: text,
+          });
+        }
       },
 
       ping: (conn, {}) => {
-        // Handle ping
+        const serverTime = Date.now();
+        const playerCount = this.players.size;
+        this.broadcast({
+          type: "pong",
+          serverTime: serverTime,
+          playerCount: playerCount,
+        });
       },
 
       gamecheck: (conn, {}) => {
-        // Handle gamecheck
+        // Handle game check message
+        const serverTime = Date.now();
+        this.broadcast({
+          type: "pong",
+          serverTime: serverTime,
+          playerCount: this.players.size,
+        });
       },
     };
 
-    // Dispatch message
+    // Dispatch handler
     if (handlers[message.type]) {
-      handlers[message.type](conn, message);
+      try {
+        handlers[message.type](conn, message);
+      } catch (error) {
+        console.error(`[Server] ${roomId}: Handler error for ${message.type}`, error);
+      }
     } else {
       console.log(`[Server] ${roomId}: Unknown message type ${message.type}`);
     }
   }
 
-  private getRoomId(ctx: ConnectionContext): string {
-    return ctx.roomId;
+  // ============================================================
+  // DAMAGE VALIDATION SYSTEM
+  // ============================================================
+
+  /**
+   * Validates damage request from client
+   * Returns true if damage is authorized, false otherwise
+   */
+  validateDamageRequest(conn: Connection, targetId: string, damage: number, weapon: string): boolean {
+    const attacker = this.players.get(conn.id);
+    const target = this.players.get(targetId);
+
+    if (!attacker || !target) {
+      return false;
+    }
+
+    // Check cooldown
+    const now = Date.now();
+    const cooldownEnd = this.damageCooldowns.get(conn.id) || 0;
+    if (now < cooldownEnd) {
+      console.log(`[Server] ${this.getRoomId(this.getCtx(conn))}: Damage request rejected - cooldown active`);
+      return false;
+    }
+
+    // Set new cooldown (2 seconds between damage requests)
+    this.damageCooldowns.set(conn.id, now + 2000);
+
+    // Check damage cap based on weapon
+    const cap = this.damageCaps.get(weapon) || 50;
+    const multiplier = this.weaponDamageMultipliers.get(weapon) || 1.0;
+    const adjustedDamage = Math.floor(damage * multiplier);
+
+    if (adjustedDamage > cap) {
+      console.log(`[Server] ${this.getRoomId(this.getCtx(conn))}: Damage request rejected - exceeds cap ${cap}`);
+      return false;
+    }
+
+    // Check distance (must be within range)
+    const distance = this.calculateDistance(attacker.x, attacker.y, target.x, target.y);
+    if (distance > 100) {
+      console.log(`[Server] ${this.getRoomId(this.getCtx(conn))}: Damage request rejected - out of range`);
+      return false;
+    }
+
+    // Check if target is alive
+    if (target.hp <= 0) {
+      console.log(`[Server] ${this.getRoomId(this.getCtx(conn))}: Damage request rejected - target dead`);
+      return false;
+    }
+
+    return true;
   }
 
-  private getCtx(conn: Connection): ConnectionContext {
-    // Get context from connection
-    return {} as ConnectionContext;
+  /**
+   * Apply damage authoritatively
+   */
+  applyDamage(conn: Connection, targetId: string, damage: number, weapon: string): void {
+    const attacker = this.players.get(conn.id);
+    const target = this.players.get(targetId);
+
+    if (!attacker || !target) {
+      return;
+    }
+
+    // Validate damage request
+    if (!this.validateDamageRequest(conn, targetId, damage, weapon)) {
+      return;
+    }
+
+    // Apply damage
+    const adjustedDamage = Math.floor(damage * (this.weaponDamageMultipliers.get(weapon) || 1.0));
+    target.hp = Math.max(0, target.hp - adjustedDamage);
+    target.lastUpdate = Date.now();
+
+    // Check for death
+    if (target.hp <= 0) {
+      // Record kill
+      this.broadcast({
+        type: "player-death",
+        id: targetId,
+        killerId: conn.id,
+      });
+
+      // Update killer stats
+      const killer = this.players.get(conn.id);
+      if (killer) {
+        killer.stats.kills += 1;
+        killer.stats.lastKillTime = Date.now();
+      }
+
+      // Update victim stats
+      target.stats.deaths += 1;
+      target.stats.lastDeathTime = Date.now();
+    }
+
+    // Broadcast damage
+    this.broadcast({
+      type: "player-damage",
+      id: targetId,
+      damage: adjustedDamage,
+      hp: target.hp,
+    });
   }
 
-  private broadcast(message: any): void {
-    // Broadcast to all connections
+  /**
+   * Calculate Euclidean distance between two points
+   */
+  calculateDistance(x1: number, y1: number, x2: number, y2: number): number {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  /**
+   * Get room ID from context
+   */
+  getRoomId(ctx: ConnectionContext): string {
+    return ctx.roomId || "default-room";
+  }
+
+  /**
+   * Get context from connection
+   */
+  getCtx(conn: Connection): ConnectionContext {
+    const context = conn.context as any;
+    return context || { roomId: "default-room" };
+  }
+
+  /**
+   * Broadcast message to all clients
+   */
+  broadcast(message: ServerMessage): void {
+    const roomId = this.getRoomId(this.getCtx(this.connectionMap.values().next().value));
+    const roomIdKey = Object.keys(this.playerConnMap).find(key => this.playerConnMap.get(key) === this.connectionMap.values().next().value.id);
+    
+    // Find all connections in this room
+    const roomConnections: Connection[] = [];
+    for (const [key, connId] of this.playerConnMap.entries()) {
+      if (this.connectionMap.has(connId)) {
+        roomConnections.push(this.connectionMap.get(connId)!);
+      }
+    }
+
+    for (const conn of roomConnections) {
+      try {
+        conn.send(message);
+      } catch (error) {
+        console.error(`[Server] ${roomId}: Broadcast error`, error);
+      }
+    }
+  }
+
+  /**
+   * Broadcast message to all clients except sender
+   */
+  broadcastExcept(message: ServerMessage, exceptConn: Connection): void {
+    const roomId = this.getRoomId(this.getCtx(this.connectionMap.values().next().value));
+    const exceptId = exceptConn.id;
+
+    // Find all connections in this room except sender
+    const roomConnections: Connection[] = [];
+    for (const [key, connId] of this.playerConnMap.entries()) {
+      if (this.connectionMap.has(connId) && connId !== exceptId) {
+        roomConnections.push(this.connectionMap.get(connId)!);
+      }
+    }
+
+    for (const conn of roomConnections) {
+      try {
+        conn.send(message);
+      } catch (error) {
+        console.error(`[Server] ${roomId}: BroadcastExcept error`, error);
+      }
+    }
   }
 }
