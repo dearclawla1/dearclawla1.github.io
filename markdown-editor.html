@@ -5,25 +5,33 @@
 <style>
 :root{--bg:#1e1e1e;--fg:#c9c9c9;--muted:#858585;--accent:#61afef;--border:#3c3c3c}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Segoe UI,sans-serif;background:var(--bg);color:var(--fg);padding:20px;min-height:100vh}
+body{font-family:Segoe UI,sans-serif;background:var(--bg);color:var(--fg);padding:20px;min-height:100vh;transition:background 0.3s,color 0.3s}
 h1{font-size:1.5rem;margin-bottom:1rem;color:var(--accent)}
-.container{display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:1200px;margin:0 auto;@media(max-width:768px){grid-template-columns:1fr}}
-.panel{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;min-height:400px}
-.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-button{padding:8px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:14px}
-button:hover{opacity:0.9}
+.container{display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:1200px;margin:0 auto}@media(max-width:768px){.container{grid-template-columns:1fr}}
+.panel{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;min-height:400px;transition:box-shadow 0.3s}
+.panel:focus-within{box-shadow:0 0 0 2px var(--accent)}
+.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;animation:fadeIn 0.3s ease-out}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+button{padding:8px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:14px;transition:all 0.2s}
+button:hover{opacity:0.9;transform:translateY(-1px)}
+button:active{transform:translateY(0)}
 button:disabled{opacity:0.5;cursor:not-allowed;background:var(--muted)}
-select{padding:8px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-size:14px}
-textarea{width:100%;height:100%;border:none;resize:none;font-family:Consolas,Monaco,monospace;font-size:14px;background:transparent;color:var(--fg);outline:none}
-pre{white-space:pre-wrap;font-family:Consolas,Monaco,monospace;font-size:14px;background:var(--bg);padding:16px;border-radius:8px;min-height:400px;overflow:auto;max-height:600px}
+select{padding:8px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-size:14px;transition:border-color 0.2s}
+select:focus{outline:none;border-color:var(--accent)}
+textarea{width:100%;height:100%;border:none;resize:none;font-family:Consolas,Monaco,monospace;font-size:14px;background:transparent;color:var(--fg);outline:none;font-weight:400}
+pre{white-space:pre-wrap;font-family:Consolas,Monaco,monospace;font-size:14px;background:var(--bg);padding:16px;border-radius:8px;min-height:400px;overflow:auto;max-height:600px;transition:box-shadow 0.3s}
+pre:focus-within{box-shadow:0 0 0 2px var(--accent)}
 .tag{display:inline-block;background:var(--accent);color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;text-transform:uppercase;vertical-align:top;margin-top:-6px}
-.back{position:absolute;top:16px;left:16px}
-@media(max-width:768px){.container{grid-template-columns:1fr}}
+.back{position:absolute;top:16px;left:16px;transition:opacity 0.3s}
+.back:hover{opacity:0.8}
+.error-message{background:#ff6b6b;color:#fff;padding:12px;border-radius:6px;margin-bottom:12px;font-size:14px;display:none;animation:slideIn 0.3s ease-out}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
 </style>
 </head>
 <body>
 <a href="index.html" class="back">Home</a>
 <h1>Markdown Previewer</h1>
+<div class="error-message" id="errorMessage"></div>
 <div class="container">
 <div class="panel">
 <div class="toolbar">
@@ -40,12 +48,148 @@ pre{white-space:pre-wrap;font-family:Consolas,Monaco,monospace;font-size:14px;ba
 </div>
 <script>
 const md=new MarkdownIt();
-document.getElementById('editor').addEventListener('input',()=>renderPreview());
-function renderPreview(){const editor=document.getElementById('editor');const content=editor.value||'# Markdown Previewer\n\nStart typing...';try{document.getElementById('preview').innerHTML=md.render(content);}catch(e){console.error('Render error:',e);}document.getElementById('preview').innerHTML+='<span class="tag">Preview</span>';}
+let editorValue='',previewValue='';
+let saveTimer=null;
+let lastSaveTime=null;
+
+// Load from localStorage on startup
+function loadFromStorage(){
+    try{
+        const saved=localStorage.getItem('markdownEditor');
+        if(saved){
+            editorValue=saved;
+            document.getElementById('editor').value=editorValue;
+            renderPreview();
+            lastSaveTime=new Date().toISOString();
+            showNotification('Loaded from storage');
+        }
+    }catch(e){
+        console.error('Storage load error:',e);
+    }
+}
+
+// Save to localStorage with debounce
+function saveToStorage(){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>{
+        try{
+            const content=document.getElementById('editor').value;
+            localStorage.setItem('markdownEditor',content);
+            lastSaveTime=new Date().toISOString();
+        }catch(e){
+            console.error('Storage save error:',e);
+            showError('Failed to save to storage');
+        }
+    },500);
+}
+
+// Render preview with error handling
+function renderPreview(){
+    const editor=document.getElementById('editor');
+    const content=editor.value||'# Markdown Previewer\n\nStart typing...';
+    try{
+        const rendered=md.render(content);
+        document.getElementById('preview').innerHTML=rendered+'<span class="tag">Preview</span>';
+        previewValue=rendered;
+    }catch(e){
+        console.error('Render error:',e);
+    }
+    saveToStorage();
+}
+
+// Save file download with validation
+function saveFile(){
+    const editor=document.getElementById('editor');
+    const content=editor.value;
+    if(!content.trim()){
+        showError('Please enter some content before saving.');
+        return;
+    }
+    const fmt=document.getElementById('exportFmt').value;
+    const blob=new Blob([content],{type:'text/'+fmt});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='document.'+fmt;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification('File saved successfully');
+}
+
+// Clear editor with confirmation
+function clearEditor(){
+    if(confirm('Clear editor? This will delete all current content.')){
+        const editor=document.getElementById('editor');
+        editor.value='';
+        renderPreview();
+        saveToStorage();
+        showNotification('Editor cleared');
+    }
+}
+
+// Export markdown with validation
+function exportMarkdown(){
+    const editor=document.getElementById('editor');
+    const content=editor.value;
+    if(!content.trim()){
+        showError('Please enter some content before exporting.');
+        return;
+    }
+    const fmt=document.getElementById('exportFmt').value;
+    const blob=new Blob([content],{type:'text/'+fmt});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='document.'+fmt;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification('Exported successfully');
+}
+
+// Show error message
+function showError(message){
+    const errorEl=document.getElementById('errorMessage');
+    errorEl.textContent=message;
+    errorEl.style.display='block';
+    setTimeout(()=>{
+        errorEl.style.display='none';
+    },3000);
+}
+
+// Show notification
+function showNotification(message){
+    const notification=document.createElement('div');
+    notification.style.cssText='position:fixed;bottom:20px;right:20px;background:var(--accent);color:#fff;padding:12px 20px;border-radius:6px;font-size:14px;animation:slideIn 0.3s ease-out;z-index:1000';
+    notification.textContent=message;
+    document.body.appendChild(notification);
+    setTimeout(()=>{
+        notification.remove();
+    },2000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown',function(e){
+    if(e.ctrlKey && e.key==='s'){
+        e.preventDefault();
+        saveFile();
+    }
+    if(e.ctrlKey && e.key==='z'){
+        e.preventDefault();
+        clearEditor();
+    }
+    if(e.key==='Escape' && !e.ctrlKey){
+        clearEditor();
+    }
+});
+
+// Auto-save on input
+document.getElementById('editor').addEventListener('input',function(){
+    renderPreview();
+});
+
+// Initialize
+loadFromStorage();
 renderPreview();
-function saveFile(){const editor=document.getElementById('editor');const content=editor.value;if(!content.trim()){alert('Please enter some content before saving.');return;}const fmt=document.getElementById('exportFmt').value;const blob=new Blob([content],{type:'text/'+fmt});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='document.'+fmt;a.click();URL.revokeObjectURL(url);}
-function clearEditor(){const editor=document.getElementById('editor');if(confirm('Clear editor?')){editor.value='';renderPreview();}}
-function exportMarkdown(){const editor=document.getElementById('editor');const content=editor.value;if(!content.trim()){alert('Please enter some content before exporting.');return;}const fmt=document.getElementById('exportFmt').value;const blob=new Blob([content],{type:'text/'+fmt});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='document.'+fmt;a.click();URL.revokeObjectURL(url);}
 </script>
 </body>
 </html>
