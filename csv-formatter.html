@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>CSV Formatter</title>
 <style>
-:root{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--accent:#2f9c3f;--border:#303639}
+:root{--bg:#0d1117;--card:#161b22;--text:#c9d1d9;--muted:#8b949e;--accent:#2f9c3f;--border:#303639;--error:#da3633}
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
 body{background:var(--bg);color:var(--text);padding:2rem;display:grid;grid-template-rows:auto auto 1fr;gap:1.5rem;min-height:100vh}
 header{text-align:center;margin-bottom:1.5rem}
@@ -21,6 +21,7 @@ table{width:100%;border-collapse:collapse;margin-top:1rem}
 th,td{padding:0.5rem 0.75rem;text-align:left;font-size:0.875rem;border-bottom:1px solid var(--border)}
 th{background:#1c2128;font-weight:600}
 select{background:#0d1117;border:1px solid var(--border);padding:0.5rem;border-radius:6px;font-size:0.875rem;color:var(--text)}
+.error{background:#1c2128;border:1px solid var(--error);color:var(--error);padding:0.75rem;border-radius:6px;margin-top:0.75rem;font-size:0.875rem;display:none}
 </style>
 </head>
 <body>
@@ -32,6 +33,7 @@ select{background:#0d1117;border:1px solid var(--border);padding:0.5rem;border-r
 <div class="card">
 <h2>1. Upload CSV</h2>
 <input type="file" id="fileInput" accept=".csv">
+<div id="error" class="error"></div>
 </div>
 <div class="card" id="previewCard" style="display:none">
 <h2>2. Preview</h2>
@@ -60,6 +62,7 @@ const sortCol=document.getElementById('sortCol');
 const sortBtn=document.getElementById('sortBtn');
 const sortAsc=document.getElementById('sortAsc');
 const exportBtn=document.getElementById('exportBtn');
+const errorDiv=document.getElementById('error');
 let data=[];
 let headers=[];
 fileInput.addEventListener('change',async(e)=>{
@@ -69,10 +72,17 @@ const reader=new FileReader();
 reader.onload=()=>{
 const text=reader.result;
 const rows=text.split('\n').map(r=>r.trim()).filter(Boolean);
-if(rows.length===0)return;
+if(rows.length===0){
+showError('CSV file is empty');
+return;
+}
 headers=rows[0].split(',').map(h=>h.trim().replace(/^"|"$/,''));
 const parseRow=r=>r.split(',').map(c=>c.trim().replace(/^"|"$/,''));
 data=rows.slice(1).map(parseRow).filter(r=>r.some(c=>c));
+if(data.length===0){
+showError('No data rows found in CSV file');
+return;
+}
 table.innerHTML='';
 headers.forEach(h=>{
 const th=document.createElement('th');
@@ -94,9 +104,17 @@ table.appendChild(tr);
 previewCard.style.display='block';
 actionsCard.style.display='block';
 updateSortDropdown();
+errorDiv.style.display='none';
+};
+reader.onerror=()=>{
+showError('Failed to read CSV file');
 };
 reader.readAsText(file);
 });
+function showError(msg){
+errorDiv.textContent=msg;
+errorDiv.style.display='block';
+}
 function updateSortDropdown(){
 let options='<option value="">--</option>';
 headers.forEach((h,i)=>{
