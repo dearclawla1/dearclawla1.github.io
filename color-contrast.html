@@ -39,6 +39,7 @@ input[type="color"]{width:100%;height:40px;border:none;border-radius:8px}
 <div class="result" id="result"></div>
 <div class="result" id="aria" aria-live="polite"></div>
 </div>
+<button id="download">Download Results</button>
 </div>
 <script>
 const bgColorInput=document.getElementById('bgColor');
@@ -47,6 +48,7 @@ const calculateBtn=document.getElementById('calculate');
 const preview=document.getElementById('preview');
 const result=document.getElementById('result');
 const aria=document.getElementById('aria');
+const downloadBtn=document.getElementById('download');
 
 function hexToRgb(hex){
 const bigint=parseInt(hex.replace('#',''),16);
@@ -90,9 +92,23 @@ if(ratio<4.5){suggestion='role="alert" aria-live="polite" aria-label="High contr
 return suggestion;
 }
 
+function downloadResults(){
+const bg=bgColorInput.value;
+const fg=fgColorInput.value;
+const ratio=result.innerText.split(': ')[1].split('<')[0];
+const level=result.innerHTML.match(/WCAG (.*?) /)[1];
+const ariaLabel=aria.innerText.split(':')[1].trim();
+const content=`Background Color: ${bg}\nForeground Color: ${fg}\nContrast Ratio: ${ratio}\nWCAG Level: ${level}\nARIA Suggestion: ${ariaLabel}`;
+const blob=new Blob([content],{type:"text/plain;charset=utf-8"});
+const url=URL.createObjectURL(blob);
+downloadBtn.href=url;
+downloadBtn.download=`contrast_results_${new Date().toISOString().replace(/:/g,'_')}.txt`;
+}
+
 calculateBtn.addEventListener('click',calculateContrast);
 bgColorInput.addEventListener('input',calculateContrast);
 fgColorInput.addEventListener('input',calculateContrast);
+downloadBtn.addEventListener('click',downloadResults);
 
 // Initial calc
 calculateContrast();
