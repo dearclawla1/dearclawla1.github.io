@@ -13,6 +13,8 @@ body{margin:0;min-height:100vh;background:#0a0a0a;color:#e4e4e4;font-family:sans
 .preview{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px}
 .box{display:flex;flex-direction:column;gap:5px;min-height:120px;border:2px solid #6366f1;background:#1a1a1a;border-radius:6px;overflow:hidden}
 .box-content{padding:10px;font-weight:bold;cursor:pointer}
+.export-btn{padding:8px;background:#10b981;border:none;color:#fff;border-radius:4px;cursor:pointer;margin-top:10px}
+.clear-btn{padding:8px;background:#ef4444;border:none;color:#fff;border-radius:4px;cursor:pointer;margin-top:10px;font-size:12px}
 </style>
 </head>
 <body>
@@ -28,6 +30,8 @@ body{margin:0;min-height:100vh;background:#0a0a0a;color:#e4e4e4;font-family:sans
 <div class="property"><h3>Flex Shrink</h3><input type="number" id="flexShrink" min="0" value="1" step="1" placeholder="1"></div>
 <div class="property"><h3>Flex Basis</h3><input type="number" id="flexBasis" min="0" value="100" step="5" placeholder="100"></div>
 <button id="addBox" style="padding:8px;background:#6366f1;border:none;color:#fff;border-radius:4px;cursor:pointer">+ Add Box</button>
+<button id="exportConfig" class="export-btn">Export Configuration</button>
+<button id="clearBoxes" class="clear-btn">Clear All Boxes</button>
 </div>
 <div class="preview">
 <div class="box" id="box1"><div class="box-content">Box 1</div></div>
@@ -38,13 +42,78 @@ body{margin:0;min-height:100vh;background:#0a0a0a;color:#e4e4e4;font-family:sans
 </div>
 <script>
 const boxes=document.querySelectorAll('.box'),props={direction:'flexDirection',wrap:'flexWrap',alignItems:'alignItems',justifyContent:'justifyContent'},inputs={grow:'flexGrow',shrink:'flexShrink',basis:'flexBasis'}
-function apply() {
-const style=document.createElement('style');style.textContent=`.${props.direction.value} {flex-direction:${document.getElementById(props.direction.value).value};flex-wrap:${document.getElementById(props.wrap.value).value};align-items:${document.getElementById(props.alignItems.value).value};justify-content:${document.getElementById(props.justifyContent.value).value};flex-grow:${document.getElementById(props.grow.value).value};flex-shrink:${document.getElementById(props.shrink.value).value};flex-basis:${document.getElementById(props.basis.value).value};}`;
-const container=document.querySelector('.preview');container.innerHTML='';container.appendChild(style);
-boxes.forEach(b=>b.style.cssText=`display:flex;flex-direction:${document.getElementById(props.direction.value).value};flex-wrap:${document.getElementById(props.wrap.value).value};align-items:${document.getElementById(props.alignItems.value).value};justify-content:${document.getElementById(props.justifyContent.value).value};flex-grow:${document.getElementById(props.grow.value).value};flex-shrink:${document.getElementById(props.shrink.value).value};flex-basis:${document.getElementById(props.basis.value).value};`);
+
+function getFlexProps() {
+const direction=document.getElementById(props.direction.value).value;
+const wrap=document.getElementById(props.wrap.value).value;
+const alignItems=document.getElementById(props.alignItems.value).value;
+const justifyContent=document.getElementById(props.justifyContent.value).value;
+const flexGrow=document.getElementById(props.inputs.grow.value).value;
+const flexShrink=document.getElementById(props.inputs.shrink.value).value;
+const flexBasis=document.getElementById(props.inputs.basis.value).value;
+return {
+direction:direction,
+wrap:wrap,
+alignItems:alignItems,
+justifyContent:justifyContent,
+flexGrow:flexGrow||'0',
+flexShrink:flexShrink||'1',
+flexBasis:flexBasis||'100'
+};
 }
-const controls=document.querySelectorAll('select,input');controls.forEach(c=>c.addEventListener('input',apply));
-document.getElementById('addBox').addEventListener('click',()=>{const n=boxes.length+1;const b=document.createElement('div');b.className='box';b.id=`box${n}`;b.innerHTML=`<div class="box-content">Box ${n}</div>`;document.querySelector('.preview').appendChild(b);apply();});
+
+function apply() {
+const flexProps=getFlexProps();
+const container=document.querySelector('.preview');
+container.innerHTML='';
+
+const style=document.createElement('style');
+style.textContent=`.${flexProps.direction} {flex-direction:${flexProps.direction};flex-wrap:${flexProps.wrap};align-items:${flexProps.alignItems};justify-content:${flexProps.justifyContent};flex-grow:${flexProps.flexGrow};flex-shrink:${flexProps.flexShrink};flex-basis:${flexProps.flexBasis};}`;
+container.appendChild(style);
+
+boxes.forEach(b=>b.style.cssText=`display:flex;flex-direction:${flexProps.direction};flex-wrap:${flexProps.wrap};align-items:${flexProps.alignItems};justify-content:${flexProps.justifyContent};flex-grow:${flexProps.flexGrow};flex-shrink:${flexProps.flexShrink};flex-basis:${flexProps.flexBasis};`);
+}
+
+const controls=document.querySelectorAll('select,input');
+controls.forEach(c=>c.addEventListener('input',apply));
+
+document.getElementById('addBox').addEventListener('click',()=>{
+const n=boxes.length+1;
+const b=document.createElement('div');
+b.className='box';
+b.id=`box${n}`;
+b.innerHTML=`<div class="box-content">Box ${n}</div>`;
+document.querySelector('.preview').appendChild(b);
+apply();
+});
+
+document.getElementById('exportConfig').addEventListener('click',()=>{
+const flexProps=getFlexProps();
+const config={
+direction:flexProps.direction,
+wrap:flexProps.wrap,
+alignItems:flexProps.alignItems,
+justifyContent:flexProps.justifyContent,
+flexGrow:flexProps.flexGrow,
+flexShrink:flexProps.flexShrink,
+flexBasis:flexProps.flexBasis,
+boxesCount:boxes.length
+};
+const blob=new Blob([JSON.stringify(config,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download='flexbox-config.json';
+a.click();
+URL.revokeObjectURL(url);
+});
+
+document.getElementById('clearBoxes').addEventListener('click',()=>{
+const preview=document.querySelector('.preview');
+preview.innerHTML='';
+apply();
+});
+
 apply();
 </script>
 </body>
