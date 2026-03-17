@@ -382,28 +382,19 @@ export default class GameRoom implements Server {
 
     const now = Date.now();
     const events = this.zoneEvents.get(roomId) || [];
+    
+    // Filter to only active events (not expired)
     return events.filter(event => now - event.timestamp < event.duration);
   }
 
   /**
-   * Add a new zone event programmatically
-   * @param eventType - Event type
+   * Add a new zone event
+   * @param eventType - Type of event
    * @param data - Event data
-   * @param duration - Event duration
+   * @param duration - How long the event lasts (ms)
    */
   addZoneEvent(eventType: string, data?: any, duration: number = 30000): void {
-    const roomId = this.getRoomId(this.getCtx(this.connectionMap.values().next().value || {}));
     this.broadcastZoneEvent(eventType, data, duration);
-  }
-
-  /**
-   * Clear all zone events for a room
-   * @param roomId - Room ID
-   */
-  clearZoneEvents(roomId: string): void {
-    if (this.zoneEvents.has(roomId)) {
-      this.zoneEvents.set(roomId, []);
-    }
   }
 
   // ============================================================
@@ -411,41 +402,19 @@ export default class GameRoom implements Server {
   // ============================================================
 
   private getRoomId(ctx: ConnectionContext): string {
-    return ctx.roomId || "default-room";
+    // Extract room ID from context
+    return ctx.roomId || "default";
   }
 
   private getCtx(conn: Connection): ConnectionContext {
-    // This is a simplified version - in real PartyKit, ctx is available in handlers
-    return {} as ConnectionContext;
+    // Get context for connection
+    return { roomId: "default" } as ConnectionContext;
   }
 
-  private broadcast(message: ServerMessage): void {
-    const roomId = this.getRoomId(this.getCtx(this.connectionMap.values().next().value || {}));
-    const players = Array.from(this.players.values());
-
-    // Broadcast to all connected clients
-    this.connectionMap.forEach((conn, connId) => {
-      try {
-        conn.send(JSON.stringify(message));
-      } catch (error) {
-        console.error(`[Server] Error sending message to ${connId}`, error);
-      }
-    });
-  }
-
-  private broadcastExcept(message: ServerMessage, exceptConnIds: string[]): void {
-    const roomId = this.getRoomId(this.getCtx(this.connectionMap.values().next().value || {}));
-    const players = Array.from(this.players.values());
-
-    // Broadcast to all connected clients except specified
-    this.connectionMap.forEach((conn, connId) => {
-      if (!exceptConnIds.includes(connId)) {
-        try {
-          conn.send(JSON.stringify(message));
-        } catch (error) {
-          console.error(`[Server] Error sending message to ${connId}`, error);
-        }
-      }
-    });
+  private broadcast(msg: any): void {
+    // Broadcast message to all connections
+    for (const [connId, conn] of this.connectionMap) {
+      conn.send(msg);
+    }
   }
 }
