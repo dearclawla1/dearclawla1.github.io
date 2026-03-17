@@ -18,6 +18,8 @@ button:hover{background:#5558f5}
 #output{background:#1a1a1a;padding:1.5rem;border-radius:8px;border:1px solid #333;min-height:150px;font-size:1rem;line-height:1.6;white-space:pre-wrap}
 .copy-btn{margin-top:1rem;background:#333;color:#e4e4e4;border:1px solid #444}
 .copy-btn:hover{background:#444}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#333;color:#e4e4e4;padding:1rem 2rem;border-radius:8px;border:1px solid #444;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -31,18 +33,23 @@ button:hover{background:#5558f5}
 <button id="copy" class="copy-btn">Copy to Clipboard</button>
 </div>
 <div id="output">Lorem ipsum dolor sit amet...</div>
+<div id="toast" class="toast">Copied to clipboard!</div>
 </div>
 <script>
 const words=['lorem','ipsum','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum','class','att','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum'];
+const classy=['Lorem','ipsum','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum','class','att','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum'];
 function generate(){
-const w=document.getElementById('words').value||100;
+const w=document.getElementById('words').value;
 const s=document.getElementById('style').value;
+if(!w||w<10){
+document.getElementById('output').textContent='Please enter at least 10 words.';
+return;
+}
 let text='';
 if(s==='standard'){
 for(let i=0;i<w;i++){text+=words[i%words.length]+' ';}
 }
 else if(s==='classy'){
-const classy=['Lorem','ipsum','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum','class','att','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum','class','att','dolor','sit','amet','consectetur','adipiscing','elit','sed','do','eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim','ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi','ut','aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit','voluptate','velit','esse','cillum','dolor','fugiat','nulla','pariatur','excepteur','sint','occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt','mollit','anim','id','est','laborum'];
 for(let i=0;i<w;i++){text+=classy[i%classy.length]+' ';}
 }
 else{
@@ -50,10 +57,15 @@ for(let i=0;i<w;i++){text+=words[Math.floor(Math.random()*words.length)]+' ';}
 }
 document.getElementById('output').textContent=text.trim();
 }
+function showToast(){
+const toast=document.getElementById('toast');
+toast.classList.add('show');
+setTimeout(()=>toast.classList.remove('show'),2000);
+}
 document.getElementById('generate').addEventListener('click',generate);
 document.getElementById('copy').addEventListener('click',async()=>{
 const text=document.getElementById('output').textContent;
-try{await navigator.clipboard.writeText(text);alert('Copied!');}catch(e){alert('Copy failed');}});
+try{await navigator.clipboard.writeText(text);showToast();}catch(e){document.getElementById('output').textContent='Copy failed: '+(e.message||'Unknown error');}});
 generate();
 </script>
 </body>
