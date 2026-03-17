@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Pair VI - Font Combination Visualizer</title>
+    <meta name="description" content="Test and visualize different font pairings for headings and body text. Perfect for web design and typography exploration.">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --text-primary: #e4e4e4;
+            --text-secondary: #a0a0a0;
+            --accent: #6366f1;
+            --accent-hover: #5558e5;
+            --border: #333333;
+            --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-heading);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .description {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 800px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls-panel {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .font-selectors {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .font-selector {
+            position: relative;
+        }
+
+        .font-selector label {
+            margin-bottom: 0.3rem;
+        }
+
+        .font-selector select {
+            font-size: 1rem;
+        }
+
+        .text-input {
+            min-height: 100px;
+            resize: vertical;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .size-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .size-control {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .size-control label {
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .size-control input {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .preview-panel {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .copy-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+
+        .font-pair-name {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .preview-content {
+            flex: 1;
+            min-height: 300px;
+            padding: 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            overflow-y: auto;
+        }
+
+        .preview-text {
+            font-size: 1.5rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+        }
+
+        .preview-subtitle {
+            font-size: 1.25rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+        }
+
+        .preview-body {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .preview-button {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        .preview-footer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            display: none;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .font-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .font-list-item {
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .font-list-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .font-list-item.selected {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--accent);
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent);
+        }
+
+        .action-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .action-btn.primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .reset-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .preview-labels {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .preview-label {
+            padding: 0.25rem 0.5rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 4px;
+        }
+
+        .preview-label.active {
+            background: var(--accent);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Font Pair VI</h1>
+            <p class="description">
+                Visualize and test different font pairings for headings and body text. 
+                Perfect for web design, typography exploration, and finding the right combination 
+                for your projects.
+            </p>
+            <a href="index.html" style="color:#6366f1">Back to Home</a>
+        </header>
+
+        <div class="main-content">
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label>Heading Font</label>
+                    <div class="font-selectors">
+                        <div class="font-selector">
+                            <label>Primary</label>
+                            <select id="headingFont">
+                                <option value="Inter">Inter</option>
+                                <option value="Roboto">Roboto</option>
+                                <option value="Open Sans">Open Sans</option>
+                                <option value="Lato">Lato</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Poppins">Poppins</option>
+                                <option value="Raleway">Raleway</option>
+                                <option value="Nunito">Nunito</option>
+                                <option value="Merriweather">Merriweather</option>
+                                <option value="Playfair Display">Playfair Display</option>
+                                <option value="Oswald">Oswald</option>
+                                <option value="Inter">Inter</option>
+                                <option value="Source Sans Pro">Source Sans Pro</option>
+                                <option value="Ubuntu">Ubuntu</option>
+                                <option value="Cormorant Garamond">Cormorant Garamond</option>
+                                <option value="Dancing Script">Dancing Script</option>
+                                <option value="Pacifico">Pacifico</option>
+                                <option value="Righteous">Righteous</option>
+                                <option value="Fira Sans">Fira Sans</option>
+                                <option value="Work Sans">Work Sans</option>
+                                <option value="Quicksand">Quicksand</option>
+                                <option value="Karla">Karla</option>
+                            </select>
+                        </div>
+                        <div class="font-selector">
+                            <label>Secondary</label>
+                            <select id="bodyFont">
+                                <option value="Inter">Inter</option>
+                                <option value="Roboto">Roboto</option>
+                                <option value="Open Sans">Open Sans</option>
+                                <option value="Lato">Lato</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Poppins">Poppins</option>
+                                <option value="Raleway">Raleway</option>
+                                <option value="Nunito">Nunito</option>
+                                <option value="Merriweather">Merriweather</option>
+                                <option value="Playfair Display">Playfair Display</option>
+                                <option value="Oswald">Oswald</option>
+                                <option value="Inter">Inter</option>
+                                <option value="Source Sans Pro">Source Sans Pro</option>
+                                <option value="Ubuntu">Ubuntu</option>
+                                <option value="Cormorant Garamond">Cormorant Garamond</option>
+                                <option value="Dancing Script">Dancing Script</option>
+                                <option value="Pacifico">Pacifico</option>
+                                <option value="Righteous">Righteous</option>
+                                <option value="Fira Sans">Fira Sans</option>
+                                <option value="Work Sans">Work Sans</option>
+                                <option value="Quicksand">Quicksand</option>
+                                <option value="Karla">Karla</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="font-list" id="fontList"></div>
+                </div>
+
+                <div class="control-group">
+                    <label>Sample Text</label>
+                    <textarea 
+                        class="text-input" 
+                        id="sampleText" 
+                        placeholder="Enter your sample text here...&#10;&#10;Try typing something like:&#10;&#10;The quick brown fox jumps over the lazy dog.&#10;&#10;This is a sample paragraph to test the font pairing.&#10;It shows how the heading and body fonts work together.&#10;You can customize this text to match your project needs.&#10;The preview will update automatically as you type.&#10;Feel free to experiment with different combinations.&#10;This tool helps you find the perfect typography for your website.&#10;Design is not just what it looks like and feels like.&#10;Design is how it works.&#10;Good design is obvious. Great design is transparent.&#10;Typography is the art of arranging type.&#10;Type is the voice of the design.&#10;Choose wisely.">The quick brown fox jumps over the lazy dog.
+
+This is a sample paragraph to test the font pairing.
+It shows how the heading and body fonts work together.
+You can customize this text to match your project needs.
+The preview will update automatically as you type.
+Feel free to experiment with different combinations.
+This tool helps you find the perfect typography for your website.
+Design is not just what it looks like and feels like.
+Design is how it works.
+Good design is obvious. Great design is transparent.
+Typography is the art of arranging type.
+Type is the voice of the design.
+Choose wisely.</textarea>
+                </div>
+
+                <div class="control-group">
+                    <label>Preview Size</label>
+                    <div class="size-controls">
+                        <div class="size-control">
+                            <label>Heading Size</label>
+                            <input type="number" id="headingSize" value="48" min="12" max="120">
+                        </div>
+                        <div class="size-control">
+                            <label>Body Size</label>
+                            <input type="number" id="bodySize" value="18" min="10" max="48">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Spacing</label>
+                    <div class="size-controls">
+                        <div class="size-control">
+                            <label>Line Height</label>
+                            <input type="number" id="lineHeight" value="1.4" min="1" max="3" step="0.1">
+                        </div>
+                        <div class="size-control">
+                            <label>Letter Spacing</label>
+                            <input type="number" id="letterSpacing" value="0" min="-2" max="10" step="0.5">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Font Weight</label>
+                    <div class="size-controls">
+                        <div class="size-control">
+                            <label>Heading Weight</label>
+                            <select id="headingWeight">
+                                <option value="300">Light (300)</option>
+                                <option value="400" selected>Regular (400)</option>
+                                <option value="500">Medium (500)</option>
+                                <option value="600">Semi-Bold (600)</option>
+                                <option value="700">Bold (700)</option>
+                                <option value="800">Extra Bold (800)</option>
+                                <option value="900">Black (900)</option>
+                            </select>
+                        </div>
+                        <div class="size-control">
+                            <label>Body Weight</label>
+                            <select id="bodyWeight">
+                                <option value="300">Light (300)</option>
+                                <option value="400" selected>Regular (400)</option>
+                                <option value="500">Medium (500)</option>
+                                <option value="600">Semi-Bold (600)</option>
+                                <option value="700">Bold (700)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Preview Labels</label>
+                    <div class="preview-labels">
+                        <span class="preview-label active" id="labelHeading">Heading</span>
+                        <span class="preview-label" id="labelBody">Body</span>
+                        <span class="preview-label" id="labelButton">Button</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <div class="preview-header">
+                    <span class="preview-title">Live Preview</span>
+                    <button class="copy-btn" id="copyBtn">Copy Font Names</button>
+                </div>
+                <div class="font-pair-name" id="fontPairName">Inter + Inter</div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <span>Loading fonts...</span>
+                </div>
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage">Font names copied to clipboard!</div>
+                <div class="preview-content" id="previewContent">
+                    <div class="preview-text" id="previewText"></div>
+                    <div class="preview-subtitle" id="previewSubtitle"></div>
+                    <div class="preview-body" id="previewBody"></div>
+                    <div class="preview-button" id="previewButton"></div>
+                    <div class="preview-footer" id="previewFooter"></div>
+                </div>
+                <div class="preview-actions">
+                    <button class="action-btn primary" id="resetBtn">Reset All</button>
+                    <button class="action-btn" id="swapBtn">Swap Fonts</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Font pairing visualizer - Font Pair VI
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:['font-pair-vi','load',new Date().toISOString()]})}).catch(()=>{});
+
+        // DOM Elements
+        const headingFont = document.getElementById('headingFont');
+        const bodyFont = document.getElementById('bodyFont');
+        const sampleText = document.getElementById('sampleText');
+        const headingSize = document.getElementById('headingSize');
+        const bodySize = document.getElementById('bodySize');
+        const lineHeight = document.getElementById('lineHeight');
+        const letterSpacing = document.getElementById('letterSpacing');
+        const headingWeight = document.getElementById('headingWeight');
+        const bodyWeight = document.getElementById('bodyWeight');
+        const previewText = document.getElementById('previewText');
+        const previewSubtitle = document.getElementById('previewSubtitle');
+        const previewBody = document.getElementById('previewBody');
+        const previewButton = document.getElementById('previewButton');
+        const previewFooter = document.getElementById('previewFooter');
+        const previewContent = document.getElementById('previewContent');
+        const fontPairName = document.getElementById('fontPairName');
+        const copyBtn = document.getElementById('copyBtn');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const resetBtn = document.getElementById('resetBtn');
+        const swapBtn = document.getElementById('swapBtn');
+        const labelHeading = document.getElementById('labelHeading');
+        const labelBody = document.getElementById('labelBody');
+        const labelButton = document.getElementById('labelButton');
+        const fontList = document.getElementById('fontList');
+
+        // Font families with their weights
+        const fontWeights = {
+            'Inter': ['300', '400', '500', '600', '700', '800', '900'],
+            'Roboto': ['300', '400', '500', '700'],
+            'Open Sans': ['300', '400', '600', '700'],
+            'Lato': ['300', '400', '700'],
+            'Montserrat': ['300', '400', '500', '600', '700', '800'],
+            'Poppins': ['300', '400', '500', '600', '700', '800'],
+            'Raleway': ['300', '400', '500', '700', '800', '900'],
+            'Nunito': ['300', '400', '600', '700', '800'],
+            'Merriweather': ['300', '400', '700', '900'],
+            'Playfair Display': ['400', '700', '900'],
+            'Oswald': ['300', '400', '500', '700'],
+            'Source Sans Pro': ['300', '400', '600', '700'],
+            'Ubuntu': ['300', '400', '500', '700'],
+            'Cormorant Garamond': ['300', '400', '500', '600', '700'],
+            'Dancing Script': ['400', '700'],
+            'Pacifico': ['400'],
+            'Righteous': ['400'],
+            'Fira Sans': ['300', '400', '500', '700'],
+            'Work Sans': ['300', '400', '500', '600', '700'],
+            'Quicksand': ['300', '400', '500', '700'],
+            'Karla': ['300', '400', '500', '600', '700']
+        };
+
+        // Initialize font list
+        function initFontList() {
+            const allFonts = new Set([...headingFont.options, ...bodyFont.options].map(opt => opt.value));
+            allFonts.forEach(font => {
+                const item = document.createElement('div');
+                item.className = 'font-list-item';
+                item.textContent = font;
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.font-list-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                });
+                fontList.appendChild(item);
+            });
+        }
+
+        // Update preview
+        function updatePreview() {
+            const headingFontName = headingFont.value;
+            const bodyFontName = bodyFont.value;
+            const headingSizeValue = parseInt(headingSize.value) || 48;
+            const bodySizeValue = parseInt(bodySize.value) || 18;
+            const lineHeightValue = parseFloat(lineHeight.value) || 1.4;
+            const letterSpacingValue = parseFloat(letterSpacing.value) || 0;
+            const headingWeightValue = headingWeight.value;
+            const bodyWeightValue = bodyWeight.value;
+
+            // Update font pair name
+            fontPairName.textContent = `${headingFontName} + ${bodyFontName}`;
+
+            // Get sample text
+            const text = sampleText.value || 'The quick brown fox jumps over the lazy dog.';
+
+            // Update preview elements
+            previewText.style.fontFamily = `"${headingFontName}"`;
+            previewText.style.fontSize = `${headingSizeValue}px`;
+            previewText.style.fontWeight = headingFontWeights[headingFontName] || headingWeightValue;
+            previewText.style.lineHeight = lineHeightValue;
+            previewText.style.letterSpacing = `${letterSpacingValue}px`;
+            previewText.textContent = text.substring(0, 150) + (text.length > 150 ? '...' : '');
+
+            previewSubtitle.style.fontFamily = `"${headingFontName}"`;
+            previewSubtitle.style.fontSize = `${headingSizeValue * 0.75}px`;
+            previewSubtitle.style.fontWeight = headingFontWeights[headingFontName] || headingWeightValue;
+            previewSubtitle.style.lineHeight = lineHeightValue;
+            previewSubtitle.style.letterSpacing = `${letterSpacingValue * 0.8}px`;
+            previewSubtitle.textContent = text.substring(150, 300) + (text.length > 300 ? '...' : '');
+
+            previewBody.style.fontFamily = `"${bodyFontName}"`;
+            previewBody.style.fontSize = `${bodySizeValue}px`;
+            previewBody.style.fontWeight = bodyFontWeights[bodyFontName] || bodyWeightValue;
+            previewBody.style.lineHeight = lineHeightValue;
+            previewBody.style.letterSpacing = `${letterSpacingValue * 0.5}px`;
+            previewBody.textContent = text.substring(300, 500) + (text.length > 500 ? '...' : '');
+
+            previewButton.style.fontFamily = `"${bodyFontName}"`;
+            previewButton.style.fontSize = `${bodySizeValue * 0.9}px`;
+            previewButton.style.fontWeight = '600';
+            previewButton.textContent = 'Get Started';
+
+            previewFooter.style.fontFamily = `"${bodyFontName}"`;
+            previewFooter.style.fontSize = `${bodySizeValue * 0.6}px`;
+            previewFooter.style.fontWeight = '400';
+            previewFooter.style.color = '#666';
+            previewFooter.textContent = 'Font Pair VI - Typography Visualizer';
+
+            // Update labels
+            document.querySelectorAll('.preview-label').forEach(label => {
+                label.classList.remove('active');
+            });
+            if (labelHeading.classList.contains('active')) {
+                previewText.style.opacity = '1';
+            } else {
+                previewText.style.opacity = '0.5';
+            }
+            if (labelBody.classList.contains('active')) {
+                previewBody.style.opacity = '1';
+            } else {
+                previewBody.style.opacity = '0.5';
+            }
+            if (labelButton.classList.contains('active')) {
+                previewButton.style.opacity = '1';
+            } else {
+                previewButton.style.opacity = '0.5';
+            }
+        }
+
+        // Get font weights for a font
+        function getFontWeights(fontName) {
+            return fontWeights[fontName] || ['400'];
+        }
+
+        // Copy font names to clipboard
+        function copyToClipboard() {
+            const headingFontName = headingFont.value;
+            const bodyFontName = bodyFont.value;
+            const text = `${headingFontName} + ${bodyFontName}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                successMessage.classList.add('show');
+                setTimeout(() => {
+                    successMessage.classList.remove('show');
+                }, 2000);
+            }).catch(err => {
+                errorMessage.textContent = 'Failed to copy font names';
+                errorMessage.classList.add('show');
+                setTimeout(() => {
+                    errorMessage.classList.remove('show');
+                }, 3000);
+            });
+        }
+
+        // Reset all controls
+        function resetAll() {
+            headingFont.value = 'Inter';
+            bodyFont.value = 'Inter';
+            sampleText.value = 'The quick brown fox jumps over the lazy dog.\n\nThis is a sample paragraph to test the font pairing.\nIt shows how the heading and body fonts work together.\nYou can customize this text to match your project needs.\nThe preview will update automatically as you type.\nFeel free to experiment with different combinations.\nThis tool helps you find the perfect typography for your website.\nDesign is not just what it looks like and feels like.\nDesign is how it works.\nGood design is obvious. Great design is transparent.\nTypography is the art of arranging type.\nType is the voice of the design.\nChoose wisely.';
+            headingSize.value = '48';
+            bodySize.value = '18';
+            lineHeight.value = '1.4';
+            letterSpacing.value = '0';
+            headingWeight.value = '400';
+            bodyWeight.value = '400';
+            updatePreview();
+        }
+
+        // Swap fonts
+        function swapFonts() {
+            const temp = headingFont.value;
+            headingFont.value = bodyFont.value;
+            bodyFont.value = temp;
+            updatePreview();
+        }
+
+        // Toggle labels
+        function toggleLabels() {
+            document.querySelectorAll('.preview-label').forEach(label => {
+                label.classList.remove('active');
+            });
+            labelHeading.classList.add('active');
+            labelBody.classList.add('active');
+            labelButton.classList.add('active');
+            updatePreview();
+        }
+
+        // Event listeners
+        headingFont.addEventListener('change', updatePreview);
+        bodyFont.addEventListener('change', updatePreview);
+        sampleText.addEventListener('input', updatePreview);
+        headingSize.addEventListener('input', updatePreview);
+        bodySize.addEventListener('input', updatePreview);
+        lineHeight.addEventListener('input', updatePreview);
+        letterSpacing.addEventListener('input', updatePreview);
+        headingWeight.addEventListener('change', updatePreview);
+        bodyWeight.addEventListener('change', updatePreview);
+        copyBtn.addEventListener('click', copyToClipboard);
+        resetBtn.addEventListener('click', resetAll);
+        swapBtn.addEventListener('click', swapFonts);
+        labelHeading.addEventListener('click', toggleLabels);
+        labelBody.addEventListener('click', toggleLabels);
+        labelButton.addEventListener('click', toggleLabels);
+
+        // Initialize
+        initFontList();
+        updatePreview();
+
+        // Keyboard shortcut for copy (Ctrl/Cmd + K)
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                copyToClipboard();
+            }
+        });
+    </script>
+</body>
+</html>
