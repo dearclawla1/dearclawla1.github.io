@@ -21,6 +21,8 @@ button:hover{background:#5558f0}
 .clear-btn{background:#ef4444;margin-top:15px}
 .clear-btn:hover{background:#dc2626}
 .loading{opacity:0.6;pointer-events:none}
+.download-btn{background:#10b981;margin-top:10px}
+.download-btn:hover{background:#059669}
 </style>
 </head>
 <body>
@@ -34,6 +36,11 @@ button:hover{background:#5558f0}
 <div class="result-box" id="decoded"></div>
 </div>
 <button class="clear-btn" id="clearBtn" style="display:none">Clear All</button>
+<div style="margin-top:15px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+<button class="download-btn" id="downloadOutput">Download Output</button>
+<button class="download-btn" id="downloadEncoded">Download Encoded</button>
+<button class="download-btn" id="downloadDecoded">Download Decoded</button>
+</div>
 </div>
 <script>
 const inputText = document.getElementById('inputText');
@@ -42,6 +49,9 @@ const output = document.getElementById('output');
 const encoded = document.getElementById('encoded');
 const decoded = document.getElementById('decoded');
 const clearBtn = document.getElementById('clearBtn');
+const downloadOutput = document.getElementById('downloadOutput');
+const downloadEncoded = document.getElementById('downloadEncoded');
+const downloadDecoded = document.getElementById('downloadDecoded');
 
 function rot13(str) {
 return str.replace(/[a-zA-Z]/g, function(c) {
@@ -69,6 +79,50 @@ decoded.textContent = text;
 clearBtn.style.display = 'block';
 }
 
+function downloadText(text, filename) {
+const blob = new Blob([text], {type: 'text/plain'});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = filename;
+a.click();
+URL.revokeObjectURL(url);
+}
+
+function saveToLocalStorage() {
+try {
+localStorage.setItem('rot13_input', inputText.value);
+localStorage.setItem('rot13_output', output.textContent);
+localStorage.setItem('rot13_encoded', encoded.textContent);
+localStorage.setItem('rot13_decoded', decoded.textContent);
+} catch(e) {
+console.warn('Could not save to localStorage:', e);
+}
+}
+
+function loadFromLocalStorage() {
+try {
+const savedInput = localStorage.getItem('rot13_input');
+if(savedInput) {
+inputText.value = savedInput;
+}
+const savedOutput = localStorage.getItem('rot13_output');
+if(savedOutput) {
+output.textContent = savedOutput;
+}
+const savedEncoded = localStorage.getItem('rot13_encoded');
+if(savedEncoded) {
+encoded.textContent = savedEncoded;
+}
+const savedDecoded = localStorage.getItem('rot13_decoded');
+if(savedDecoded) {
+decoded.textContent = savedDecoded;
+}
+} catch(e) {
+console.warn('Could not load from localStorage:', e);
+}
+}
+
 convertBtn.addEventListener('click', convert);
 
 inputText.addEventListener('keydown', function(e) {
@@ -86,6 +140,27 @@ clearBtn.style.display = 'none';
 inputText.focus();
 });
 
+downloadOutput.addEventListener('click', function() {
+const text = output.textContent;
+if(text) {
+downloadText(text, 'rot13-output.txt');
+}
+});
+
+downloadEncoded.addEventListener('click', function() {
+const text = encoded.textContent;
+if(text) {
+downloadText(text, 'rot13-encoded.txt');
+}
+});
+
+downloadDecoded.addEventListener('click', function() {
+const text = decoded.textContent;
+if(text) {
+downloadText(text, 'rot13-decoded.txt');
+}
+});
+
 inputText.addEventListener('input', function() {
 if(inputText.value === '') {
 output.textContent = '';
@@ -94,6 +169,19 @@ decoded.textContent = '';
 clearBtn.style.display = 'none';
 }
 });
+
+inputText.addEventListener('keydown', function(e) {
+if(e.key === 'Escape') {
+inputText.value = '';
+output.textContent = '';
+encoded.textContent = '';
+decoded.textContent = '';
+clearBtn.style.display = 'none';
+inputText.focus();
+}
+});
+
+loadFromLocalStorage();
 </script>
 </body>
 </html>
