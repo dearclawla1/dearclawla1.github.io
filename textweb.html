@@ -30,6 +30,10 @@ body{padding:15px}
 #text{font-size:0.9rem}
 button{padding:10px 14px;font-size:0.9rem}
 }
+.error-message{background:#ef4444;color:#fff;padding:10px 15px;border-radius:6px;font-size:0.9rem;margin-top:10px;display:none;animation:slideIn 0.3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.download-btn{background:#10b981;color:#0a0a0a;font-weight:600}
+.download-btn:hover{background:#059669;box-shadow:0 4px 12px rgba(16,185,129,0.4)}
 </style>
 </head>
 <body>
@@ -40,7 +44,9 @@ button{padding:10px 14px;font-size:0.9rem}
 <button onclick="render()" class="primary" title="Render Grid (Ctrl+Enter)">Render Grid</button>
 <button onclick="clearGrid()" title="Clear Grid (Ctrl+C)">Clear</button>
 <button onclick="copyText()" id="copy-btn" title="Copy Text (Ctrl+X)">Copy Text</button>
+<button onclick="downloadGrid()" class="download-btn" title="Download Grid (Ctrl+D)">Download</button>
 </div>
+<div id="error-message" class="error-message"></div>
 <div id="grid"></div>
 <a href="index.html">Back to Home</a>
 <script>
@@ -48,6 +54,17 @@ const textInput=document.getElementById('text');
 const grid=document.getElementById('grid');
 const charCount=document.getElementById('char-count');
 const copyBtn=document.getElementById('copy-btn');
+const errorMessage=document.getElementById('error-message');
+
+function showError(message){
+errorMessage.textContent=message;
+errorMessage.style.display='block';
+setTimeout(()=>errorMessage.style.display='none',3000);
+}
+
+function hideError(){
+errorMessage.style.display='none';
+}
 
 function updateCharCount(){
 const count=textInput.value.length;
@@ -57,6 +74,11 @@ copyBtn.textContent=count>0?'Copy Text':'Copy Text';
 
 function render(){
 const text=textInput.value;
+hideError();
+if(!text){
+showError('Please enter some text first');
+return;
+}
 grid.innerHTML='';
 grid.style.gridTemplateColumns=`repeat(auto-fill,minmax(40px,1fr))`;
 const cells=text.split('').map((c,i)=>{
@@ -74,6 +96,7 @@ function clearGrid(){
 grid.innerHTML='';
 textInput.value='';
 updateCharCount();
+hideError();
 }
 
 function copyText(){
@@ -86,12 +109,54 @@ navigator.clipboard.writeText(text).then(()=>{
 copyBtn.textContent='Copied!';
 setTimeout(()=>copyBtn.textContent='Copy Text',2000);
 }).catch(err=>{
+showError('Copy failed: ' + err.message);
 copyBtn.textContent='Copy Failed';
 setTimeout(()=>copyBtn.textContent='Copy Text',2000);
 });
 }
 
-textInput.addEventListener('input',updateCharCount);
+function downloadGrid(){
+const text=textInput.value;
+if(!text){
+showError('Please enter some text first');
+return;
+}
+const blob=new Blob([text],{type:'text/plain'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download='text-grid.txt';
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+}
+
+function loadFromStorage(){
+try{
+const saved=textInput.value;
+if(saved){
+textInput.value=saved;
+updateCharCount();
+}
+}catch(err){
+console.log('Failed to load from storage:',err);
+}
+}
+
+function saveToStorage(){
+try{
+localStorage.setItem('textInput',textInput.value);
+}catch(err){
+console.log('Failed to save to storage:',err);
+}
+}
+
+textInput.addEventListener('input',function(e){
+updateCharCount();
+saveToStorage();
+});
+
 textInput.addEventListener('keydown',e=>{
 if(e.ctrlKey&&e.key==='Enter'){
 e.preventDefault();
@@ -105,10 +170,15 @@ if(e.ctrlKey&&e.key==='X'){
 e.preventDefault();
 copyText();
 }
+if(e.ctrlKey&&e.key==='D'){
+e.preventDefault();
+downloadGrid();
+}
 });
 
 copyBtn.addEventListener('click',copyText);
 
+loadFromStorage();
 updateCharCount();
 render();
 </script>
