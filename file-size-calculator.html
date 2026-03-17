@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11,25 +11,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem}
 a{color:var(--primary);text-decoration:none}
 a:hover{text-decoration:underline}
-.container{width:100%;max-width:400px;background:#1a1a1a;padding:2rem;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.container{width:100%;max-width:400px;background:#1a1a1a;padding:2rem;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:all 0.3s ease}
 h1{text-align:center;margin-bottom:1.5rem;font-size:1.5rem;color:#fff}
 .home-link{display:block;text-align:center;margin-bottom:1.5rem;color:#6366f1;font-size:0.9rem}
-.form-group{margin-bottom:1rem}
+.form-group{margin-bottom:1rem;position:relative}
 label{display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#ccc}
-input,select,button{width:100%;padding:0.8rem;border:none;border-radius:8px;font-size:1rem}
+input,select,button{width:100%;padding:0.8rem;border:none;border-radius:8px;font-size:1rem;transition:all 0.2s ease}
 input{background:#2a2a2a;color:#e4e4e4;border:1px solid #3a3a3a}
-input:focus{outline:none;border-color:var(--primary)}
+input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,0.2)}
+input.error{border-color:#ef4444;background:#2a1a1a}
+input.error::placeholder{color:#ef4444}
 select{background:#2a2a2a;color:#e4e4e4;border:1px solid #3a3a3a}
-select:focus{outline:none;border-color:var(--primary)}
+select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,0.2)}
 button{background:var(--primary);color:#fff;cursor:pointer;font-weight:600;transition:opacity 0.2s}
 button:hover{opacity:0.9}
-.result-box{background:#1a1a1a;border-radius:8;padding:1rem;margin-top:1rem;border:1px solid #3a3a3a}
+button:active{transform:scale(0.98)}
+.result-box{background:#1a1a1a;border-radius:8;padding:1rem;margin-top:1rem;border:1px solid #3a3a3a;animation: slideIn 0.3s ease}
 .result-box h3{color:#ccc;margin-bottom:0.5rem;font-size:1rem}
 .result-box p{color:#e4e4e4;font-size:1rem;margin:0.5rem 0}
 .result-box span{font-weight:600}
 .units{display:flex;gap:0.5rem;margin-top:1rem}
-.units button{flex:1;background:#2a2a2a;color:#ccc;font-weight:400}
-.units button.active{background:var(--primary);color:#fff}
+.units button{flex:1;background:#2a2a2a;color:#ccc;font-weight:400;border:1px solid #3a3a3a}
+.units button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.units button:hover:not(.active){background:#3a3a3a}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.error-message{background:#2a1a1a;border:1px solid #ef4444;color:#ef4444;padding:0.8rem;border-radius:8px;margin-top:1rem;font-size:0.9rem;display:none;animation: fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
@@ -57,12 +64,11 @@ button:hover{opacity:0.9}
 <option value="MB">Megabytes (MB)</option>
 <option value="GB">Gigabytes (GB)</option>
 </select>
-</select>
 </div>
 <div class="result-box">
 <h3>Result:</h3>
-<p>Converted size: <span id="result">ΓÇö</span></p>
-<p id="equivalent">Equivalent in all units: ΓÇö</p>
+<p>Converted size: <span id="result">—</span></p>
+<p id="equivalent">Equivalent in all units: —</p>
 </div>
 <div class="units">
 <button onclick="convertUnits('B')">Bytes (B)</button>
@@ -70,19 +76,54 @@ button:hover{opacity:0.9}
 <button onclick="convertUnits('MB')">MB</button>
 <button onclick="convertUnits('GB')">GB</button>
 </div>
+<div class="error-message" id="errorMessage"></div>
 </div>
 <script>
-function convertUnits() {
+const sizeInput = document.getElementById('size');
+const fromUnit = document.getElementById('fromUnit');
+const toUnit = document.getElementById('toUnit');
+const resultSpan = document.getElementById('result');
+const equivalentText = document.getElementById('equivalent');
+const errorMessage = document.getElementById('errorMessage');
+
+function convertUnits(targetUnit) {
 const from = document.getElementById('fromUnit').value;
 const to = document.getElementById('toUnit').value;
 const size = parseFloat(document.getElementById('size').value) || 0;
+
+// Validate input
+if (size < 0) {
+showError('Size cannot be negative');
+return;
+}
+
+if (size === 0 && from !== 'B') {
+showError('Please enter a valid size');
+return;
+}
+
+// Hide error if conversion succeeds
+hideError();
+
+// Calculate conversion
 const toFactor = {B:1,KB:1024,MB:1048576,GB:1073741824}[to];
 const converted = size * (1/toFactor) * Math.pow(1024, {B:0,KB:1,MB:2,GB:3}[from]);
-document.getElementById('result').textContent = formatted(converted, to);
+
+// Format and display result
+resultSpan.textContent = formatted(converted, to);
+
+// Calculate and display equivalent in all units
 const eq = {B:formatted(converted, 'B'),KB:formatted(converted, 'KB'),
 MB:formatted(converted, 'MB'),GB:formatted(converted, 'GB')};
-document.getElementById('equivalent').textContent = 'B: ' + eq.B + ', KB: ' + eq.KB + ', MB: ' + eq.MB + ', GB: ' + eq.GB;
+equivalentText.textContent = 'B: ' + eq.B + ', KB: ' + eq.KB + ', MB: ' + eq.MB + ', GB: ' + eq.GB;
+
+// Save to localStorage
+saveToLocalStorage(size, from, to, resultSpan.textContent, equivalentText.textContent);
+
+// Update unit button states
+updateUnitButtons();
 }
+
 function formatted(num, unit) {
 if (unit === 'B') return num.toFixed(0) + ' B';
 const exp = {B:0,KB:1,MB:2,GB:3}[unit];
@@ -91,8 +132,89 @@ const val = num / base;
 if (val < 1000000) return val.toLocaleString(undefined, {minimumFractionDigits:0,maximumFractionDigits:2}) + ' ' + unit;
 return val.toLocaleString(undefined, {minimumFractionDigits:0,maximumFractionDigits:2}) + ' ' + unit;
 }
-document.getElementById('size').addEventListener('input', convertUnits);
+
+function showError(message) {
+errorMessage.textContent = message;
+errorMessage.style.display = 'block';
+sizeInput.classList.add('error');
+}
+
+function hideError() {
+errorMessage.style.display = 'none';
+sizeInput.classList.remove('error');
+}
+
+function saveToLocalStorage(size, from, to, result, equivalent) {
+try {
+const data = JSON.parse(localStorage.getItem('fileSizeCalculator')) || [];
+data.push({
+size: size,
+from: from,
+to: to,
+result: result,
+equivalent: equivalent,
+timestamp: new Date().toISOString()
+});
+if (data.length > 50) data.shift(); // Keep last 50 entries
+localStorage.setItem('fileSizeCalculator', JSON.stringify(data));
+} catch (e) {
+console.error('Failed to save to localStorage:', e);
+}
+}
+
+function loadFromLocalStorage() {
+try {
+const data = JSON.parse(localStorage.getItem('fileSizeCalculator')) || [];
+if (data.length > 0) {
+const lastEntry = data[data.length - 1];
+sizeInput.value = lastEntry.size;
+fromUnit.value = lastEntry.from;
+toUnit.value = lastEntry.to;
+convertUnits(lastEntry.to);
+}
+} catch (e) {
+console.error('Failed to load from localStorage:', e);
+}
+}
+
+function updateUnitButtons() {
+const buttons = document.querySelectorAll('.units button');
+buttons.forEach(btn => {
+btn.classList.remove('active');
+if (btn.textContent === fromUnit.value) {
+btn.classList.add('active');
+}
+});
+}
+
+// Event listeners
+sizeInput.addEventListener('input', convertUnits);
+fromUnit.addEventListener('change', convertUnits);
+toUnit.addEventListener('change', convertUnits);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+if (e.ctrlKey && e.key === 'Enter') {
 convertUnits();
+}
+if (e.key === 'Escape') {
+sizeInput.value = '';
+convertUnits();
+}
+});
+
+// Initialize
+loadFromLocalStorage();
+convertUnits();
+
+// Export functionality
+document.querySelector('.container').addEventListener('click', (e) => {
+if (e.target.classList.contains('units')) {
+const btn = e.target;
+const unit = btn.textContent;
+convertUnits(unit);
+}
+});
 </script>
 </body>
 </html>
