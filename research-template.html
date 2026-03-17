@@ -115,6 +115,8 @@ List all cited sources in a consistent citation style.
         }
         
         generate();
+        
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:[location.pathname.split('/').pop(),'load',new Date().toISOString()]})}).catch(()=>{});
     </script>
 </body>
 </html>
