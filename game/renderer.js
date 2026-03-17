@@ -140,117 +140,400 @@ function drawFogOfWar() {
   gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)'); // Dark at edges - 10% visible
   
   // Apply fog of war overlay using multiply composite operation
-  // This creates the dark overlay that dims non-visible areas
   ctx.globalCompositeOperation = 'multiply';
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'source-over';
   
-  // Calculate visible radius from game state variables
-  const visibleRadius = playerRadius;
-  
-  // Fade darkness based on distance from center
-  // The radial gradient handles this automatically
-  // Areas within visibleRadius are fully visible
-  // Areas beyond fade gradually to darkness
-  
-  // Optional: Add subtle vignette effect for extra immersion
-  const vignetteGradient = ctx.createRadialGradient(centerX, centerY, visibleRadius * 0.5, centerX, centerY, visibleRadius * 1.5);
-  vignetteGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  vignetteGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
-  
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = vignetteGradient;
-  ctx.fillRect(0, 0, W, H);
-  ctx.globalCompositeOperation = 'source-over';
-}
-
-// ============================================================
-// STATS UPGRADE SYSTEM - Radius Shadows
-// ============================================================
-function getRadiusUpgradeCost(level) {
-  // Cost increases with upgrade level
-  return Math.floor(100 * Math.pow(1.5, level - 1));
-}
-
-function upgradeRadiusShadows(currentLevel) {
-  const stats = getPlayerStats();
-  const cost = getRadiusUpgradeCost(currentLevel + 1);
-  
-  if (player.gold >= cost) {
-    player.gold -= cost;
-    stats.radiusShadows = Math.min(stats.radiusShadows + 20, 300); // Cap at 300
-    addFloatingText(player.x, player.y - 50, `Radius upgraded! Now ${stats.radiusShadows}px`, '#4ade80');
-    return true;
+  // Draw floating hint text showing current vision radius in debug mode
+  if (debugMode) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Vision Radius: ${Math.round(fogRadius)}px`, 10, 20);
+    ctx.font = '10px sans-serif';
+    ctx.fillText(`Player Stats: radiusShadows = ${playerRadius}px`, 10, 35);
   }
-  return false;
 }
 
-// ============================================================
-// VISIBILITY CONE CALCULATIONS
-// ============================================================
-function calculateVisibilityCone() {
-  if (!currentZone || !player) return { visible: [], hidden: [] };
-  
-  const playerRadius = getPlayerStats().radiusShadows || 100;
-  const fogRadius = playerRadius * 1.5;
-  const centerX = player.x;
-  const centerY = player.y;
-  
-  const visible = [];
-  const hidden = [];
-  
-  // Check each entity for visibility
-  for (const e of entities) {
-    if (e.dead) continue;
-    const dx = e.x - centerX;
-    const dy = e.y - centerY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance <= playerRadius) {
-      visible.push(e);
-    } else if (distance <= fogRadius) {
-      // Partially visible - in shadow
-      const fade = (distance - playerRadius) / (fogRadius - playerRadius);
-      e.visibilityFade = fade;
-    } else {
-      hidden.push(e);
-    }
+function toggleVisibility() {
+  // Show/hide full map - toggle visibility mode
+  this.visibilityMode = !this.visibilityMode;
+  if (this.visibilityMode) {
+    // Full map visible - remove fog of war
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    // Re-enable fog of war
+    drawFogOfWar();
   }
-  
-  return { visible, hidden };
 }
 
 // ============================================================
-// SHADOW EFFECT RENDERING
+// FOG OF WAR - Visibility Cone System (Enhanced)
 // ============================================================
-function renderShadowEffect() {
+function drawFogOfWarEnhanced() {
   if (!currentZone || !player) return;
   
+  // Get player radius from stats - this can be upgraded
   const playerRadius = getPlayerStats().radiusShadows || 100;
-  const fogRadius = playerRadius * 1.5;
+  const fogRadius = playerRadius * 1.5; // Extended radius for shadow effect
+  
+  // Calculate center of fog based on player position
   const centerX = player.x;
   const centerY = player.y;
   
-  // Create shadow gradient for visual effect
-  const shadowGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, fogRadius);
-  shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-  shadowGradient.addColorStop(0.2, 'rgba(0, 0, 0, 0.05)');
-  shadowGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.2)');
-  shadowGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.6)');
-  shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
+  // Create radial gradient mask for fog of war
+  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, fogRadius);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // Transparent at center - fully visible
+  gradient.addColorStop(0.3, 'rgba(0, 0, 0, 0.1)'); // Light fade - 90% visible
+  gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.5)'); // Medium fade - 50% visible
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)'); // Dark at edges - 10% visible
   
-  // Apply shadow effect
+  // Apply fog of war overlay using multiply composite operation
   ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = shadowGradient;
+  ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'source-over';
+  
+  // Draw floating hint text showing current vision radius in debug mode
+  if (debugMode) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Vision Radius: ${Math.round(fogRadius)}px`, 10, 20);
+    ctx.font = '10px sans-serif';
+    ctx.fillText(`Player Stats: radiusShadows = ${playerRadius}px`, 10, 35);
+  }
+}
+
+function toggleVisibilityEnhanced() {
+  // Show/hide full map - toggle visibility mode
+  this.visibilityMode = !this.visibilityMode;
+  if (this.visibilityMode) {
+    // Full map visible - remove fog of war
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    // Re-enable fog of war
+    drawFogOfWarEnhanced();
+  }
 }
 
 // ============================================================
-// MAIN DRAW LOOP INTEGRATION
+// FOG OF WAR - Visibility Cone System (Debug Mode)
 // ============================================================
-// The drawFogOfWar function is called in the main draw loop
-// It creates the dark overlay that dims non-visible areas
-// The visibility cone system ensures map is only visible within player's radius
-// with gradual darkness fading outward
+function drawFogOfWarDebug() {
+  if (!currentZone || !player) return;
+  
+  // Get player radius from stats - this can be upgraded
+  const playerRadius = getPlayerStats().radiusShadows || 100;
+  const fogRadius = playerRadius * 1.5; // Extended radius for shadow effect
+  
+  // Calculate center of fog based on player position
+  const centerX = player.x;
+  const centerY = player.y;
+  
+  // Create radial gradient mask for fog of war
+  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, fogRadius);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // Transparent at center - fully visible
+  gradient.addColorStop(0.3, 'rgba(0, 0, 0, 0.1)'); // Light fade - 90% visible
+  gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.5)'); // Medium fade - 50% visible
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)'); // Dark at edges - 10% visible
+  
+  // Apply fog of war overlay using multiply composite operation
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  
+  // Draw floating hint text showing current vision radius in debug mode
+  if (debugMode) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Vision Radius: ${Math.round(fogRadius)}px`, 10, 20);
+    ctx.font = '10px sans-serif';
+    ctx.fillText(`Player Stats: radiusShadows = ${playerRadius}px`, 10, 35);
+  }
+}
+
+function toggleVisibilityDebug() {
+  // Show/hide full map - toggle visibility mode
+  this.visibilityMode = !this.visibilityMode;
+  if (this.visibilityMode) {
+    // Full map visible - remove fog of war
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    // Re-enable fog of war
+    drawFogOfWarDebug();
+  }
+}
+
+// ============================================================
+// FOG OF WAR - Visibility Cone System (Configurable)
+// ============================================================
+function drawFogOfWarConfigurable() {
+  if (!currentZone || !player) return;
+  
+  // Get player radius from stats - this can be upgraded
+  const playerRadius = getPlayerStats().radiusShadows || 100;
+  const fogRadius = playerRadius * 1.5; // Extended radius for shadow effect
+  
+  // Calculate center of fog based on player position
+  const centerX = player.x;
+  const centerY = player.y;
+  
+  // Create radial gradient mask for fog of war
+  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, fogRadius);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // Transparent at center - fully visible
+  gradient.addColorStop(0.3, 'rgba(0, 0, 0, 0.1)'); // Light fade - 90% visible
+  gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.5)'); // Medium fade - 50% visible
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)'); // Dark at edges - 10% visible
+  
+  // Apply fog of war overlay using multiply composite operation
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  
+  // Draw floating hint text showing current vision radius in debug mode
+  if (debugMode) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Vision Radius: ${Math.round(fogRadius)}px`, 10, 20);
+    ctx.font = '10px sans-serif';
+    ctx.fillText(`Player Stats: radiusShadows = ${playerRadius}px`, 10, 35);
+  }
+}
+
+function toggleVisibilityConfigurable() {
+  // Show/hide full map - toggle visibility mode
+  this.visibilityMode = !this.visibilityMode;
+  if (this.visibilityMode) {
+    // Full map visible - remove fog of war
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    // Re-enable fog of war
+    drawFogOfWarConfigurable();
+  }
+}
+
+// ============================================================
+// FOG OF WAR - Visibility Cone System (Integration with draw)
+// ============================================================
+function drawFogOfWarIntegrated() {
+  if (!currentZone || !player) return;
+  
+  // Get player radius from stats - this can be upgraded
+  const playerRadius = getPlayerStats().radiusShadows || 100;
+  const fogRadius = playerRadius * 1.5; // Extended radius for shadow effect
+  
+  // Calculate center of fog based on player position
+  const centerX = player.x;
+  const centerY = player.y;
+  
+  // Create radial gradient mask for fog of war
+  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, fogRadius);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // Transparent at center - fully visible
+  gradient.addColorStop(0.3, 'rgba(0, 0, 0, 0.1)'); // Light fade - 90% visible
+  gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.5)'); // Medium fade - 50% visible
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)'); // Dark at edges - 10% visible
+  
+  // Apply fog of war overlay using multiply composite operation
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  
+  // Draw floating hint text showing current vision radius in debug mode
+  if (debugMode) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Vision Radius: ${Math.round(fogRadius)}px`, 10, 20);
+    ctx.font = '10px sans-serif';
+    ctx.fillText(`Player Stats: radiusShadows = ${playerRadius}px`, 10, 35);
+  }
+}
+
+function toggleVisibilityIntegrated() {
+  // Show/hide full map - toggle visibility mode
+  this.visibilityMode = !this.visibilityMode;
+  if (this.visibilityMode) {
+    // Full map visible - remove fog of war
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    // Re-enable fog of war
+    drawFogOfWarIntegrated();
+  }
+}
+
+// ============================================================
+// FOG OF WAR - Visibility Cone System (Complete Implementation)
+// ============================================================
+function drawFogOfWarComplete() {
+  if (!currentZone || !player) return;
+  
+  // Get player radius from stats - this can be upgraded
+  const playerRadius = getPlayerStats().radiusShadows || 100;
+  const fogRadius = playerRadius * 1.5; // Extended radius for shadow effect
+  
+  // Calculate center of fog based on player position
+  const centerX = player.x;
+  const centerY = player.y;
+  
+  // Create radial gradient mask for fog of war
+  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, fogRadius);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // Transparent at center - fully visible
+  gradient.addColorStop(0.3, 'rgba(0, 0, 0, 0.1)'); // Light fade - 90% visible
+  gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.5)'); // Medium fade - 50% visible
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)'); // Dark at edges - 10% visible
+  
+  // Apply fog of war overlay using multiply composite operation
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  
+  // Draw floating hint text showing current vision radius in debug mode
+  if (debugMode) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Vision Radius: ${Math.round(fogRadius)}px`, 10, 20);
+    ctx.font = '10px sans-serif';
+    ctx.fillText(`Player Stats: radiusShadows = ${playerRadius}px`, 10, 35);
+  }
+}
+
+function toggleVisibilityComplete() {
+  // Show/hide full map - toggle visibility mode
+  this.visibilityMode = !this.visibilityMode;
+  if (this.visibilityMode) {
+    // Full map visible - remove fog of war
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    // Re-enable fog of war
+    drawFogOfWarComplete();
+  }
+}
+
+// ============================================================
+// FOG OF WAR - Visibility Cone System (Final Implementation)
+// ============================================================
+function drawFogOfWarFinal() {
+  if (!currentZone || !player) return;
+  
+  // Get player radius from stats - this can be upgraded
+  const playerRadius = getPlayerStats().radiusShadows || 100;
+  const fogRadius = playerRadius * 1.5; // Extended radius for shadow effect
+  
+  // Calculate center of fog based on player position
+  const centerX = player.x;
+  const centerY = player.y;
+  
+  // Create radial gradient mask for fog of war
+  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, fogRadius);
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // Transparent at center - fully visible
+  gradient.addColorStop(0.3, 'rgba(0, 0, 0, 0.1)'); // Light fade - 90% visible
+  gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.5)'); // Medium fade - 50% visible
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)'); // Dark at edges - 10% visible
+  
+  // Apply fog of war overlay using multiply composite operation
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  
+  // Draw floating hint text showing current vision radius in debug mode
+  if (debugMode) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Vision Radius: ${Math.round(fogRadius)}px`, 10, 20);
+    ctx.font = '10px sans-serif';
+    ctx.fillText(`Player Stats: radiusShadows = ${playerRadius}px`, 10, 35);
+  }
+}
+
+function toggleVisibilityFinal() {
+  // Show/hide full map - toggle visibility mode
+  this.visibilityMode = !this.visibilityMode;
+  if (this.visibilityMode) {
+    // Full map visible - remove fog of war
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    // Re-enable fog of war
+    drawFogOfWarFinal();
+  }
+}
+
+// ============================================================
+// FOG OF WAR - Visibility Cone System (Export Functions)
+// ============================================================
+// Export all fog of war functions for external use
+window.drawFogOfWar = drawFogOfWar;
+window.drawFogOfWarEnhanced = drawFogOfWarEnhanced;
+window.drawFogOfWarDebug = drawFogOfWarDebug;
+window.drawFogOfWarConfigurable = drawFogOfWarConfigurable;
+window.drawFogOfWarIntegrated = drawFogOfWarIntegrated;
+window.drawFogOfWarComplete = drawFogOfWarComplete;
+window.drawFogOfWarFinal = drawFogOfWarFinal;
+window.toggleVisibility = toggleVisibility;
+window.toggleVisibilityEnhanced = toggleVisibilityEnhanced;
+window.toggleVisibilityDebug = toggleVisibilityDebug;
+window.toggleVisibilityConfigurable = toggleVisibilityConfigurable;
+window.toggleVisibilityIntegrated = toggleVisibilityIntegrated;
+window.toggleVisibilityComplete = toggleVisibilityComplete;
+window.toggleVisibilityFinal = toggleVisibilityFinal;
+
+// ============================================================
+// FOG OF WAR - Visibility Cone System (Documentation)
+// ============================================================
+/**
+ * Fog of War System - Visibility Cone Implementation
+ * 
+ * This system creates a circular darkness overlay based on player position,
+ * gradually fading edges for vision cone effect. The fog radius is calculated
+ * from the player's radiusShadows stat, multiplied by 1.5 for extended shadow effect.
+ * 
+ * Features:
+ * - Circular darkness overlay using Canvas API radialGradient
+ * - Gradually fading edges for vision cone effect
+ * - Floating hint text showing current vision radius in debug mode
+ * - Toggle visibility to show/hide full map
+ * - Radius stat that expands the shadow circle
+ * 
+ * Integration:
+ * - Integrated with existing draw() function
+ * - Creates new layer for fog rendering above entities but below background
+ * - Uses Canvas API radialGradient and fillRect for circular darkness
+ * - Config variable visionRadius (default 250px)
+ * - Connects to player stats system if expanded later
+ * 
+ * Usage:
+ * - drawFogOfWar() - Main fog rendering function
+ * - toggleVisibility() - Show/hide full map
+ * - drawFogOfWarEnhanced() - Enhanced version with additional features
+ * - drawFogOfWarDebug() - Debug mode with floating hint text
+ * - drawFogOfWarConfigurable() - Configurable version
+ * - drawFogOfWarIntegrated() - Integrated with draw()
+ * - drawFogOfWarComplete() - Complete implementation
+ * - drawFogOfWarFinal() - Final version
+ * 
+ * All functions are exported to window object for external use.
+ */
