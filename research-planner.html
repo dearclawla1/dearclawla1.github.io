@@ -2,31 +2,42 @@
 <html>
 <head>
 <style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;min-height:100vh;display:flex;align-items:center;justify-content:center;}
-input,select{background:#0a0a0a;color:#e4e4e4;border:1px solid #333;padding:8px;border-radius:4px;min-width:150px;}
-button{background:#6366f1;color:#fff;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;}
-button:hover{background:#5558f1;}
-a{color:#6366f1;text-decoration:none;}
-h1{color:#6366f1;}
-.task-item{background:#111;border:1px solid #333;padding:12px;margin:8px 0;border-radius:4px;display:flex;align-items:center;gap:10px;}
+body{background:#0a0a0a;color:#e4e4e4;font-family:monospace;min-height:100vh;display:flex;align-items:center;justify-content:center;transition:background 0.3s,color 0.3s;}
+input,select{background:#0a0a0a;color:#e4e4e4;border:1px solid #333;padding:8px;border-radius:4px;min-width:150px;transition:border-color 0.2s,box-shadow 0.2s;}
+input:focus,select:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.3);}
+button{background:#6366f1;color:#fff;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;transition:background 0.2s,transform 0.1s;}
+button:hover{background:#5558f1;transform:translateY(-1px);}
+button:active{transform:translateY(0);}
+a{color:#6366f1;text-decoration:none;transition:color 0.2s;}
+a:hover{color:#7c7fff;}
+h1{color:#6366f1;animation:fadeIn 0.5s ease-out;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.task-item{background:#111;border:1px solid #333;padding:12px;margin:8px 0;border-radius:4px;display:flex;align-items:center;gap:10px;transition:all 0.3s,opacity 0.3s;}
+.task-item:hover{border-color:#444;transform:translateX(4px);}
 .task-item.completed{opacity:0.6;}
 .task-item.completed .task-name{text-decoration:line-through;color:#888;}
 .task-actions{display:flex;gap:8px;}
-.edit-btn{background:#333;color:#e4e4e4;padding:6px 10px;border-radius:4px;border:none;cursor:pointer;font-size:12px;}
+.edit-btn{background:#333;color:#e4e4e4;padding:6px 10px;border-radius:4px;border:none;cursor:pointer;font-size:12px;transition:background 0.2s;}
 .edit-btn:hover{background:#444;}
-.delete-btn{background:#ef4444;color:#fff;padding:6px 10px;border-radius:4px;border:none;cursor:pointer;font-size:12px;}
+.delete-btn{background:#ef4444;color:#fff;padding:6px 10px;border-radius:4px;border:none;cursor:pointer;font-size:12px;transition:background 0.2s;}
 .delete-btn:hover{background:#dc2626;}
-.export-btn{background:#10b981;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:10px;}
+.export-btn{background:#10b981;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:10px;transition:background 0.2s;}
 .export-btn:hover{background:#059669;}
 #tasks{max-width:600px;}
-#taskForm{display:flex;gap:10px;flex-wrap:wrap;}
+#taskForm{display:flex;gap:10px;flex-wrap:wrap;animation:slideIn 0.5s ease-out;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);}}
 #taskForm input,#taskForm select{min-width:120px;}
 #taskForm button{min-width:100px;}
+.error-message{background:#ef4444;color:#fff;padding:10px;border-radius:4px;margin:10px 0;display:none;animation:shake 0.5s;}
+@keyframes shake{0%,100%{transform:translateX(0);}10%,30%,50%,70%,90%{transform:translateX(-5px);}20%,40%,60%,80%{transform:translateX(5px);}}
+.task-item{animation:slideIn 0.3s ease-out;}
+.task-item.completed{animation:slideIn 0.3s ease-out;}
 </style>
 </head>
 <body>
 <a href='index.html' style='color:#6366f1'>Back to Home</a>
 <h1>Research Planner</h1>
+<div id='errorContainer'></div>
 <div id='taskForm'>
 <select id='researchType'>
 <option value='academic'>Academic Research</option>
@@ -35,16 +46,35 @@ h1{color:#6366f1;}
 </select>
 <input id='taskName' placeholder='Enter task name'>
 <input id='priority' placeholder='Priority (1-10)' type='number' min='1' max='10'>
-<button onclick='addTask()'>Add Task</button>
+<button onclick='addTask()' id='addBtn'>Add Task</button>
 <button class='export-btn' onclick='exportTasks()'>Export JSON</button>
 </div>
 <div id='tasks'></div>
 <script>
 let tasks = JSON.parse(localStorage.getItem('researchTasks')) || [];
 
+function showError(message){
+const container = document.getElementById('errorContainer');
+const errorDiv = document.createElement('div');
+errorDiv.className = 'error-message';
+errorDiv.textContent = message;
+container.innerHTML = '';
+container.appendChild(errorDiv);
+setTimeout(()=>{errorDiv.style.display='none';}, 3000);
+}
+
+function clearError(){
+const container = document.getElementById('errorContainer');
+container.innerHTML = '';
+}
+
 function saveTasks(){
+try{
 localStorage.setItem('researchTasks', JSON.stringify(tasks));
 renderTasks();
+}catch(e){
+showError('Failed to save tasks. Storage might be full.');
+}
 }
 
 function renderTasks(){
@@ -71,22 +101,30 @@ container.appendChild(div);
 
 function addTask(){
 let type = document.getElementById('researchType').value;
-let task = document.getElementById('taskName').value;
+let task = document.getElementById('taskName').value.trim();
 let prio = document.getElementById('priority').value;
+
 if(!task || !prio){
-alert('Please fill in all fields');
+showError('Please fill in all fields');
 return;
 }
-tasks.push({name: task, priority: prio, type: type, completed: false});
+
+if(prio < 1 || prio > 10){
+showError('Priority must be between 1 and 10');
+return;
+}
+
+tasks.push({name: task, priority: parseInt(prio), type: type, completed: false});
 saveTasks();
 document.getElementById('taskName').value = '';
 document.getElementById('priority').value = '';
+clearError();
 }
 
 function editTask(index){
 let newName = prompt('Edit task name:', tasks[index].name);
-if(newName){
-tasks[index].name = newName;
+if(newName && newName.trim()){
+tasks[index].name = newName.trim();
 saveTasks();
 }
 }
@@ -102,6 +140,7 @@ saveTasks();
 }
 
 function exportTasks(){
+try{
 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks, null, 2));
 const downloadAnchorNode = document.createElement('a');
 downloadAnchorNode.setAttribute("href", dataStr);
@@ -109,7 +148,23 @@ downloadAnchorNode.setAttribute("download", "research_tasks.json");
 document.body.appendChild(downloadAnchorNode);
 downloadAnchorNode.click();
 document.body.removeChild(downloadAnchorNode);
+}catch(e){
+showError('Failed to export tasks');
 }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+if(e.ctrlKey && e.key === 'Enter'){
+e.preventDefault();
+addTask();
+}
+if(e.key === 'Escape'){
+document.getElementById('taskName').value = '';
+document.getElementById('priority').value = '';
+clearError();
+}
+});
 
 renderTasks();
 </script>
