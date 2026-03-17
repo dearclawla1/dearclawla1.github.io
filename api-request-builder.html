@@ -11,6 +11,7 @@ button:hover{background:#5558ff}
 #output{background:#1a1a1a;border:1px solid #333;padding:15px;min-height:100px;white-space:pre-wrap;overflow:auto}
 #output.error{border-color:#ef4444}
 #output.success{border-color:#22c55e}
+#output.result{border-color:#6366f1}
 </style>
 </head>
 <body>
@@ -45,6 +46,7 @@ button:hover{background:#5558ff}
 </div>
 <button type="submit">Build Request</button>
 <button type="button" id="clear-btn">Clear</button>
+<button type="button" id="download-btn">Download Result</button>
 </form>
 <h2>Output:</h2>
 <div id="output" aria-live="polite"></div>
@@ -55,6 +57,7 @@ const form=document.getElementById('request-form');
 const urlInput=document.getElementById('url');
 const output=document.getElementById('output');
 const clearBtn=document.getElementById('clear-btn');
+const downloadBtn=document.getElementById('download-btn');
 
 function showError(message){
 output.textContent=message;
@@ -68,7 +71,7 @@ output.className='success';
 
 function showResult(message){
 output.textContent=message;
-output.className='';
+output.className='result';
 }
 
 function buildUrl(url,query){
@@ -89,6 +92,21 @@ return JSON.parse(str);
 showError(`Invalid ${field} JSON: ${e.message}`);
 return null;
 }
+}
+
+function downloadResult(){
+const result=output.textContent;
+if(!result){
+showError('No result to download');
+return;
+}
+const blob=new Blob([result],{type:'text/plain'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download='api-request.txt';
+a.click();
+URL.revokeObjectURL(url);
 }
 
 async function handleSubmit(e){
@@ -132,12 +150,60 @@ clearBtn.addEventListener('click',()=>{
 form.reset();
 showResult('Form cleared');
 });
+downloadBtn.addEventListener('click',downloadResult);
 
-// Keyboard shortcut: Enter to submit
+// Keyboard shortcuts: Enter to submit, Ctrl+Enter to submit, Escape to clear
 document.addEventListener('keydown',(e)=>{
 if(e.key==='Enter'&&!e.target.matches('textarea')){
 form.dispatchEvent(new Event('submit',{cancelable:true}));
 }
+if(e.ctrlKey && e.key==='Enter'&&!e.target.matches('textarea')){
+form.dispatchEvent(new Event('submit',{cancelable:true}));
+}
+if(e.key==='Escape'){
+form.reset();
+showResult('Form cleared');
+}
+});
+
+// Load saved data from localStorage
+try{
+const savedData=localStorage.getItem('api-request-builder');
+if(savedData){
+const data=JSON.parse(savedData);
+if(data.method){
+document.getElementById('method').value=data.method;
+}
+if(data.url){
+document.getElementById('url').value=data.url;
+}
+if(data.headers){
+document.getElementById('headers').value=data.headers;
+}
+if(data.body){
+document.getElementById('body').value=data.body;
+}
+if(data.query){
+document.getElementById('query').value=data.query;
+}
+}
+}catch(e){
+console.error('Failed to load saved data:',e);
+}
+
+// Save data to localStorage on input change
+const inputs=[urlInput,document.getElementById('method'),document.getElementById('headers'),document.getElementById('body'),document.getElementById('query')];
+inputs.forEach(input=>{
+input.addEventListener('input',()=>{
+const data={
+method:document.getElementById('method').value,
+url:document.getElementById('url').value,
+headers:document.getElementById('headers').value,
+body:document.getElementById('body').value,
+query:document.getElementById('query').value
+};
+localStorage.setItem('api-request-builder',JSON.stringify(data));
+});
 });
 
 // Show initial message
