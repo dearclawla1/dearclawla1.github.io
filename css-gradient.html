@@ -70,7 +70,7 @@ a { display: block; text-align: center; margin-bottom: 12px; }
 <input type="color" id="color2" value="#6366f1" title="End Color">
 <select id="direction">
 <option value="linear-gradient(90deg,">Horizontal</option>
-<option value="linear-gradient(90deg,">Vertical</option>
+<option value="linear-gradient(180deg,">Vertical</option>
 <option value="conic-gradient(360deg,">Cylindrical</option>
 <option value="repeating-linear-gradient(90deg,">Striped</option>
 </select>
@@ -82,7 +82,7 @@ a { display: block; text-align: center; margin-bottom: 12px; }
 <canvas id="preview"></canvas>
 <button onclick="generate()">Generate Gradient</button>
 <button class="secondary" onclick="copyCode()">Copy CSS</button>
-<textarea id="code" readonly style="width:100%;min-height:80px;background:#1a1a1a;border:1px solid #333;color:#e4e44;"></textarea>
+<textarea id="code" readonly style="width:100%;min-height:80px;background:#1a1a1a;border:1px solid #333;color:#e4e4e4;"></textarea>
 </div>
 <script>
 const canvas = document.getElementById('preview');
@@ -104,11 +104,8 @@ drawGradient(c1, c2, dir.includes('conic-gradient'), repeat === 'true');
 
 const drawGradient = (c1, c2, conic, repeat) => {
 ctx.clearRect(0, 0, width, height);
-const gradient = ctx.createLinearGradient(0, 0, width, height);
 if (!conic) {
-const [x, y] = conic.includes('90deg') ? [0, 0] : [0, 0];
-if (conic.includes('horizontal')) x = width, y = 0;
-if (conic.includes('vertical')) x = 0, y = height;
+const [x, y] = [0, 0];
 const g = ctx.createLinearGradient(x, y, width, height);
 g.addColorStop(0, c1);
 g.addColorStop(1, c2);
