@@ -52,6 +52,7 @@ interface ClientMessage {
   "hit-player": { targetId: string; damage: number };
   chat: { text: string };
   ping: {};
+  gamecheck: {};
 }
 
 interface ServerMessage {
@@ -248,6 +249,10 @@ export default class GameRoom implements Server {
 
       ping: (conn, {}) => {
         // Handle ping
+      },
+
+      gamecheck: (conn, {}) => {
+        // Handle gamecheck
       },
     };
 
