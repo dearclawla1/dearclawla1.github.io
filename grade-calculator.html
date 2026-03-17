@@ -10,10 +10,14 @@
     h1 { text-align: center; color: #6366f1; margin-bottom: 20px; }
     .back-link { text-align: center; margin-bottom: 20px; }
     .container { max-width: 600px; margin: 0 auto; }
-    .assignment { background: #1a1a1a; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; }
-    .assignment input, .assignment select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #444; border-radius: 4px; background: #0a0a0a; color: #e4e4e4; }
+    .assignment { background: #1a1a1a; padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #333; transition: all 0.3s ease; }
+    .assignment:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15); }
+    .assignment input, .assignment select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #444; border-radius: 4px; background: #0a0a0a; color: #e4e4e4; transition: all 0.2s ease; }
+    .assignment input:focus, .assignment select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
     .weight-input { width: 80px; }
-    button { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s ease; }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
     .btn-add { background: #6366f1; color: white; }
     .btn-remove { background: #ef4444; color: white; }
     .btn-calc { background: #10b981; color: white; }
@@ -24,12 +28,17 @@
     .letter { font-size: 24px; color: #ef4444; }
     .grade-range { font-size: 14px; color: #888; margin-top: 10px; }
     .input-note { font-size: 12px; color: #666; text-align: center; margin-bottom: 15px; }
+    .error-message { background: #ef4444; color: white; padding: 10px; margin: 10px 0; border-radius: 6px; text-align: center; font-size: 14px; display: none; animation: shake 0.5s ease; }
+    .export-btn { background: #8b5cf6; color: white; margin: 5px 0; }
+    .export-btn:hover { background: #7c3aed; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
   </style>
 </head>
 <body>
   <a href="index.html" style="color:#6366f1">Home</a>
   <h1>📊 Grade Calculator</h1>
   <div class="input-note">Enter weights (must total 100%) and scores to calculate final grade</div>
+  <div class="error-message" id="errorMessage"></div>
   <div class="container">
     <div id="assignments">
       <div class="assignment">
@@ -50,6 +59,7 @@
     </div>
     <button class="btn-add" onclick="addAssignment()">+ Add Assignment</button>
     <button class="btn-calc" onclick="calculate()">Calculate Final Grade</button>
+    <button class="export-btn" onclick="exportResults()">📥 Export Results</button>
     <button class="btn-clear" onclick="clearAll()">Clear All</button>
     <div id="result">
       <h2>Final Grade</h2>
@@ -60,6 +70,43 @@
   </div>
   <script>
     let assignmentCount = 1;
+    let lastGrade = null;
+    
+    // Load from localStorage on page load
+    window.addEventListener('load', function() {
+      const savedData = localStorage.getItem('gradeCalculatorData');
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          assignmentCount = parsed.assignmentCount || 1;
+          const assignments = parsed.assignments || [];
+          assignments.forEach((a, i) => {
+            const id = i + 1;
+            const nameInput = document.getElementById(`name${id}`);
+            const scoreInput = document.getElementById(`score${id}`);
+            const weightSelect = document.getElementById(`weight${id}`);
+            if (nameInput) nameInput.value = a.name || `Assignment ${id}`;
+            if (scoreInput) scoreInput.value = a.score || 75;
+            if (weightSelect) weightSelect.value = a.weight || 10;
+          });
+        } catch (e) {
+          console.error('Failed to load saved data:', e);
+        }
+      }
+    });
+    
+    // Save to localStorage on change
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('change', function() {
+        saveToLocalStorage();
+      });
+    });
+    
+    function saveToLocalStorage() {
+      const assignments = getAssignments();
+      const data = { assignmentCount, assignments };
+      localStorage.setItem('gradeCalculatorData', JSON.stringify(data));
+    }
     
     function addAssignment() {
       assignmentCount++;
@@ -81,12 +128,14 @@
         <button class="btn-remove" onclick="removeAssignment(${assignmentCount})">Remove</button>
       `;
       document.getElementById('assignments').appendChild(div);
+      saveToLocalStorage();
     }
     
     function removeAssignment(id) {
       const el = document.getElementById(`name${id}`);
       if (el) {
         el.parentElement.remove();
+        saveToLocalStorage();
       }
     }
     
@@ -103,13 +152,26 @@
       return result;
     }
     
+    function showError(message) {
+      const errorEl = document.getElementById('errorMessage');
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+      setTimeout(() => {
+        errorEl.style.display = 'none';
+      }, 3000);
+    }
+    
     function calculate() {
       const assignments = getAssignments();
       const totalWeight = assignments.reduce((sum, a) => sum + a.weight, 0);
       
+      if (assignments.length === 0) {
+        showError('Please add at least one assignment');
+        return;
+      }
+      
       if (totalWeight === 0) {
-        document.getElementById('gradeDisplay').textContent = '0%';
-        document.getElementById('letterGrade').textContent = 'F';
+        showError('Total weight must be greater than 0%');
         return;
       }
       
@@ -123,21 +185,22 @@
       const grade = parseFloat(finalGrade);
       
       document.getElementById('gradeDisplay').textContent = finalGrade + '%';
+      document.getElementById('letterGrade').textContent = getLetterGrade(grade);
       
-      let letter = 'F';
-      if (grade >= 90) letter = 'A';
-      else if (grade >= 80) letter = 'B';
-      else if (grade >= 70) letter = 'C';
-      else if (grade >= 60) letter = 'D';
-      
-      document.getElementById('letterGrade').textContent = letter;
+      lastGrade = { grade, finalGrade };
+    }
+    
+    function getLetterGrade(grade) {
+      if (grade >= 90) return 'A';
+      else if (grade >= 80) return 'B';
+      else if (grade >= 70) return 'C';
+      else if (grade >= 60) return 'D';
+      else return 'F';
     }
     
     function clearAll() {
       document.getElementById('name1').value = 'Quiz 1';
       document.getElementById('score1').value = '85';
-      document.getElementById('name2').value = 'Quiz 2';
-      document.getElementById('score2').value = '75';
       document.getElementById('assignments').innerHTML = `
       <div class="assignment">
         <input type="text" id="name1" placeholder="Assignment Name" value="Quiz 1">
@@ -156,9 +219,67 @@
       </div>
       `;
       assignmentCount = 1;
+      lastGrade = null;
+      saveToLocalStorage();
       calculate();
     }
     
+    function exportResults() {
+      const assignments = getAssignments();
+      const totalWeight = assignments.reduce((sum, a) => sum + a.weight, 0);
+      
+      if (assignments.length === 0) {
+        showError('No assignments to export');
+        return;
+      }
+      
+      let weightedSum = 0;
+      assignments.forEach(a => {
+        const contribution = a.score * (a.weight / totalWeight);
+        weightedSum += contribution;
+      });
+      
+      const finalGrade = weightedSum.toFixed(1);
+      const grade = parseFloat(finalGrade);
+      const letter = getLetterGrade(grade);
+      
+      const exportText = `Grade Calculator Results\n\n` +
+        `Total Weight: ${totalWeight}%\n` +
+        `Final Grade: ${finalGrade}%\n` +
+        `Letter Grade: ${letter}\n\n` +
+        `Assignments:\n`;
+      
+      assignments.forEach((a, i) => {
+        exportText += `${i + 1}. ${a.name}: ${a.score} (${a.weight}%) - Weighted: ${(a.score * (a.weight / totalWeight)).toFixed(2)}%\n`;
+      });
+      
+      exportText += `\nGrade Range: A: 90-100% | B: 80-89% | C: 70-79% | D: 60-69% | F: <60%`;
+      
+      const blob = new Blob([exportText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'grade-calculator-results.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        calculate();
+      }
+      if (e.ctrlKey && e.key === 'S') {
+        e.preventDefault();
+        saveToLocalStorage();
+      }
+      if (e.key === 'Escape') {
+        clearAll();
+      }
+    });
+    
+    // Initialize calculation
     calculate();
   </script>
 </body>
