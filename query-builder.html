@@ -11,10 +11,13 @@ a{color:#0f0}
 label{display:block;margin-bottom:5px;font-size:12px}
 input,select{width:95%}
 textarea{width:95%;height:80px;padding:8px;font-family:monospace;resize:vertical}
-button{margin:5px 0;padding:8px 15px;background:#2a2a2a;color:#e4e4e4;border:1px solid #3a3a3a;border-radius:3px;cursor:pointer}
+button{margin:5px 0;padding:8px 15px;background:#2a2a2a;color:#e4e4e4;border:1px solid #3a3a3a;border-radius:3px;cursor:pointer;transition:all 0.2s}
 button:hover{background:#3a3a3a}
-#output{margin-top:15px;padding:10px;background:#1a1a1a;border-radius:5px;font-family:monospace;white-space:pre-wrap;min-height:60px}
-#result{margin-top:10px;padding:10px;background:#111;border-radius:5px;font-family:monospace;font-weight:bold}
+button:active{transform:scale(0.98)}
+#output{margin-top:15px;padding:10px;background:#1a1a1a;border-radius:5px;font-family:monospace;white-space:pre-wrap;min-height:60px;transition:all 0.3s}
+#result{margin-top:10px;padding:10px;background:#111;border-radius:5px;font-family:monospace;font-weight:bold;transition:all 0.3s}
+.error-message{margin-top:10px;padding:10px;background:#3a1a1a;border-radius:5px;font-family:monospace;font-size:12px;display:none;animation:shake 0.5s}
+@keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-5px)}100%{transform:translateX(0)}}
 </style>
 </head>
 <body>
@@ -26,7 +29,7 @@ button:hover{background:#3a3a3a}
 </div>
 <div class="input-group">
 <label>Operation:</label>
-<select id="op"><option value="SELECT">SELECT</option><option value="INSERT">INSERT</option><option value="UPDATE">UPDATE</option><option value="DELETE">DELETE</option><option value="FIND">FIND</option><option value="UPDATE">UPDATE</option><option value="REMOVE">REMOVE</option></select>
+<select id="op"><option value="SELECT">SELECT</option><option value="INSERT">INSERT</option><option value="UPDATE">UPDATE</option><option value="DELETE">DELETE</option><option value="FIND">FIND</option><option value="REMOVE">REMOVE</option></select>
 </div>
 <div class="input-group">
 <label>From / Collection:</label>
@@ -46,8 +49,10 @@ button:hover{background:#3a3a3a}
 </div>
 <button onclick="generate()">Generate Query</button>
 <button onclick="clearAll()">Clear All</button>
+<button onclick="exportQuery()">Export Query</button>
 <div id="output">Preview your query here...</div>
 <div id="result"></div>
+<div id="error" class="error-message"></div>
 <script>
 function getDBType(){return document.getElementById("dbType").value}
 function getOp(){return document.getElementById("op").value}
@@ -64,6 +69,8 @@ const limit=lim?`LIMIT ${lim}`:""
 const query=`${op.toUpperCase()} * FROM ${from} ${where} ${orderBy} ${limit}`
 document.getElementById("output").innerText=query
 document.getElementById("result").innerText="✓ Query generated successfully! Validated."
+document.getElementById("error").style.display="none"
+saveToLocalStorage(query)
 }
 function clearAll(){
 document.getElementById("table").value=""
@@ -72,9 +79,85 @@ document.getElementById("orderby").value=""
 document.getElementById("limit").value=""
 document.getElementById("output").innerText="Preview your query here..."
 document.getElementById("result").innerText=""
+document.getElementById("error").style.display="none"
+clearLocalStorage()
 }
 function validate(){generate()}
+function exportQuery(){
+const query=document.getElementById("output").innerText
+const blob=new Blob([query],{type:'text/plain'})
+const url=URL.createObjectURL(blob)
+const a=document.createElement('a')
+a.href=url
+a.download='query.txt'
+a.click()
+URL.revokeObjectURL(url)
+}
+function saveToLocalStorage(query){
+try{
+localStorage.setItem('lastQuery',query)
+localStorage.setItem('lastDBType',getDBType())
+localStorage.setItem('lastOp',getOp())
+localStorage.setItem('lastTable',getTable())
+localStorage.setItem('lastFilter',document.getElementById("filter").value)
+localStorage.setItem('lastOrderBy',getOrder())
+localStorage.setItem('lastLimit',getLimit())
+}catch(e){showError('Failed to save to local storage')}}
+function clearLocalStorage(){
+try{
+localStorage.removeItem('lastQuery')
+localStorage.removeItem('lastDBType')
+localStorage.removeItem('lastOp')
+localStorage.removeItem('lastTable')
+localStorage.removeItem('lastFilter')
+localStorage.removeItem('lastOrderBy')
+localStorage.removeItem('lastLimit')
+}catch(e){}}
+function showError(msg){
+document.getElementById("error").innerText=msg
+document.getElementById("error").style.display="block"
+}
+function loadFromLocalStorage(){
+try{
+const lastQuery=localStorage.getItem('lastQuery')
+const lastDBType=localStorage.getItem('lastDBType')
+const lastOp=localStorage.getItem('lastOp')
+const lastTable=localStorage.getItem('lastTable')
+const lastFilter=localStorage.getItem('lastFilter')
+const lastOrderBy=localStorage.getItem('lastOrderBy')
+const lastLimit=localStorage.getItem('lastLimit')
+if(lastQuery){document.getElementById("output").innerText=lastQuery}
+if(lastDBType){document.getElementById("dbType").value=lastDBType}
+if(lastOp){document.getElementById("op").value=lastOp}
+if(lastTable){document.getElementById("table").value=lastTable}
+if(lastFilter){document.getElementById("filter").value=lastFilter}
+if(lastOrderBy){document.getElementById("orderby").value=lastOrderBy}
+if(lastLimit){document.getElementById("limit").value=lastLimit}
+}catch(e){}}
+function loadQuery(){
+const query=localStorage.getItem('lastQuery')
+if(query){
+document.getElementById("output").innerText=query
+const dbType=localStorage.getItem('lastDBType')
+const op=localStorage.getItem('lastOp')
+const table=localStorage.getItem('lastTable')
+const filter=localStorage.getItem('lastFilter')
+const orderBy=localStorage.getItem('lastOrderBy')
+const limit=localStorage.getItem('lastLimit')
+if(dbType){document.getElementById("dbType").value=dbType}
+if(op){document.getElementById("op").value=op}
+if(table){document.getElementById("table").value=table}
+if(filter){document.getElementById("filter").value=filter}
+if(orderBy){document.getElementById("orderby").value=orderBy}
+if(limit){document.getElementById("limit").value=limit}
+}
+}
+function init(){
+loadFromLocalStorage()
+loadQuery()
 generate()
+}
+init()
 fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:[location.pathname.split('/').pop(),'load',new Date().toISOString()]})}).catch(()=>{});
 </script>
 </body>
