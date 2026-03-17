@@ -11,12 +11,71 @@ input,button,select{margin:5px 0;background:#333;color:#e4e4e4;border:1px solid 
 button{cursor:pointer}
 select{width:100%}
 pre{background:#1a1a1a;padding:10px;border-radius:4px;overflow:auto}
+
+/* Responsive layout */
+@media (max-width: 600px) {
+  .api-section {
+    margin-bottom: 20px;
+  }
+  input, button, select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* Placeholders */
+input::placeholder {
+  color: #666;
+  opacity: 1;
+}
+
+/* Dark theme toggle */
+#theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: #333;
+  border: 1px solid #555;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #e4e4e4;
+}
+
+/* Keyboard shortcuts hint */
+.keyboard-hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+/* Output styling */
+pre {
+  min-height: 100px;
+}
+
+/* Button hover effects */
+button:hover {
+  background: #444;
+  border-color: #6366f1;
+}
+
+/* Select focus */
+select:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
 </style>
 </head>
 <body>
 <h1>API Quick Reference</h1>
 
+<div id="theme-toggle" title="Toggle Dark Theme">🌙</div>
+
 <p>Welcome to the API Quick Reference. This page allows you to quickly look up API endpoints and their parameters.</p>
+
+<div class="keyboard-hint">💡 Tip: Press Enter to submit, or use Reset All to clear</div>
 
 <div class="api-section">
     <h2>Available Endpoints</h2>
@@ -47,6 +106,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const endpointOutput = document.getElementById('endpoint-output');
     const resetBtn = document.getElementById('reset-btn');
     const loadAllBtn = document.getElementById('load-all');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    // Theme toggle functionality
+    themeToggle.addEventListener('click', function() {
+        const isDark = document.body.style.background === '#0a0a0a';
+        if (isDark) {
+            document.body.style.background = '#1a1a1a';
+            document.body.style.color = '#e4e4e4';
+            themeToggle.textContent = '☀️';
+        } else {
+            document.body.style.background = '#0a0a0a';
+            document.body.style.color = '#e4e4e4';
+            themeToggle.textContent = '🌙';
+        }
+    });
 
     // API data mock
     const apiData = {
@@ -115,6 +189,14 @@ document.addEventListener('DOMContentLoaded', function() {
     endpointParam.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             getEndpointBtn.click();
+        }
+    });
+
+    // Keyboard shortcut: Ctrl+R to reset
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'r') {
+            e.preventDefault();
+            resetBtn.click();
         }
     });
 });
