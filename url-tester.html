@@ -10,11 +10,19 @@ button{background:#6366f1;color:#fff;border:none;cursor:pointer}
 button:hover{background:#5558e6}
 a{color:#6366f1;text-decoration:none}
 textarea{width:100%;min-height:60px;font-family:monospace;font-size:12px}
-.result-box{background:#1a1a1a;border:1px solid #333;padding:10px;border-radius:4px;min-height:100px;font-family:monospace;font-size:12px;white-space:pre-wrap}
+.result-box{background:#1a1a1a;border:1px solid #333;padding:10px;border-radius:4px;min-height:100px;font-family:monospace;font-size:12px;white-space:pre-wrap;transition:all 0.3s ease}
 .method-select{width:120px}
 .error-message{background:#3a1a1a;border:1px solid #631a1a;color:#ff6b6b;padding:10px;border-radius:4px;margin:10px 0;font-size:14px}
 .download-btn{background:#10b981;color:#fff;border:none;cursor:pointer;margin:5px}
 .download-btn:hover{background:#059669}
+.history-box{background:#1a1a1a;border:1px solid #333;padding:10px;border-radius:4px;margin:10px 0;min-height:100px;font-family:monospace;font-size:12px;white-space:pre-wrap;transition:all 0.3s ease}
+.history-item{padding:8px;margin:5px 0;border-radius:4px;background:#2a2a2a;cursor:pointer;transition:all 0.2s ease}
+.history-item:hover{background:#3a3a3a}
+.history-item .method{color:#6366f1;font-weight:bold}
+.history-item .url{color:#e4e4e4}
+.history-item .status{color:#10b981}
+.history-item .time{color:#888;font-size:11px}
+.history-item .action{color:#ff6b6b;font-size:11px;margin-left:5px}
 </style>
 </head>
 <body>
@@ -32,6 +40,7 @@ textarea{width:100%;min-height:60px;font-family:monospace;font-size:12px}
 <button onclick="testUrl()">Test</button>
 <button class="download-btn" onclick="downloadResult()">Download Result</button>
 <div id="result"></div>
+<div id="history" class="history-box"></div>
 <a href="index.html" style="color:#6366f1">Back to Home</a>
 <script>
 // Load saved URL from localStorage
@@ -40,12 +49,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (savedUrl) {
     document.getElementById('urlInput').value = savedUrl;
   }
+  
+  // Load history from localStorage
+  const savedHistory = localStorage.getItem('urlTester_history');
+  if (savedHistory) {
+    document.getElementById('history').innerHTML = savedHistory;
+  }
 });
 
 // Save URL to localStorage on input change
 document.getElementById('urlInput').addEventListener('input', () => {
   localStorage.setItem('urlTester_urlInput', document.getElementById('urlInput').value);
 });
+
+// Save history to localStorage
+function saveHistory() {
+  const history = document.getElementById('history').innerHTML;
+  localStorage.setItem('urlTester_history', history);
+}
 
 async function testUrl() {
   const urlInput = document.getElementById('urlInput');
@@ -116,9 +137,26 @@ async function testUrl() {
     // Save result to localStorage
     localStorage.setItem('urlTester_lastResult', resultHtml);
     
+    // Add to history
+    addToHistory(url, method, status, duration);
+    
   } catch (e) {
     showError(`Error: ${e.message}`);
   }
+}
+
+function addToHistory(url, method, status, duration) {
+  const history = document.getElementById('history');
+  const historyItem = document.createElement('div');
+  historyItem.className = 'history-item';
+  historyItem.innerHTML = `<span class="method">${method}</span> <span class="url">${url}</span> <span class="status">${status}</span> <span class="time">${duration}ms</span> <span class="action">↩</span>`;
+  historyItem.onclick = () => {
+    document.getElementById('urlInput').value = url;
+    document.getElementById('methodSelect').value = method;
+    saveHistory();
+  };
+  history.appendChild(historyItem);
+  saveHistory();
 }
 
 function showError(message) {
