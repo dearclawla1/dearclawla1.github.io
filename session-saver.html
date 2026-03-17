@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Session Saver</title>
 <style>
-:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1;--secondary:#1a1a1a;--border:#333}
+:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1;--secondary:#1a1a1a;--border:#333;--error:#ef4444;--success:#10b981;--warning:#f59e0b}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);padding:2rem;display:flex;flex-direction:column;align-items:center;gap:1rem}
 a{color:var(--primary)}
@@ -22,13 +22,21 @@ button:active{transform:scale(0.98)}
 #clearBtn:hover{background:#dc2626}
 #saveBtn{background:#10b981;color:#fff}
 #saveBtn:hover{background:#059669}
+#downloadBtn{background:#f59e0b;color:#fff}
+#downloadBtn:hover{background:#d97706}
 .badge{display:inline-block;padding:0.25rem 0.5rem;font-size:0.75rem;background:#333;border-radius:4px;margin-left:0.5rem}
+.error-message{background:var(--error);color:#fff;padding:0.75rem;border-radius:6px;margin-bottom:0.75rem;font-size:0.9rem;display:none}
+.error-message.show{display:block}
+.success-message{background:var(--success);color:#fff;padding:0.75rem;border-radius:6px;margin-bottom:0.75rem;font-size:0.9rem;display:none}
+.success-message.show{display:block}
 </style>
 </head>
 <body>
 <a href="index.html" style="color:#6366f1">Back to Home</a>
 <h1>Session Saver <span class="badge">v2.0</span></h1>
 <div class="container">
+<div id="errorContainer" class="error-message"></div>
+<div id="successContainer" class="success-message"></div>
 <label>Session Name:</label>
 <input type="text" id="sessionName" placeholder="my-session" autocomplete="off">
 <label>Store Type:</label>
@@ -40,6 +48,7 @@ button:active{transform:scale(0.98)}
 <button id="saveBtn">Save Session</button>
 <button id="clearBtn">Clear Session</button>
 </div>
+<button id="downloadBtn">Download Session</button>
 <button id="copyBtn">Copy to Clipboard</button>
 <div id="output">Session data will appear here...</div>
 </div>
@@ -48,66 +57,143 @@ const sessionNameInput = document.getElementById('sessionName');
 const storeTypeSelect = document.getElementById('storeType');
 const saveBtn = document.getElementById('saveBtn');
 const clearBtn = document.getElementById('clearBtn');
+const downloadBtn = document.getElementById('downloadBtn');
 const copyBtn = document.getElementById('copyBtn');
 const output = document.getElementById('output');
+const errorContainer = document.getElementById('errorContainer');
+const successContainer = document.getElementById('successContainer');
 
 // Load existing session on page load
 window.addEventListener('DOMContentLoaded', () => {
-    const storedName = localStorage.getItem('sessionSaverName') || sessionStorage.getItem('sessionSaverName');
-    if (storedName) {
-        sessionNameInput.value = storedName;
-        output.textContent = `Session: ${storedName}\n\nType: ${storedName ? 'Loaded' : 'New'}`;
+    try {
+        const storedName = localStorage.getItem('sessionSaverName') || sessionStorage.getItem('sessionSaverName');
+        if (storedName) {
+            sessionNameInput.value = storedName;
+            output.textContent = `Session: ${storedName}\n\nType: ${storedName ? 'Loaded' : 'New'}`;
+        }
+    } catch (err) {
+        showError('Failed to load saved session. Storage may be full or disabled.');
     }
 });
 
+// Show error message
+function showError(message) {
+    errorContainer.textContent = message;
+    errorContainer.classList.add('show');
+    setTimeout(() => {
+        errorContainer.classList.remove('show');
+    }, 5000);
+}
+
+// Show success message
+function showSuccess(message) {
+    successContainer.textContent = message;
+    successContainer.classList.add('show');
+    setTimeout(() => {
+        successContainer.classList.remove('show');
+    }, 3000);
+}
+
+// Validate input
+function validateInput() {
+    const name = sessionNameInput.value.trim();
+    if (!name) {
+        showError('Session name cannot be empty. Please enter a name.');
+        return false;
+    }
+    return true;
+}
+
 // Save session
 saveBtn.addEventListener('click', () => {
-    const name = sessionNameInput.value.trim();
-    const type = storeTypeSelect.value;
-    const data = {
-        name: name,
-        timestamp: new Date().toISOString(),
-        storeType: type,
-        content: output.textContent
-    };
+    if (!validateInput()) return;
     
-    if (type === 'local') {
-        localStorage.setItem('sessionSaverName', name);
-        localStorage.setItem('sessionSaverData', JSON.stringify(data));
-    } else {
-        sessionStorage.setItem('sessionSaverName', name);
-        sessionStorage.setItem('sessionSaverData', JSON.stringify(data));
+    try {
+        const name = sessionNameInput.value.trim();
+        const type = storeTypeSelect.value;
+        const data = {
+            name: name,
+            timestamp: new Date().toISOString(),
+            storeType: type,
+            content: output.textContent
+        };
+        
+        if (type === 'local') {
+            localStorage.setItem('sessionSaverName', name);
+            localStorage.setItem('sessionSaverData', JSON.stringify(data));
+        } else {
+            sessionStorage.setItem('sessionSaverName', name);
+            sessionStorage.setItem('sessionSaverData', JSON.stringify(data));
+        }
+        
+        output.textContent = `✓ Saved to ${type} Storage!\n\nSession: ${name}\nType: ${type}\nTimestamp: ${data.timestamp}`;
+        showSuccess('Session saved successfully!');
+    } catch (err) {
+        showError('Failed to save session. Storage may be full or disabled.');
     }
-    
-    output.textContent = `✓ Saved to ${type} Storage!\n\nSession: ${name}\nType: ${type}\nTimestamp: ${data.timestamp}`;
 });
 
 // Clear session
 clearBtn.addEventListener('click', () => {
-    const type = storeTypeSelect.value;
-    if (type === 'local') {
-        localStorage.removeItem('sessionSaverName');
-        localStorage.removeItem('sessionSaverData');
-    } else {
-        sessionStorage.removeItem('sessionSaverName');
-        sessionStorage.removeItem('sessionSaverData');
+    try {
+        const type = storeTypeSelect.value;
+        if (type === 'local') {
+            localStorage.removeItem('sessionSaverName');
+            localStorage.removeItem('sessionSaverData');
+        } else {
+            sessionStorage.removeItem('sessionSaverName');
+            sessionStorage.removeItem('sessionSaverData');
+        }
+        sessionNameInput.value = '';
+        output.textContent = 'Session cleared. Enter new data and save.';
+        showSuccess('Session cleared successfully!');
+    } catch (err) {
+        showError('Failed to clear session.');
     }
-    sessionNameInput.value = '';
-    output.textContent = 'Session cleared. Enter new data and save.';
+});
+
+// Download session
+downloadBtn.addEventListener('click', () => {
+    try {
+        const name = sessionNameInput.value.trim();
+        const type = storeTypeSelect.value;
+        const data = {
+            name: name,
+            timestamp: new Date().toISOString(),
+            storeType: type,
+            content: output.textContent
+        };
+        
+        const jsonString = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${name || 'session'}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showSuccess('Session downloaded successfully!');
+    } catch (err) {
+        showError('Failed to download session.');
+    }
 });
 
 // Copy to clipboard
 copyBtn.addEventListener('click', async () => {
-    const text = output.textContent;
     try {
+        const text = output.textContent;
         await navigator.clipboard.writeText(text);
         const originalText = copyBtn.textContent;
         copyBtn.textContent = '✓ Copied!';
         setTimeout(() => {
             copyBtn.textContent = originalText;
         }, 2000);
+        showSuccess('Copied to clipboard!');
     } catch (err) {
-        output.textContent = 'Error copying to clipboard. Please try manually.';
+        showError('Error copying to clipboard. Please try manually.');
     }
 });
 
@@ -128,6 +214,11 @@ document.addEventListener('keydown', (e) => {
         e.preventDefault();
         clearBtn.click();
     }
+    // Ctrl/Cmd + D to download
+    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault();
+        downloadBtn.click();
+    }
 });
 
 // Auto-save on input change (debounced)
@@ -135,27 +226,29 @@ let saveTimeout;
 sessionNameInput.addEventListener('input', () => {
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
-        const name = sessionNameInput.value.trim();
-        const type = storeTypeSelect.value;
-        const data = {
-            name: name,
-            timestamp: new Date().toISOString(),
-            storeType: type,
-            content: output.textContent
-        };
-        
-        if (type === 'local') {
-            localStorage.setItem('sessionSaverName', name);
-            localStorage.setItem('sessionSaverData', JSON.stringify(data));
-        } else {
-            sessionStorage.setItem('sessionSaverName', name);
-            sessionStorage.setItem('sessionSaverData', JSON.stringify(data));
+        if (validateInput()) {
+            const name = sessionNameInput.value.trim();
+            const type = storeTypeSelect.value;
+            const data = {
+                name: name,
+                timestamp: new Date().toISOString(),
+                storeType: type,
+                content: output.textContent
+            };
+            
+            if (type === 'local') {
+                localStorage.setItem('sessionSaverName', name);
+                localStorage.setItem('sessionSaverData', JSON.stringify(data));
+            } else {
+                sessionStorage.setItem('sessionSaverName', name);
+                sessionStorage.setItem('sessionSaverData', JSON.stringify(data));
+            }
         }
     }, 500);
 });
 
 // Show keyboard shortcuts hint
-output.textContent += `\n\n💡 Keyboard Shortcuts:\nCtrl+S: Save | Ctrl+C: Copy | Ctrl+Enter: Clear`;
+output.textContent += `\n\n💡 Keyboard Shortcuts:\nCtrl+S: Save | Ctrl+C: Copy | Ctrl+Enter: Clear | Ctrl+D: Download`;
 </script>
 </body>
 </html>
