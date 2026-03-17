@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Path Visualizer - Explore and Query JSON Data</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #121212;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #e4e4e4;
+            --text-secondary: #a0a0a0;
+            --text-muted: #606060;
+            --accent-primary: #6366f1;
+            --accent-secondary: #818cf8;
+            --accent-hover: #4f46e5;
+            --border-color: #2a2a2a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --code-bg: #1e1e1e;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --radius: 8px;
+            --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            min-height: calc(100vh - 200px);
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .panel-content {
+            padding: 20px;
+            min-height: 400px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            padding: 0 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-primary);
+        }
+
+        .tab.active {
+            color: var(--accent-primary);
+            background: var(--bg-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Input Areas */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 12px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 200px;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        textarea::placeholder, input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* JSON Tree */
+        .json-tree {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .json-node {
+            display: inline-block;
+            margin: 2px 0;
+        }
+
+        .json-key {
+            color: #93c5fd;
+        }
+
+        .json-string {
+            color: #a7f3d0;
+        }
+
+        .json-number {
+            color: #fca5a5;
+        }
+
+        .json-boolean {
+            color: #f472b6;
+        }
+
+        .json-null {
+            color: #d1d5db;
+            font-style: italic;
+        }
+
+        .json-bracket {
+            color: #6b7280;
+        }
+
+        .json-path-highlight {
+            background: rgba(99, 102, 241, 0.2);
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin: 0 2px;
+        }
+
+        /* Results */
+        .results-container {
+            background: var(--code-bg);
+            border-radius: var(--radius);
+            padding: 15px;
+            min-height: 200px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            color: var(--text-primary);
+        }
+
+        .results-empty {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: var(--radius);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error */
+        .error {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 15px;
+            border-radius: var(--radius);
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-btn {
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* History */
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .history-item:hover {
+            border-color: var(--accent-primary);
+            transform: translateX(4px);
+        }
+
+        .history-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .history-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+            z-index: 100;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Syntax highlighting classes */
+        .syntax-key { color: #93c5fd; }
+        .syntax-string { color: #a7f3d0; }
+        .syntax-number { color: #fca5a5; }
+        .syntax-boolean { color: #f472b6; }
+        .syntax-null { color: #d1d5db; font-style: italic; }
+        .syntax-bracket { color: #6b7280; }
+        .syntax-operator { color: #fbbf24; }
+        .syntax-comment { color: #6b7280; font-style: italic; }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .panel-content {
+                padding: 15px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>JSON Path Visualizer</h1>
+            <p>Explore, query, and visualize JSON data with powerful path expressions. Supports standard JSONPath syntax with advanced features for data exploration.</p>
+            <a href="index.html" class="back-link">← Back to Home</a>
+        </header>
+
+        <div class="main-layout">
+            <!-- Left Panel: JSON Input & Tree -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">JSON Data</span>
+                </div>
+                <div class="panel-content">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="json-input">Input</button>
+                        <button class="tab" data-tab="json-tree">Tree View</button>
+                    </div>
+
+                    <div id="json-input-tab" class="tab-content active">
+                        <div class="input-group">
+                            <label for="json-input">
+                                JSON Data <span class="tooltip" data-tooltip="Paste your JSON here or use sample data">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                                        <path d="M9 12h6"/>
+                                        <path d="M9 16h6"/>
+                                    </svg>
+                                </span>
+                            </label>
+                            <textarea id="json-input" placeholder='{"users": [{"name": "John", "age": 30}, {"name": "Jane", "age": 25}], "metadata": {"count": 2}}'></textarea>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-secondary" onclick="loadSampleData('simple')">Load Simple Sample</button>
+                            <button class="btn btn-secondary" onclick="loadSampleData('users')">Load Users Sample</button>
+                            <button class="btn btn-secondary" onclick="loadSampleData('nested')">Load Nested Sample</button>
+                            <button class="btn btn-success" onclick="loadTestData()">Load Test Data</button>
+                        </div>
+
+                        <div class="toolbar">
+                            <button class="toolbar-btn" onclick="validateJSON()">Validate JSON</button>
+                            <button class="toolbar-btn" onclick="clearJSON()">Clear</button>
+                        </div>
+
+                        <div id="json-error" class="error"></div>
+                    </div>
+
+                    <div id="json-tree-tab" class="tab-content">
+                        <div class="input-group">
+                            <label>JSON Tree View</label>
+                            <div id="json-tree" class="json-tree">
+                                <div class="results-empty">Enter JSON data to view tree structure</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Path Explorer & Results -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Path Explorer</span>
+                </div>
+                <div class="panel-content">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="path-input">Path</button>
+                        <button class="tab" data-tab="results">Results</button>
+                        <button class="tab" data-tab="history">History</button>
+                    </div>
+
+                    <div id="path-input-tab" class="tab-content active">
+                        <div class="input-group">
+                            <label for="path-input">
+                                JSON Path <span class="tooltip" data-tooltip="Use standard JSONPath syntax: $.users[0].name">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 6v6l4 2"/>
+                                    </svg>
+                                </span>
+                            </label>
+                            <input type="text" id="path-input" placeholder="$.users[0].name" value="$.users[0].name">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="query-input">
+                                Query (Optional) <span class="tooltip" data-tooltip="Filter results with a query">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="11" cy="11" r="8"/>
+                                        <path d="M21 21l-4.35-4.35"/>
+                                        <path d="M11 8v6"/>
+                                        <path d="M8 11h6"/>
+                                    </svg>
+                                </span>
+                            </label>
+                            <input type="text" id="query-input" placeholder="age > 25">
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn" onclick="executeQuery()">Execute Query</button>
+                            <button class="btn btn-secondary" onclick="loadSamplePath()">Load Sample Path</button>
+                        </div>
+
+                        <div id="query-error" class="error"></div>
+                    </div>
+
+                    <div id="results-tab" class="tab-content">
+                        <div class="input-group">
+                            <label>Query Results</label>
+                            <div id="results" class="results-container">
+                                <div class="results-empty">Execute a query to see results</div>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-count">0</div>
+                                <div class="stat-label">Results</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-size">0</div>
+                                <div class="stat-label">Bytes</div>
+                            </div>
+                        </div>
+
+                        <div class="toolbar">
+                            <button class="toolbar-btn" onclick="copyResults()">Copy Results</button>
+                            <button class="toolbar-btn" onclick="exportJSON()">Export JSON</button>
+                            <button class="toolbar-btn" onclick="exportCSV()">Export CSV</button>
+                        </div>
+                    </div>
+
+                    <div id="history-tab" class="tab-content">
+                        <div class="input-group">
+                            <label>Query History</label>
+                            <div id="history-list" class="history-list">
+                                <div class="results-empty">No query history yet</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let jsonState = null;
+        let queryHistory = [];
+        let lastResults = null;
+
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+                params: ['json-path-viz', 'load', new Date().toISOString()]
+            })
+        }).catch(() => {});
+
+        // DOM Elements
+        const jsonInput = document.getElementById('json-input');
+        const pathInput = document.getElementById('path-input');
+        const queryInput = document.getElementById('query-input');
+        const jsonTree = document.getElementById('json-tree');
+        const results = document.getElementById('results');
+        const historyList = document.getElementById('history-list');
+        const jsonError = document.getElementById('json-error');
+        const queryError = document.getElementById('query-error');
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Update tabs
+                tab.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update content
+                tab.parentElement.parentElement.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSampleData('simple');
+            loadSamplePath();
+            updateHistory();
+        });
+
+        // Sample data loaders
+        function loadSampleData(type) {
+            const samples = {
+                simple: '{"name": "John", "age": 30, "city": "New York"}',
+                users: '{"users": [{"name": "John", "age": 30, "email": "john@example.com"}, {"name": "Jane", "age": 25, "email": "jane@example.com"}], "metadata": {"count": 2}}',
+                nested: '{"company": {"name": "Acme Corp", "departments": [{"name": "Engineering", "employees": [{"name": "Alice", "role": "Developer"}, {"name": "Bob", "role": "Designer"}]}, {"name": "Marketing", "employees": [{"name": "Charlie", "role": "Manager"}]}]}}, "version": 1}'
+            };
+            
+            jsonInput.value = samples[type];
+            validateJSON();
+        }
+
+        // Load test data from API
+        async function loadTestData() {
+            try {
+                const response = await fetch('https://randomuser.me/api/');
+                const data = await response.json();
+                jsonInput.value = JSON.stringify(data, null, 2);
+                validateJSON();
+            } catch (error) {
+                showError(jsonError, 'Failed to load test data: ' + error.message);
+            }
+        }
+
+        // Validate JSON
+        function validateJSON() {
+            try {
+                jsonState = JSON.parse(jsonInput.value);
+                jsonError.classList.remove('active');
+                renderJSONTree();
+                return true;
+            } catch (error) {
+                showError(jsonError, 'Invalid JSON: ' + error.message);
+                return false;
+            }
+        }
+
+        // Clear JSON
+        function clearJSON() {
+            jsonInput.value = '';
+            jsonState = null;
+            jsonTree.innerHTML = '<div class="results-empty">Enter JSON data to view tree structure</div>';
+            jsonError.classList.remove('active');
+        }
+
+        // Render JSON tree
+        function renderJSONTree() {
+            if (!jsonState) {
+                jsonTree.innerHTML = '<div class="results-empty">Enter JSON data to view tree structure</div>';
+                return;
+            }
+
+            const tree = buildTree(jsonState, '');
+            jsonTree.innerHTML = tree;
+        }
+
+        // Build tree HTML
+        function buildTree(obj, key) {
+            if (Array.isArray(obj)) {
+                return obj.map((item, index) => {
+                    const itemKey = key ? `${key}[${index}]` : `[${index}]`;
+                    return `<span class="json-node"><span class="json-bracket">[</span><span class="json-key">${itemKey}</span><span class="json-bracket">]</span>${buildTree(item, itemKey)}</span>`;
+                }).join('');
+            } else if (obj === null) {
+                return `<span class="json-node"><span class="json-null">null</span></span>`;
+            } else {
+                const keys = Object.keys(obj);
+                return keys.map(k => {
+                    return `<span class="json-node"><span class="json-bracket">{</span><span class="json-key">${k}</span><span class="json-bracket">:</span><span class="syntax-string">${JSON.stringify(obj[k])}</span></span>`;
+                }).join('');
+            }
+        }
+
+        // Execute query
+        function executeQuery() {
+            if (!jsonState) {
+                showError(queryError, 'Please enter valid JSON data first');
+                return;
+            }
+
+            const path = pathInput.value.trim();
+            const query = queryInput.value.trim();
+
+            if (!path) {
+                showError(queryError, 'Please enter a JSON path');
+                return;
+            }
+
+            try {
+                // Parse path
+                const result = parseJSONPath(jsonState, path);
+                
+                // Apply query filter if provided
+                let filtered = result;
+                if (query) {
+                    filtered = applyQuery(result, query);
+                }
+
+                // Store results
+                lastResults = filtered;
+                
+                // Display results
+                displayResults(filtered);
+                
+                // Add to history
+                addToHistory(path, query, filtered);
+                
+                // Clear errors
+                queryError.classList.remove('active');
+                
+            } catch (error) {
+                showError(queryError, 'Query error: ' + error.message);
+            }
+        }
+
+        // Parse JSON path
+        function parseJSONPath(obj, path) {
+            // Remove leading/trailing whitespace
+            path = path.trim();
+            
+            // Handle root path
+            if (path === '$' || path === '') {
+                return obj;
+            }
+
+            // Parse the path
+            let current = obj;
+            let remaining = path.substring(1).trim(); // Remove $
+            
+            while (remaining.length > 0) {
+                // Check for field access
+                if (remaining.startsWith('.')) {
+                    const fieldMatch = remaining.match(/^\.([a-zA-Z_][a-zA-Z0-9_]*)/);
+                    if (fieldMatch) {
+                        const field = fieldMatch[1];
+                        remaining = remaining.substring(fieldMatch[0].length);
+                        
+                        if (current[field] !== undefined) {
+                            current = current[field];
+                        } else {
+                            throw new Error(`Field "${field}" not found`);
+                        }
+                    } else {
+                        throw new Error('Invalid path syntax');
+                    }
+                }
+                // Check for array access
+                else if (remaining.startsWith('[')) {
+                    const bracketMatch = remaining.match(/^\[([^\]]+)\]/);
+                    if (bracketMatch) {
+                        const indexExpr = bracketMatch[1];
+                        remaining = remaining.substring(bracketMatch[0].length);
+                        
+                        let index;
+                        if (indexExpr === '*') {
+                            index = '*';
+                        } else if (indexExpr === '?') {
+                            index = '?';
+                        } else if (indexExpr.startsWith('[') && indexExpr.endsWith(']')) {
+                            // Slice
+                            const slice = indexExpr.substring(1, indexExpr.length - 1);
+                            const parts = slice.split(',').map(p => p.trim());
+                            const start = parseInt(parts[0]) || 0;
+                            const end = parts[1] ? parseInt(parts[1]) : undefined;
+                            index = { type: 'slice', start, end };
+                        } else {
+                            index = parseInt(indexExpr);
+                        }
+                        
+                        if (Array.isArray(current)) {
+                            if (index === '*') {
+                                current = [...current];
+                            } else if (index === '?') {
+                                current = current.filter((_, i) => i % 2 === 0);
+                            } else if (index >= 0 && index < current.length) {
+                                current = current[index];
+                            } else if (index < 0 && Math.abs(index) <= current.length) {
+                                current = current[current.length + index];
+                            } else if (index.type === 'slice') {
+                                current = current.slice(index.start, index.end);
+                            } else {
+                                throw new Error(`Array index ${index} out of bounds`);
+                            }
+                        } else {
+                            throw new Error('Cannot use array access on non-array');
+                        }
+                    } else {
+                        throw new Error('Invalid path syntax');
+                    }
+                }
+                else {
+                    throw new Error('Invalid path syntax');
+                }
+            }
+            
+            return current;
+        }
+
+        // Apply query filter
+        function applyQuery(obj, query) {
+            try {
+                // Simple query parser
+                const lowerQuery = query.toLowerCase();
+                
+                // Greater than
+                if (lowerQuery.includes('>')) {
+                    const parts = query.split('>');
+                    const field = parts[0].trim();
+                    const value = parseFloat(parts[1].trim());
+                    
+                    if (typeof obj === 'object' && obj !== null) {
+                        if (obj[field] !== undefined) {
+                            return obj.filter(item => item[field] > value);
+                        }
+                    }
+                    return obj;
+                }
+                
+                // Less than
+                if (lowerQuery.includes('<')) {
+                    const parts = query.split('<');
+                    const field = parts[0].trim();
+                    const value = parseFloat(parts[1].trim());
+                    
+                    if (typeof obj === 'object' && obj !== null) {
+                        if (obj[field] !== undefined) {
+                            return obj.filter(item => item[field] < value);
+                        }
+                    }
+                    return obj;
+                }
+                
+                // Contains
+                if (lowerQuery.includes('contains')) {
+                    const parts = query.split('contains');
+                    const field = parts[0].trim();
+                    const value = parts[1].trim();
+                    
+                    if (typeof obj === 'object' && obj !== null) {
+                        return obj.filter(item => item[field] && item[field].toString().includes(value));
+                    }
+                    return obj;
+                }
+                
+                // Start with
+                if (lowerQuery.includes('startsWith')) {
+                    const parts = query.split('startsWith');
+                    const field = parts[0].trim();
+                    const value = parts[1].trim();
+                    
+                    if (typeof obj === 'object' && obj !== null) {
+                        return obj.filter(item => item[field] && item[field].toString().startsWith(value));
+                    }
+                    return obj;
+                }
+                
+                // End with
+                if (lowerQuery.includes('endsWith')) {
+                    const parts = query.split('endsWith');
+                    const field = parts[0].trim();
+                    const value = parts[1].trim();
+                    
+                    if (typeof obj === 'object' && obj !== null) {
+                        return obj.filter(item => item[field] && item[field].toString().endsWith(value));
+                    }
+                    return obj;
+                }
+                
+                // Regex match
+                if (lowerQuery.includes('matches')) {
+                    const parts = query.split('matches');
+                    const field = parts[0].trim();
+                    const pattern = parts[1].trim();
+                    
+                    if (typeof obj === 'object' && obj !== null) {
+                        return obj.filter(item => item[field] && new RegExp(pattern).test(item[field]));
+                    }
+                    return obj;
+                }
+                
+                // Default: return as-is
+                return obj;
+            } catch (error) {
+                return obj;
+            }
+        }
+
+        // Display results
+        function displayResults(data) {
+            if (!data) {
+                results.innerHTML = '<div class="results-empty">No results</div>';
+                updateStats(0, 0);
+                return;
+            }
+            
+            // Format output
+            let output = '';
+            if (Array.isArray(data)) {
+                output = data.map(item => {
+                    if (typeof item === 'object') {
+                        return JSON.stringify(item, null, 2);
+                    }
+                    return String(item);
+                }).join('\n\n');
+            } else {
+                output = typeof data === 'object' ? JSON.stringify(data, null, 2) : String(data);
+            }
+            
+            results.innerHTML = output;
+            updateStats(data.length || 1, new TextEncoder().encode(output).length);
+        }
+
+        // Update stats
+        function updateStats(count, size) {
+            document.getElementById('stat-count').textContent = count;
+            document.getElementById('stat-size').textContent = size;
+        }
+
+        // Add to history
+        function addToHistory(path, query, results) {
+            const historyItem = {
+                path,
+                query,
+                timestamp: new Date().toISOString(),
+                results: results
+            };
+            
+            queryHistory.unshift(historyItem);
+            if (queryHistory.length > 50) {
+                queryHistory = queryHistory.slice(0, 50);
+            }
+            
+            updateHistory();
+        }
+
+        // Update history UI
+        function updateHistory() {
+            if (queryHistory.length === 0) {
+                historyList.innerHTML = '<div class="results-empty">No query history yet</div>';
+                return;
+            }
+            
+            historyList.innerHTML = queryHistory.map(item => {
+                const date = new Date(item.timestamp);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString().slice(0, 5);
+                
+                return `<div class="history-item" onclick="loadFromHistory('${encodeURIComponent(JSON.stringify(item))}')">
+                    <div class="history-title">${escapeHtml(item.path)}${item.query ? ' - ' + escapeHtml(item.query) : ''}</div>
+                    <div class="history-meta">${formattedDate}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // Load from history
+        function loadFromHistory(encodedItem) {
+            try {
+                const item = JSON.parse(decodeURIComponent(encodedItem));
+                pathInput.value = item.path;
+                queryInput.value = item.query;
+                executeQuery();
+            } catch (error) {
+                showError(queryError, 'Failed to load from history');
+            }
+        }
+
+        // Load sample path
+        function loadSamplePath() {
+            pathInput.value = '$.users[0].name';
+        }
+
+        // Copy results
+        function copyResults() {
+            const text = results.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Results copied to clipboard');
+            }).catch(() => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showNotification('Results copied to clipboard');
+            });
+        }
+
+        // Export JSON
+        function exportJSON() {
+            const text = results.textContent;
+            const blob = new Blob([text], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'query-results.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Export CSV
+        function exportCSV() {
+            const data = lastResults;
+            if (!data || typeof data !== 'object') {
+                showNotification('No data to export as CSV');
+                return;
+            }
+            
+            let csv = 'Field,Value\n';
+            if (Array.isArray(data)) {
+                data.forEach(item => {
+                    Object.keys(item).forEach(key => {
+                        csv += `${key},"${item[key]}"\n`;
+                    });
+                });
+            } else {
+                Object.keys(data).forEach(key => {
+                    csv += `${key},"${data[key]}"\n`;
+                });
+            }
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'query-results.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Show error
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.add('active');
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: var(--success);
+                color: white;
+                padding: 12px 20px;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                z-index: 1000;
+                animation: fadeIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Enter to execute query
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                executeQuery();
+            }
+            
+            // Ctrl/Cmd + Shift + C to copy results
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                copyResults();
+            }
+        });
+
+        // Auto-resize textarea
+        jsonInput.addEventListener('input', () => {
+            jsonInput.style.height = 'auto';
+            jsonInput.style.height = jsonInput.scrollHeight + 'px';
+        });
+
+        // Show loading state
+        function showLoading() {
+            results.innerHTML = '<div class="loading active"><div class="spinner"></div><div>Processing...</div></div>';
+        }
+
+        // Clear loading
+        function clearLoading() {
+            results.innerHTML = '';
+        }
+
+        // Sample path loader
+        const samplePaths = [
+            '$.users[0].name',
+            '$.users[*].age',
+            '$.metadata.count',
+            '$.company.departments[0].name',
+            '$.company.departments[?(@.name == "Engineering")]'
+        ];
+
+        // Load random sample path
+        function loadRandomSamplePath() {
+            const randomIndex = Math.floor(Math.random() * samplePaths.length);
+            pathInput.value = samplePaths[randomIndex];
+        }
+
+        // Add toolbar button for random sample
+        const randomSampleBtn = document.createElement('button');
+        randomSampleBtn.className = 'toolbar-btn';
+        randomSampleBtn.textContent = 'Random Sample Path';
+        randomSampleBtn.onclick = loadRandomSamplePath;
+        document.querySelector('#path-input-tab .toolbar').appendChild(randomSampleBtn);
+    </script>
+</body>
+</html>
