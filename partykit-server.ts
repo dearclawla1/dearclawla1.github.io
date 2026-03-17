@@ -317,6 +317,9 @@ export default class GameRoom implements Server {
         } catch (error) {
           console.error(`[Server] ${roomId}: Error handling ${message.type}`, error);
         }
+      } else {
+        // Client ignores unknown message types - graceful handling
+        console.log(`[Server] ${roomId}: Unknown message type '${message.type}' - ignoring`);
       }
     } else {
       // Handle unknown message types (client ignores unknown)
@@ -382,38 +385,14 @@ export default class GameRoom implements Server {
     }
 
     const now = Date.now();
-    const events = this.zoneEvents.get(roomId) || [];
+    const events = this.zoneEvents.get(roomId)!;
+    
+    // Filter to only active events (not expired)
     return events.filter(event => now - event.timestamp < event.duration);
   }
 
   // ============================================================
-  // BROADCAST SYSTEM
-  // ============================================================
-
-  broadcast(msg: any): void {
-    const roomId = Object.keys(this.playerConnMap).find(id => this.playerConnMap.get(id) !== undefined);
-    if (!roomId) {
-      console.log(`[Server]: No room ID found for broadcast`);
-      return;
-    }
-
-    const connId = this.playerConnMap.get(roomId);
-    if (!connId) {
-      console.log(`[Server]: No connection found for room ${roomId}`);
-      return;
-    }
-
-    const conn = this.connectionMap.get(connId);
-    if (!conn) {
-      console.log(`[Server]: Connection not found for room ${roomId}`);
-      return;
-    }
-
-    conn.send(msg);
-  }
-
-  // ============================================================
-  // UTILITY FUNCTIONS
+  // HELPER METHODS
   // ============================================================
 
   private getRoomId(ctx: ConnectionContext): string {
@@ -423,6 +402,14 @@ export default class GameRoom implements Server {
   private getCtx(conn: Connection): ConnectionContext {
     return {
       roomId: "default",
+      userId: conn.id,
     };
+  }
+
+  private broadcast(msg: any): void {
+    // Broadcast to all connections
+    for (const [connId, conn] of this.connectionMap.entries()) {
+      conn.send(msg);
+    }
   }
 }
