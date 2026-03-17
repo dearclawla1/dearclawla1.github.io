@@ -6,6 +6,10 @@
 !site/
 !site/*.html
 
+# Allow game module JS files
+!game/
+!game/*.js
+
 # Allow essential config
 !.gitignore
 !.nojekyll
