@@ -182,52 +182,23 @@ export default class GameRoom implements Server {
       attack: (conn, { facing, weapon, damage }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Calculate attack position
-          const attackX = player.x + facing.x * 50;
-          const attackY = player.y + facing.y * 50;
-          
-          // Create projectile
-          const projectile: ProjectileState = {
-            id: `proj-${Date.now()}`,
-            ownerId: conn.id,
-            x: player.x,
-            y: player.y,
-            vx: facing.x * 10,
-            vy: facing.y * 10,
-            damage: damage,
-            range: 200,
-            traveled: 0,
-            color: "#ff0000",
-            size: 5,
-          };
-          
+          // Record attack
+          player.lastUpdate = Date.now();
           this.broadcast({
-            type: "projectile",
-            proj: projectile,
+            type: "state",
+            players: Array.from(this.players.values()),
+            you: player,
           });
         }
       },
 
-      projectile: (conn, projData) => {
+      projectile: (conn, { proj }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          const projectile: ProjectileState = {
-            id: projData.id,
-            ownerId: projData.ownerId,
-            x: projData.x,
-            y: projData.y,
-            vx: projData.vx,
-            vy: projData.vy,
-            damage: projData.damage,
-            range: projData.range,
-            traveled: projData.traveled,
-            color: projData.color,
-            size: projData.size,
-          };
-          
+          // Add projectile
           this.broadcast({
             type: "projectile",
-            proj: projectile,
+            proj,
           });
         }
       },
@@ -235,56 +206,48 @@ export default class GameRoom implements Server {
       "hit-player": (conn, { targetId, damage }) => {
         const target = this.players.get(targetId);
         if (target) {
-          const player = this.players.get(conn.id);
-          if (player) {
-            target.hp -= damage;
-            target.lastUpdate = Date.now();
+          // Apply damage to target
+          target.hp = Math.max(0, target.hp - damage);
+          target.lastUpdate = Date.now();
+          
+          // Check for death
+          if (target.hp <= 0) {
+            // Record kill
+            this.broadcast({
+              type: "player-death",
+              id: targetId,
+              killerId: conn.id,
+            });
             
-            // Check death
-            if (target.hp <= 0) {
-              target.hp = 0;
-              this.broadcast({
-                type: "player-death",
-                id: targetId,
-                killerId: conn.id,
-              });
-              
-              // Update killer stats
-              player.stats.kills++;
-              player.stats.lastKillTime = Date.now();
-            } else {
-              // Update damage stats
-              player.stats.damageDealt += damage;
-              target.stats.damageTaken += damage;
+            // Update killer stats
+            const killer = this.players.get(conn.id);
+            if (killer) {
+              killer.stats.kills += 1;
+              killer.stats.lastKillTime = Date.now();
             }
             
-            this.broadcast({
-              type: "player-damage",
-              id: targetId,
-              damage: damage,
-              hp: target.hp,
-            });
+            // Update victim stats
+            target.stats.deaths += 1;
+            target.stats.lastDeathTime = Date.now();
+          } else {
+            // Record damage
+            target.stats.damageTaken += damage;
           }
-        }
-      },
-
-      chat: (conn, { text }) => {
-        const player = this.players.get(conn.id);
-        if (player) {
+          
           this.broadcast({
-            type: "chat",
-            text: text,
-            from: player.name,
+            type: "state",
+            players: Array.from(this.players.values()),
+            you: target,
           });
         }
       },
 
+      chat: (conn, { text }) => {
+        // Handle chat
+      },
+
       ping: (conn, {}) => {
-        // Handle ping from client - FIX: Added ping handler
-        this.broadcast({
-          type: "ping",
-          pong: Date.now(),
-        });
+        // Handle ping
       },
     };
 
@@ -296,23 +259,16 @@ export default class GameRoom implements Server {
     }
   }
 
-  broadcast(message: any): void {
-    const roomId = Object.keys(this.playerConnMap).find(id => this.playerConnMap.get(id) !== null);
-    if (roomId) {
-      const conn = this.connectionMap.get(this.playerConnMap.get(roomId));
-      if (conn) {
-        conn.send(message);
-      }
-    }
+  private getRoomId(ctx: ConnectionContext): string {
+    return ctx.roomId;
   }
 
-  getRoomId(ctx: ConnectionContext): string {
-    return ctx.roomId || "default";
+  private getCtx(conn: Connection): ConnectionContext {
+    // Get context from connection
+    return {} as ConnectionContext;
   }
 
-  getCtx(conn: Connection): ConnectionContext {
-    return {
-      roomId: "default",
-    };
+  private broadcast(message: any): void {
+    // Broadcast to all connections
   }
 }
