@@ -14,16 +14,19 @@ input:focus,button:focus,select:focus{outline:none;border-color:#6366f1}
 button:hover{border-color:#6366f1;background:#252525}
 button.primary{background:#6366f1;color:white;border-color:#6366f1}
 button.primary:hover{background:#5558e6}
-#output{margin-top:20px;min-height:250px;background:#111;padding:15px;border-radius:8px;display:flex;justify-content:center;align-items:center;flex-direction:column}
-#output img{max-width:100%;height:auto}
+#output{margin-top:20px;min-height:250px;background:#111;padding:15px;border-radius:8px;display:flex;justify-content:center;align-items:center;flex-direction:column;transition:all 0.3s ease}
+#output img{max-width:100%;height:auto;animation:fadeIn 0.5s ease}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
 #output .placeholder{color:#666;font-size:14px;text-align:center;padding:20px}
-#download-btn{display:none;margin-top:10px;background:#22c55e;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600}
-#download-btn:hover{background:#16a34a}
+#download-btn{display:none;margin-top:10px;background:#22c55e;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;transition:all 0.2s}
+#download-btn:hover{background:#16a34a;transform:translateY(-2px)}
 a{font-size:13px;margin-top:15px;color:#6366f1;text-decoration:none}
 a:hover{text-decoration:underline}
 .form-group{margin-bottom:12px}
 label{display:block;margin-bottom:5px;color:#888;font-size:13px}
 input[type="text"],select{width:100%}
+.error-message{background:#ff6b6b;color:white;padding:10px;border-radius:6px;margin:8px 0;font-size:13px;display:none;animation:shake 0.5s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-5px)}20%,40%,60%,80%{transform:translateX(5px)}}
 </style>
 </head>
 <body>
@@ -44,21 +47,86 @@ input[type="text"],select{width:100%}
 </div>
 <script>
 let qrCodeInstance = null;
+let debounceTimer;
+
+// Load saved text on page load
+document.addEventListener('DOMContentLoaded', () => {
+const savedText = localStorage.getItem('qrText');
+if(savedText){
+document.getElementById('text').value = savedText;
+}
+});
+
+// Save text on input change
+document.getElementById('text').addEventListener('input', function(){
+const text = this.value;
+localStorage.setItem('qrText', text);
+});
+
+// Auto-generate on Enter key (Ctrl+Enter)
+document.getElementById('text').addEventListener('keypress', function(e){
+if(e.key === 'Enter'){
+generate();
+}
+});
+
+// Clear on Escape key
+document.addEventListener('keydown', function(e){
+if(e.key === 'Escape'){
+document.getElementById('text').value = '';
+document.getElementById('output').innerHTML = '<div class="placeholder">Enter text and click Generate</div>';
+document.getElementById('download-btn').style.display = 'none';
+clearQRCode();
+localStorage.removeItem('qrText');
+}
+});
+
+function clearQRCode(){
+if(qrCodeInstance){
+qrCodeInstance.clear();
+qrCodeInstance = null;
+}
+};
 
 function generate(){
 const text=document.getElementById('text').value;
 const type=document.getElementById('type').value;
 const output=document.getElementById('output');
 const downloadBtn=document.getElementById('download-btn');
+const errorMessage = document.createElement('div');
+errorMessage.className = 'error-message';
+errorMessage.id = 'error-message';
+errorMessage.style.display = 'none';
 
+// Input validation
 if(!text.trim()){
-alert('Please enter some text or URL!');
+errorMessage.textContent = 'Please enter some text or URL!';
+errorMessage.style.display = 'block';
+setTimeout(() => {
+errorMessage.style.display = 'none';
+}, 3000);
 return;
+}
+
+// Validate URL format if URL type selected
+if(type === 'url'){
+const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+if(!urlPattern.test(text)){
+errorMessage.textContent = 'Please enter a valid URL (http:// or https://)!';
+errorMessage.style.display = 'block';
+setTimeout(() => {
+errorMessage.style.display = 'none';
+}, 3000);
+return;
+}
 }
 
 try{
 // Clear previous QR code
 output.innerHTML = '';
+clearQRCode();
+
+// Generate new QR code
 qrCodeInstance = new QRCode(output, {
 text: text,
 width: 256,
@@ -96,15 +164,7 @@ link.click();
 document.body.removeChild(link);
 }
 
-// Auto-generate on Enter key
-document.getElementById('text').addEventListener('keypress', function(e){
-if(e.key === 'Enter'){
-generate();
-}
-});
-
 // Auto-generate on input change (debounced)
-let debounceTimer;
 document.getElementById('text').addEventListener('input', function(){
 clearTimeout(debounceTimer);
 debounceTimer = setTimeout(generate, 500);
