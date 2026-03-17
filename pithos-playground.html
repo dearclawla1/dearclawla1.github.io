@@ -64,6 +64,9 @@
         button:hover {
             background-color: #4c4c4c;
         }
+        .download-button {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -80,17 +83,20 @@
             <input type="text" id="amount" placeholder="Enter amount in USD" oninput="validateInput(this)">
             <button onclick="convertCurrency()">Convert</button>
             <p id="currencyResult"></p>
+            <button class="download-button" onclick="downloadResult('currency')">Download Result</button>
         </div>
         <div id="crypto" class="tab-content">
             <h2>Crypto Price Checker</h2>
             <button onclick="checkCryptoPrice()">Check Bitcoin Price</button>
             <p id="cryptoResult"></p>
+            <button class="download-button" onclick="downloadResult('crypto')">Download Result</button>
         </div>
         <div id="weather" class="tab-content">
             <h2>Weather Forecast</h2>
             <input type="text" id="location" placeholder="Enter location (e.g., New York)">
             <button onclick="getWeather()">Get Weather</button>
             <p id="weatherResult"></p>
+            <button class="download-button" onclick="downloadResult('weather')">Download Result</button>
         </div>
     </div>
     <a href="index.html" style="color:#6366f1">Back to Home</a>
@@ -165,6 +171,24 @@
                 console.error('Error fetching weather data:', error);
                 alert('Failed to fetch weather data. Please try again later.');
             }
+        }
+
+        function downloadResult(tabName) {
+            const resultElement = document.getElementById(`${tabName}Result`);
+            if (!resultElement.innerText) {
+                alert('No result to download');
+                return;
+            }
+            
+            const blob = new Blob([resultElement.innerText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${tabName}_result.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         // Usage tracking
