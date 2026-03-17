@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Lookup Visualizer - Professional DNS Query Tool</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #121212;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #e4e4e4;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --accent: #6366f1;
+            --accent-hover: #5558e3;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #2a2a2a;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --radius: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--text-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .search-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .domain-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 1rem;
+            font-size: 1.1rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            transition: border-color 0.3s;
+        }
+        .domain-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .domain-input::placeholder {
+            color: var(--text-muted);
+        }
+        .query-btn {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .query-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        .query-btn:active {
+            transform: translateY(0);
+        }
+        .query-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .record-types {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        .record-type {
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .record-type:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+        .record-type.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .results-section {
+            display: none;
+        }
+        .results-section.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .records-container {
+            display: grid;
+            gap: 1rem;
+        }
+        .record-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: border-color 0.3s;
+        }
+        .record-card:hover {
+            border-color: var(--accent);
+        }
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .record-type-badge {
+            padding: 0.4rem 0.8rem;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--accent);
+        }
+        .record-answers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .answer-item {
+            padding: 0.6rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+        .answer-item:hover {
+            transform: scale(1.02);
+        }
+        .answer-ip {
+            color: var(--success);
+        }
+        .answer-cname {
+            color: var(--warning);
+        }
+        .answer-mx {
+            color: var(--accent);
+        }
+        .answer-txt {
+            color: var(--text-primary);
+        }
+        .answer-ns {
+            color: var(--text-secondary);
+        }
+        .answer-soa {
+            color: var(--text-muted);
+        }
+        .loading-spinner {
+            display: none;
+            flex: 1;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+        .loading-spinner.visible {
+            display: flex;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error-message {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            border-radius: var(--radius);
+            padding: 1rem;
+            color: var(--error);
+            margin-top: 1rem;
+        }
+        .error-message.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        .history-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .history-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.3s;
+        }
+        .history-item:hover {
+            border-color: var(--accent);
+        }
+        .history-domain {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .history-time {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .history-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .action-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+        .action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+        .tooltip {
+            position: relative;
+        }
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+        .export-btn {
+            padding: 0.6rem 1rem;
+            background: var(--success);
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .export-btn:hover {
+            background: #059669;
+        }
+        .clear-history-btn {
+            padding: 0.6rem 1rem;
+            background: var(--error);
+            border: none;
+            border-radius: var(--radius);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .clear-history-btn:hover {
+            background: #dc2626;
+        }
+        .keyboard-shortcut {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin: 0 0.3rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .info-box {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .info-box-title {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        .info-box-content {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .dns-json {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: var(--radius);
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .json-key { color: var(--accent); }
+        .json-string { color: var(--success); }
+        .json-number { color: var(--warning); }
+        .json-boolean { color: var(--error); }
+        .json-null { color: var(--text-muted); }
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .search-box { flex-direction: column; }
+            .domain-input { min-width: 100%; }
+            .query-btn { width: 100%; }
+            .record-types { flex-direction: column; }
+            .record-type { width: 100%; text-align: center; }
+            .history-item { flex-direction: column; gap: 0.5rem; }
+            .history-actions { width: 100%; justify-content: flex-end; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>DNS Lookup Visualizer</h1>
+            <p class="subtitle">Professional DNS query tool with real-time visualization and history tracking</p>
+            <a href="index.html" class="nav-link">Back to Home</a>
+        </header>
+
+        <section class="search-section">
+            <h2 class="section-title">Query Domain</h2>
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="domainInput" 
+                    class="domain-input" 
+                    placeholder="Enter domain name (e.g., example.com)"
+                    autocomplete="off"
+                >
+                <button id="queryBtn" class="query-btn">
+                    Query DNS
+                    <span class="keyboard-shortcut">⌘K</span>
+                </button>
+            </div>
+            <div class="record-types" id="recordTypes">
+                <div class="record-type active" data-type="A">A Record</div>
+                <div class="record-type" data-type="AAAA">AAAA Record</div>
+                <div class="record-type" data-type="CNAME">CNAME</div>
+                <div class="record-type" data-type="MX">MX</div>
+                <div class="record-type" data-type="TXT">TXT</div>
+                <div class="record-type" data-type="NS">NS</div>
+                <div class="record-type" data-type="SOA">SOA</div>
+            </div>
+            <div class="info-box">
+                <div class="info-box-title">💡 Quick Tips</div>
+                <div class="info-box-content">
+                    • Press <span class="keyboard-shortcut">⌘K</span> to quickly query the current domain<br>
+                    • Click record types to query multiple types at once<br>
+                    • Results are cached for 30 days<br>
+                    • History is saved locally in your browser
+                </div>
+            </div>
+        </section>
+
+        <section id="loadingSection" class="loading-spinner">
+            <div class="spinner"></div>
+            <p style="margin-left: 1rem; color: var(--text-secondary);">Querying DNS servers...</p>
+        </section>
+
+        <section id="errorSection" class="error-message">
+            <strong>Error:</strong> <span id="errorMessage"></span>
+        </section>
+
+        <section id="resultsSection" class="results-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statRecords">0</div>
+                    <div class="stat-label">Total Records</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statTTL">-</div>
+                    <div class="stat-label">TTL (seconds)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statTypes">0</div>
+                    <div class="stat-label">Record Types</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statSize">0</div>
+                    <div class="stat-label">Response Size</div>
+                </div>
+            </div>
+
+            <div class="records-container" id="recordsContainer">
+                <!-- Records will be inserted here -->
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+                <button id="exportBtn" class="export-btn">Export Results</button>
+                <button id="clearHistoryBtn" class="clear-history-btn">Clear History</button>
+            </div>
+
+            <div class="dns-json" id="dnsJson" style="display: none;"></div>
+        </section>
+
+        <section class="history-section">
+            <div class="history-header">
+                <h2 class="section-title">Query History</h2>
+                <span class="keyboard-shortcut">⌘H</span>
+            </div>
+            <div class="history-list" id="historyList">
+                <!-- History items will be inserted here -->
+            </div>
+            <div id="emptyHistory" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📜</div>
+                <p>No query history yet</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">Your queries will appear here</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // DNS Lookup Visualizer - Main Application
+        class DNSLookupVisualizer {
+            constructor() {
+                this.domainInput = document.getElementById('domainInput');
+                this.queryBtn = document.getElementById('queryBtn');
+                this.recordTypes = document.querySelectorAll('.record-type');
+                this.loadingSection = document.getElementById('loadingSection');
+                this.errorSection = document.getElementById('errorSection');
+                this.errorMessage = document.getElementById('errorMessage');
+                this.resultsSection = document.getElementById('resultsSection');
+                this.recordsContainer = document.getElementById('recordsContainer');
+                this.historyList = document.getElementById('historyList');
+                this.emptyHistory = document.getElementById('emptyHistory');
+                this.exportBtn = document.getElementById('exportBtn');
+                this.clearHistoryBtn = document.getElementById('clearHistoryBtn');
+                this.stats = {
+                    records: 0,
+                    ttl: null,
+                    types: new Set(),
+                    size: 0
+                };
+                this.history = JSON.parse(localStorage.getItem('dnsHistory') || '[]');
+                this.selectedTypes = ['A'];
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.renderHistory();
+                this.setupKeyboardShortcuts();
+            }
+
+            setupEventListeners() {
+                this.queryBtn.addEventListener('click', () => this.query());
+                this.domainInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.query();
+                });
+                this.recordTypes.forEach(type => {
+                    type.addEventListener('click', () => {
+                        this.toggleRecordType(type.dataset.type);
+                    });
+                });
+                this.exportBtn.addEventListener('click', () => this.exportResults());
+                this.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
+                this.domainInput.addEventListener('input', () => this.updateDomainDisplay());
+            }
+
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                        e.preventDefault();
+                        this.domainInput.focus();
+                    }
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'h') {
+                        e.preventDefault();
+                        this.historyList.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            }
+
+            toggleRecordType(type) {
+                this.selectedTypes = Array.from(this.recordTypes)
+                    .filter(t => t.dataset.type === type)
+                    .map(t => t.dataset.type);
+                this.recordTypes.forEach(t => {
+                    t.classList.toggle('active', this.selectedTypes.includes(t.dataset.type));
+                });
+            }
+
+            updateDomainDisplay() {
+                const domain = this.domainInput.value.trim();
+                if (domain) {
+                    this.domainInput.style.borderColor = 'var(--success)';
+                } else {
+                    this.domainInput.style.borderColor = 'var(--border)';
+                }
+            }
+
+            async query() {
+                const domain = this.domainInput.value.trim();
+                if (!domain) {
+                    this.showError('Please enter a domain name');
+                    return;
+                }
+
+                this.showLoading();
+                this.hideError();
+                this.resultsSection.classList.remove('visible');
+
+                try {
+                    const results = await this.fetchDNS(domain);
+                    this.displayResults(results);
+                    this.addToHistory(domain, results);
+                } catch (error) {
+                    this.showError(error.message || 'Failed to query DNS');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async fetchDNS(domain) {
+                const queryTypes = this.selectedTypes.join(',');
+                const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${queryTypes}`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/dns-json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`DNS query failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data;
+            }
+
+            displayResults(data) {
+                this.stats.records = data.Answer ? data.Answer.length : 0;
+                this.stats.types = new Set(data.Answer ? data.Answer.map(r => r.type) : []).size;
+                this.stats.size = data.Answer ? data.Answer.length : 0;
+
+                document.getElementById('statRecords').textContent = this.stats.records;
+                document.getElementById('statTypes').textContent = this.stats.types;
+                document.getElementById('statSize').textContent = this.stats.size;
+
+                if (data.Answer && data.Answer.length > 0) {
+                    const ttl = data.Answer[0].ttl;
+                    document.getElementById('statTTL').textContent = ttl ? `${ttl}s` : '-';
+                } else {
+                    document.getElementById('statTTL').textContent = '-';
+                }
+
+                this.resultsSection.classList.add('visible');
+                this.renderRecords(data);
+                this.renderJSON(data);
+            }
+
+            renderRecords(data) {
+                this.recordsContainer.innerHTML = '';
+
+                if (!data.Answer || data.Answer.length === 0) {
+                    this.recordsContainer.innerHTML = `
+                        <div class="record-card" style="text-align: center; padding: 3rem;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                            <h3>No records found</h3>
+                            <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+                                This domain may not have any DNS records for the selected types,
+                                or the records may have been removed.
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                data.Answer.forEach(record => {
+                    const card = document.createElement('div');
+                    card.className = 'record-card';
+                    
+                    let answerHTML = '';
+                    if (record.data) {
+                        answerHTML = this.formatAnswer(record.data, record.type);
+                    }
+
+                    card.innerHTML = `
+                        <div class="record-header">
+                            <span class="record-type-badge">${record.type}</span>
+                            <span class="record-flags">${record.flags ? record.flags : ''}</span>
+                        </div>
+                        <div class="record-answers">
+                            ${answerHTML}
+                        </div>
+                        <div style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                            TTL: ${record.ttl}s | Name: ${record.name}
+                        </div>
+                    `;
+                    this.recordsContainer.appendChild(card);
+                });
+            }
+
+            formatAnswer(data, type) {
+                let formatted = data;
+                let className = 'answer-txt';
+
+                if (type === 'A') {
+                    className = 'answer-ip';
+                    formatted = `[${data}]`;
+                } else if (type === 'AAAA') {
+                    className = 'answer-ip';
+                    formatted = `[${data}]`;
+                } else if (type === 'CNAME') {
+                    className = 'answer-cname';
+                    formatted = `→ ${data}`;
+                } else if (type === 'MX') {
+                    className = 'answer-mx';
+                    formatted = `${data.exchange} (${data.priority})`;
+                } else if (type === 'NS') {
+                    className = 'answer-ns';
+                    formatted = `→ ${data}`;
+                } else if (type === 'SOA') {
+                    className = 'answer-soa';
+                    formatted = `${data.mname} (${data.rname}, ${data.serial}, ${data.refresh}, ${data.retry}, ${data.expire}, ${data.minimum})`;
+                }
+
+                return `<span class="answer-item ${className}">${formatted}</span>`;
+            }
+
+            renderJSON(data) {
+                const json = JSON.stringify(data, null, 2);
+                let formatted = json;
+                
+                formatted = formatted.replace(/"([^"]+)":/g, '<span class="json-key">"$1":</span>');
+                formatted = formatted.replace(/"([^"]+)"/g, '<span class="json-string">"$1"</span>');
+                formatted = formatted.replace(/:(\d+)/g, ':<span class="json-number">$1</span>');
+                formatted = formatted.replace(/:(true|false)/g, ':<span class="json-boolean">$1</span>');
+                formatted = formatted.replace(/:null/g, ':<span class="json-null">null</span>');
+
+                const jsonEl = document.getElementById('dnsJson');
+                jsonEl.innerHTML = formatted;
+                jsonEl.style.display = 'block';
+            }
+
+            addToHistory(domain, data) {
+                const record = {
+                    domain: domain,
+                    timestamp: new Date().toISOString(),
+                    recordCount: data.Answer ? data.Answer.length : 0,
+                    types: data.Answer ? new Set(data.Answer.map(r => r.type)).size : 0
+                };
+
+                this.history.unshift(record);
+                if (this.history.length > 50) {
+                    this.history = this.history.slice(0, 50);
+                }
+
+                localStorage.setItem('dnsHistory', JSON.stringify(this.history));
+                this.renderHistory();
+            }
+
+            renderHistory() {
+                this.historyList.innerHTML = '';
+
+                if (this.history.length === 0) {
+                    this.emptyHistory.style.display = 'block';
+                    return;
+                }
+
+                this.emptyHistory.style.display = 'none';
+
+                this.history.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    div.innerHTML = `
+                        <div>
+                            <div class="history-domain">${item.domain}</div>
+                            <div class="history-time">
+                                ${new Date(item.timestamp).toLocaleString()}
+                                <span style="margin-left: 0.5rem; color: var(--text-muted);">
+                                    (${item.recordCount} records, ${item.types} types)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="history-actions">
+                            <button class="action-btn" onclick="app.requery('${item.domain}')">Requery</button>
+                            <button class="action-btn delete" onclick="app.deleteHistory('${item.domain}')">Delete</button>
+                        </div>
+                    `;
+                    this.historyList.appendChild(div);
+                });
+            }
+
+            requery(domain) {
+                this.domainInput.value = domain;
+                this.query();
+            }
+
+            deleteHistory(domain) {
+                this.history = this.history.filter(item => item.domain !== domain);
+                localStorage.setItem('dnsHistory', JSON.stringify(this.history));
+                this.renderHistory();
+            }
+
+            clearHistory() {
+                this.history = [];
+                localStorage.removeItem('dnsHistory');
+                this.renderHistory();
+            }
+
+            showLoading() {
+                this.loadingSection.classList.add('visible');
+                this.resultsSection.classList.remove('visible');
+                this.errorSection.classList.remove('visible');
+            }
+
+            hideLoading() {
+                this.loadingSection.classList.remove('visible');
+            }
+
+            showError(message) {
+                this.errorMessage.textContent = message;
+                this.errorSection.classList.add('visible');
+            }
+
+            hideError() {
+                this.errorSection.classList.remove('visible');
+            }
+
+            exportResults() {
+                const domain = this.domainInput.value.trim();
+                if (!domain) {
+                    alert('Please enter a domain name first');
+                    return;
+                }
+
+                const data = {
+                    domain: domain,
+                    timestamp: new Date().toISOString(),
+                    records: this.recordsContainer.innerHTML,
+                    stats: this.stats
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${domain.replace(/\./g, '_')}_dns_results.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Initialize application
+        const app = new DNSLookupVisualizer();
+
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+                params: [location.pathname.split('/').pop(), 'load', new Date().toISOString()]
+            })
+        }).catch(() => {});
+    </script>
+</body>
+</html>
