@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poetry Explorer - Explore Poetry by Author</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        .search-section {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .search-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #a0a0a0;
+        }
+        .search-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            background: #1a1a1a;
+            border: 2px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e4e4e4;
+            transition: border-color 0.3s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        .search-input::placeholder {
+            color: #666;
+        }
+        .search-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .results-section {
+            display: none;
+        }
+        .results-section.visible {
+            display: block;
+        }
+        .author-info {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .author-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #6366f1;
+            margin-bottom: 0.5rem;
+        }
+        .author-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #1a1a1a;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e4e4e4;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .poems-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        .poem-card {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: border-color 0.3s;
+        }
+        .poem-card:hover {
+            border-color: #2a2a2a;
+        }
+        .poem-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #a0a0a0;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .poem-content {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            color: #e4e4e4;
+            font-size: 1rem;
+        }
+        .poem-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #1a1a1a;
+        }
+        .action-btn {
+            padding: 0.5rem 1rem;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #2a2a2a;
+            color: #e4e4e4;
+        }
+        .action-btn.copy-success {
+            background: #059669;
+            border-color: #059669;
+            color: white;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+        .loading.visible {
+            display: block;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #1a1a1a;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error {
+            display: none;
+            background: #111;
+            border: 1px solid #dc2626;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #dc2626;
+        }
+        .error.visible {
+            display: block;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #059669;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.error {
+            background: #dc2626;
+        }
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid #1a1a1a;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .author-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .poem-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Home</a>
+        
+        <header>
+            <h1>Poetry Explorer</h1>
+            <p class="subtitle">Discover beautiful poems by exploring works from renowned authors</p>
+        </header>
+
+        <div class="search-section">
+            <label class="search-label" for="author-input">Enter an Author's Name</label>
+            <input 
+                type="text" 
+                id="author-input" 
+                class="search-input" 
+                placeholder="e.g., Robert Frost, Emily Dickinson, William Shakespeare"
+                autocomplete="off"
+            >
+            <button id="search-btn" class="search-btn">Explore Poetry</button>
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Searching for poems...</p>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+            <div class="empty-state-icon">📜</div>
+            <p>Enter an author's name above to explore their poetry collection</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #888;">
+                Try: Robert Frost, Emily Dickinson, William Shakespeare, Walt Whitman, or any other poet
+            </p>
+        </div>
+
+        <div id="results-section" class="results-section">
+            <div id="author-info" class="author-info"></div>
+            <div id="poems-grid" class="poems-grid"></div>
+        </div>
+
+        <footer>
+            <p>Poetry Explorer - Powered by PoetryDB API</p>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // DOM Elements
+        const authorInput = document.getElementById('author-input');
+        const searchBtn = document.getElementById('search-btn');
+        const errorDiv = document.getElementById('error');
+        const loadingDiv = document.getElementById('loading');
+        const emptyState = document.getElementById('empty-state');
+        const resultsSection = document.getElementById('results-section');
+        const authorInfo = document.getElementById('author-info');
+        const poemsGrid = document.getElementById('poems-grid');
+        const toast = document.getElementById('toast');
+
+        // API URL
+        const API_URL = 'https://poetrydb.org/author/';
+
+        // Cache for author data
+        const authorCache = new Map();
+
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+                params: ['poetry-explorer', 'load', new Date().toISOString()]
+            })
+        }).catch(() => {});
+
+        // Event Listeners
+        searchBtn.addEventListener('click', handleSearch);
+        authorInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
+
+        // Functions
+        function showToast(message, isError = false) {
+            toast.textContent = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.add('visible');
+            setTimeout(() => {
+                errorDiv.classList.remove('visible');
+            }, 5000);
+        }
+
+        function hideLoading() {
+            loadingDiv.classList.remove('visible');
+        }
+
+        function showLoading() {
+            loadingDiv.classList.add('visible');
+        }
+
+        function hideEmptyState() {
+            emptyState.style.display = 'none';
+        }
+
+        function showEmptyState() {
+            emptyState.style.display = 'block';
+        }
+
+        function hideResults() {
+            resultsSection.classList.remove('visible');
+        }
+
+        function showResults() {
+            resultsSection.classList.add('visible');
+        }
+
+        async function fetchAuthorData(author) {
+            const cacheKey = author.toLowerCase().trim();
+            if (authorCache.has(cacheKey)) {
+                return authorCache.get(cacheKey);
+            }
+
+            try {
+                const response = await fetch(`${API_URL}${author}`);
+                if (!response.ok) {
+                    throw new Error('Author not found in PoetryDB');
+                }
+                const data = await response.json();
+                authorCache.set(cacheKey, data);
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        function formatPoem(poem) {
+            const lines = poem.text.split('\n');
+            return lines.map((line, index) => {
+                const indent = line.match(/^(\s*)/)?.[1]?.length || 0;
+                return `<span style="padding-left: ${indent}px">${line}</span>`;
+            }).join('');
+        }
+
+        function createPoemCard(poem) {
+            const poemId = poem.id;
+            const poemTitle = poem.title || 'Untitled';
+            const poemText = poem.text || '';
+
+            return `
+                <div class="poem-card">
+                    <div class="poem-title">
+                        ${poemTitle}
+                        <span style="font-size: 0.8rem; color: #666; font-weight: 400;">(Poem #${poemId})</span>
+                    </div>
+                    <div class="poem-content">
+                        ${formatPoem(poem)}
+                    </div>
+                    <div class="poem-actions">
+                        <button class="action-btn" onclick="copyToClipboard(this, 'poem-content-${poemId}')">
+                            📋 Copy
+                        </button>
+                        <button class="action-btn" onclick="sharePoem(this, 'poem-content-${poemId}')">
+                            🔗 Share
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function handleSearch() {
+            const author = authorInput.value.trim();
+            
+            if (!author) {
+                showError('Please enter an author\'s name');
+                return;
+            }
+
+            if (author.length < 2) {
+                showError('Author name must be at least 2 characters');
+                return;
+            }
+
+            // Reset UI
+            hideResults();
+            showLoading();
+            hideEmptyState();
+            errorDiv.classList.remove('visible');
+
+            try {
+                const data = await fetchAuthorData(author);
+                hideLoading();
+                showResults();
+
+                // Display author info
+                const poems = data.poems || [];
+                const poemCount = poems.length;
+                const wordCount = poems.reduce((sum, p) => sum + p.text.split(' ').length, 0);
+
+                authorInfo.innerHTML = `
+                    <div class="author-name">${author}</div>
+                    <p style="color: #888;">${poemCount} poem${poemCount !== 1 ? 's' : ''} found in PoetryDB</p>
+                    <div class="author-stats">
+                        <div class="stat">
+                            <div class="stat-value">${poemCount}</div>
+                            <div class="stat-label">Poems</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">${wordCount.toLocaleString()}</div>
+                            <div class="stat-label">Words</div>
+                        </div>
+                    </div>
+                `;
+
+                // Display poems
+                if (poems.length === 0) {
+                    poemsGrid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📜</div>
+                            <p>No poems found for this author in PoetryDB</p>
+                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #888;">
+                                Try a different author name
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    poemsGrid.innerHTML = poems.map(createPoemCard).join('');
+                }
+
+            } catch (error) {
+                hideLoading();
+                showError(`Error: ${error.message || 'Failed to fetch poetry data'}`);
+                showEmptyState();
+            }
+        }
+
+        function copyToClipboard(button, contentId) {
+            const content = document.getElementById(contentId);
+            if (!content) return;
+
+            const text = content.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.innerHTML;
+                button.innerHTML = '✅ Copied!';
+                button.classList.add('copy-success');
+                showToast('Poem copied to clipboard!', false);
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('copy-success');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showToast('Failed to copy to clipboard', true);
+            });
+        }
+
+        function sharePoem(button, contentId) {
+            const content = document.getElementById(contentId);
+            if (!content) return;
+
+            const text = content.innerText;
+            const url = window.location.href;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Poetry Explorer',
+                    text: text,
+                    url: url
+                }).catch(err => {
+                    console.error('Share failed:', err);
+                });
+            } else {
+                navigator.clipboard.writeText(text + '\n\n' + url).then(() => {
+                    showToast('Poem and link copied to clipboard!', false);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    showToast('Failed to copy to clipboard', true);
+                });
+            }
+        }
+
+        // Initialize
+        hideEmptyState();
+        hideResults();
+    </script>
+</body>
+</html>
