@@ -12,12 +12,15 @@ a{color:#6366f1;text-decoration:none}
 textarea{width:100%;min-height:60px;font-family:monospace;font-size:12px}
 .result-box{background:#1a1a1a;border:1px solid #333;padding:10px;border-radius:4px;min-height:100px;font-family:monospace;font-size:12px;white-space:pre-wrap}
 .method-select{width:120px}
+.error-message{background:#3a1a1a;border:1px solid #631a1a;color:#ff6b6b;padding:10px;border-radius:4px;margin:10px 0;font-size:14px}
+.download-btn{background:#10b981;color:#fff;border:none;cursor:pointer;margin:5px}
+.download-btn:hover{background:#059669}
 </style>
 </head>
 <body>
 <h1>URL Tester</h1>
 <p>Enter a URL to test:</p>
-<input type="text" id="urlInput" placeholder="https://example.com">
+<input type="text" id="urlInput" placeholder="https://example.com" autocomplete="off">
 <select id="methodSelect" class="method-select">
   <option value="GET">GET</option>
   <option value="POST">POST</option>
@@ -27,21 +30,54 @@ textarea{width:100%;min-height:60px;font-family:monospace;font-size:12px}
 </select>
 <textarea id="bodyInput" placeholder="Request body (JSON, form data, etc.) - only for POST/PUT/PATCH"></textarea>
 <button onclick="testUrl()">Test</button>
+<button class="download-btn" onclick="downloadResult()">Download Result</button>
 <div id="result"></div>
 <a href="index.html" style="color:#6366f1">Back to Home</a>
 <script>
+// Load saved URL from localStorage
+document.addEventListener('DOMContentLoaded', () => {
+  const savedUrl = localStorage.getItem('urlTester_urlInput');
+  if (savedUrl) {
+    document.getElementById('urlInput').value = savedUrl;
+  }
+});
+
+// Save URL to localStorage on input change
+document.getElementById('urlInput').addEventListener('input', () => {
+  localStorage.setItem('urlTester_urlInput', document.getElementById('urlInput').value);
+});
+
 async function testUrl() {
-  const url = document.getElementById('urlInput').value;
+  const urlInput = document.getElementById('urlInput');
+  const url = urlInput.value.trim();
   const method = document.getElementById('methodSelect').value;
-  const body = document.getElementById('bodyInput').value;
+  const bodyInput = document.getElementById('bodyInput');
+  const body = bodyInput.value.trim();
   const result = document.getElementById('result');
+  
+  // Input validation
+  if (!url) {
+    showError('Please enter a URL to test');
+    return;
+  }
+  
+  // Validate URL format
+  try {
+    new URL(url);
+  } catch (e) {
+    showError('Invalid URL format. Please check your URL (e.g., https://example.com)');
+    return;
+  }
   
   // Only allow body for methods that support it
   if (method === 'GET' || method === 'DELETE' || method === 'HEAD') {
-    document.getElementById('bodyInput').disabled = true;
+    bodyInput.disabled = true;
   } else {
-    document.getElementById('bodyInput').disabled = false;
+    bodyInput.disabled = false;
   }
+  
+  // Clear previous error
+  hideError();
   
   try {
     const startTime = performance.now();
@@ -76,10 +112,50 @@ async function testUrl() {
     }
     
     result.innerHTML = resultHtml;
+    
+    // Save result to localStorage
+    localStorage.setItem('urlTester_lastResult', resultHtml);
+    
   } catch (e) {
-    result.innerHTML = `<strong>Error:</strong> ${e.message}`;
+    showError(`Error: ${e.message}`);
   }
 }
+
+function showError(message) {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'error-message';
+  errorDiv.textContent = message;
+  const resultDiv = document.getElementById('result');
+  resultDiv.innerHTML = '';
+  resultDiv.appendChild(errorDiv);
+}
+
+function hideError() {
+  const resultDiv = document.getElementById('result');
+  resultDiv.innerHTML = '';
+}
+
+function downloadResult() {
+  const result = document.getElementById('result');
+  const content = result.innerHTML;
+  const blob = new Blob([content], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'url-tester-result.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'Enter') {
+    e.preventDefault();
+    testUrl();
+  }
+});
 </script>
 </body>
 </html>
