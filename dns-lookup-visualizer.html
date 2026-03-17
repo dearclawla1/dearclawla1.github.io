@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Lookup Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #6366f1;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 0.95rem;
+        }
+        .input-section {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 18px;
+            border: 2px solid #1a1a1a;
+            border-radius: 8px;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        input[type="text"]::placeholder {
+            color: #555;
+        }
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: #6366f1;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #5558e3;
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        .btn-secondary {
+            background: #1a1a1a;
+            color: #e4e4e4;
+            border: 1px solid #333;
+        }
+        .btn-secondary:hover {
+            background: #2a2a2a;
+        }
+        .results-section {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 25px;
+            min-height: 200px;
+        }
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .results-title {
+            font-size: 1.2rem;
+            color: #e4e4e4;
+        }
+        .copy-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #e4e4e4;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover {
+            background: #2a2a2a;
+            border-color: #6366f1;
+        }
+        .copy-btn.copied {
+            background: #059669;
+            border-color: #059669;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6366f1;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #1a1a1a;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .record-group {
+            margin-bottom: 25px;
+        }
+        .record-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .record-type {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #6366f1;
+        }
+        .record-icon {
+            font-size: 1.2rem;
+        }
+        .record-entries {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .entry {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #111;
+            border-radius: 6px;
+            border-left: 3px solid #6366f1;
+        }
+        .entry:last-child {
+            margin-bottom: 0;
+        }
+        .entry-value {
+            flex: 1;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            color: #e4e4e4;
+            word-break: break-all;
+        }
+        .entry-ttl {
+            font-size: 0.8rem;
+            color: #666;
+            margin-left: 15px;
+        }
+        .error {
+            background: #7f1d1d;
+            border: 1px solid #991b1b;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        .error-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        .error-message {
+            color: #fecaca;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .no-results-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 1px solid #1a1a1a;
+        }
+        .footer a {
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-success {
+            background: #059669;
+            color: #fff;
+        }
+        .badge-error {
+            background: #dc2626;
+            color: #fff;
+        }
+        .badge-info {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+        .help-text a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+        .help-text a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+            input[type="text"] {
+                min-width: 100%;
+            }
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 DNS Lookup Visualizer</h1>
+            <p class="subtitle">Query DNS records for any domain and visualize the results</p>
+        </header>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="domainInput" placeholder="Enter domain (e.g., example.com)" />
+                <button class="btn btn-primary" id="lookupBtn">Lookup</button>
+                <button class="btn btn-secondary" id="clearBtn">Clear</button>
+            </div>
+            <p class="help-text">
+                Supported record types: <code>A</code>, <code>AAAA</code>, <code>MX</code>, <code>NS</code>, 
+                <code>TXT</code>, <code>CNAME</code>, <code>SOA</code>. 
+                <a href="https://cloudflare-dns.com/dns-query" target="_blank">Cloudflare DNS API</a>
+            </p>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <div class="results-title">Results</div>
+                <button class="copy-btn" id="copyBtn" style="display: none;">Copy Results</button>
+            </div>
+            <div id="resultsContent">
+                <div class="no-results">
+                    <div class="no-results-icon">📡</div>
+                    <p>Enter a domain name above and click "Lookup" to query DNS records</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <a href="index.html">Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const domainInput = document.getElementById('domainInput');
+            const lookupBtn = document.getElementById('lookupBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const resultsContent = document.getElementById('resultsContent');
+            const copyBtn = document.getElementById('copyBtn');
+            const resultsSection = document.getElementById('resultsSection');
+
+            let currentResults = null;
+            let currentQuery = null;
+
+            // Cache DNS results in localStorage
+            const cacheNamespace = 'dns-lookup-cache';
+
+            // Load cached results
+            function loadCache() {
+                try {
+                    const cached = localStorage.getItem(cacheNamespace);
+                    if (cached) {
+                        currentResults = JSON.parse(cached);
+                        displayResults(currentResults);
+                    }
+                } catch (e) {
+                    console.warn('Failed to load cache:', e);
+                }
+            }
+
+            // Save to cache
+            function saveCache() {
+                try {
+                    localStorage.setItem(cacheNamespace, JSON.stringify(currentResults));
+                } catch (e) {
+                    console.warn('Failed to save cache:', e);
+                }
+            }
+
+            // Clear cache
+            function clearCache() {
+                try {
+                    localStorage.removeItem(cacheNamespace);
+                } catch (e) {
+                    console.warn('Failed to clear cache:', e);
+                }
+            }
+
+            // Parse domain name
+            function parseDomain(domain) {
+                let parsed = domain.trim();
+                if (!parsed) return null;
+                
+                // Remove trailing dot if present
+                if (parsed.endsWith('.')) {
+                    parsed = parsed.slice(0, -1);
+                }
+                
+                // Validate domain
+                const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])+$/;
+                if (!domainRegex.test(parsed)) {
+                    return null;
+                }
+                
+                return parsed;
+            }
+
+            // Query DNS API
+            async function queryDNS(domain, type) {
+                const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${type}`;
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/dns-json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('DNS query error:', error);
+                    throw error;
+                }
+            }
+
+            // Format DNS record
+            function formatRecord(data, type) {
+                const records = [];
+                
+                if (data.Truncated) {
+                    records.push({
+                        type: 'truncated',
+                        value: 'Query was truncated (response too large)',
+                        ttl: null
+                    });
+                }
+                
+                if (data.CNAME) {
+                    records.push({
+                        type: 'cname',
+                        value: data.CNAME,
+                        ttl: null
+                    });
+                }
+                
+                if (data.A) {
+                    records.push(...data.A.map(ip => ({
+                        type: 'A',
+                        value: ip,
+                        ttl: null
+                    })));
+                }
+                
+                if (data.AAAA) {
+                    records.push(...data.AAAA.map(ip => ({
+                        type: 'AAAA',
+                        value: ip,
+                        ttl: null
+                    })));
+                }
+                
+                if (data.MX) {
+                    records.push(...data.MX.map((mx, idx) => ({
+                        type: 'MX',
+                        value: `${mx.priority} ${mx.exchange}`,
+                        ttl: null
+                    })));
+                }
+                
+                if (data.NS) {
+                    records.push(...data.NS.map(ns => ({
+                        type: 'NS',
+                        value: ns,
+                        ttl: null
+                    })));
+                }
+                
+                if (data.TXT) {
+                    records.push(...data.TXT.map(txt => ({
+                        type: 'TXT',
+                        value: txt.replace(/"/g, ''),
+                        ttl: null
+                    })));
+                }
+                
+                if (data.SOA) {
+                    records.push({
+                        type: 'SOA',
+                        value: `${data.SOA.mname} ${data.SOA.rname} ${data.SOA.serial} ${data.SOA.refresh} ${data.SOA.retry} ${data.SOA.expire} ${data.SOA.minimum}`,
+                        ttl: null
+                    });
+                }
+                
+                if (data.Error) {
+                    records.push({
+                        type: 'error',
+                        value: data.Error,
+                        ttl: null
+                    });
+                }
+                
+                return records;
+            }
+
+            // Display loading state
+            function showLoading() {
+                resultsContent.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Querying DNS records...</p>
+                    </div>
+                `;
+            }
+
+            // Display error
+            function showError(message) {
+                resultsContent.innerHTML = `
+                    <div class="error">
+                        <div class="error-icon">⚠️</div>
+                        <div class="error-message">${message}</div>
+                    </div>
+                `;
+            }
+
+            // Display results
+            function displayResults(results) {
+                currentResults = results;
+                currentQuery = results.query;
+                copyBtn.style.display = 'inline-block';
+                
+                if (!results.Answer || results.Answer.length === 0) {
+                    resultsContent.innerHTML = `
+                        <div class="no-results">
+                            <div class="no-results-icon">📡</div>
+                            <p>No DNS records found for <strong>${results.query}</strong></p>
+                            <p style="margin-top: 10px; font-size: 0.85rem; color: #555;">
+                                The domain may not exist, or no records of the requested types are available.
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <div class="record-group">
+                        <div class="record-header">
+                            <span class="record-type">${results.query}</span>
+                            <span class="badge badge-info">Answer</span>
+                        </div>
+                        <div class="record-entries">
+                `;
+                
+                const answerRecords = results.Answer || [];
+                
+                answerRecords.forEach(record => {
+                    const icon = getRecordIcon(record.type);
+                    html += `
+                        <div class="entry">
+                            <span class="record-icon">${icon}</span>
+                            <span class="entry-value">${record.type.toUpperCase()}: ${record.data || record.value || ''}</span>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+                
+                // Add additional section if present
+                if (results.Additional) {
+                    html += `
+                        <div class="record-group">
+                            <div class="record-header">
+                                <span class="record-type">Additional</span>
+                                <span class="badge badge-info">Extra</span>
+                            </div>
+                            <div class="record-entries">
+                    `;
+                    
+                    const additionalRecords = results.Additional || [];
+                    additionalRecords.forEach(record => {
+                        const icon = getRecordIcon(record.type);
+                        html += `
+                            <div class="entry">
+                                <span class="record-icon">${icon}</span>
+                                <span class="entry-value">${record.type.toUpperCase()}: ${record.data || record.value || ''}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                        </div>
+                    </div>
+                `;
+                }
+                
+                resultsContent.innerHTML = html;
+            }
+
+            // Get record icon
+            function getRecordIcon(type) {
+                const icons = {
+                    'A': '🔹',
+                    'AAAA': '🔷',
+                    'MX': '📧',
+                    'NS': '🌐',
+                    'TXT': '📝',
+                    'CNAME': '🔗',
+                    'SOA': '📋',
+                    'PTR': '📍',
+                    'SRV': '🔧',
+                    'CAA': '🔒'
+                };
+                return icons[type] || '📡';
+            }
+
+            // Format results for copying
+            function formatResultsForCopy() {
+                if (!currentResults) return '';
+                
+                let text = `DNS Lookup Results for: ${currentResults.query}\n\n`;
+                
+                const answerRecords = currentResults.Answer || [];
+                answerRecords.forEach(record => {
+                    const icon = getRecordIcon(record.type);
+                    text += `${icon} ${record.type.toUpperCase()}: ${record.data || record.value || ''}\n`;
+                });
+                
+                if (currentResults.Additional) {
+                    const additionalRecords = currentResults.Additional || [];
+                    additionalRecords.forEach(record => {
+                        const icon = getRecordIcon(record.type);
+                        text += `${icon} ${record.type.toUpperCase()}: ${record.data || record.value || ''}\n`;
+                    });
+                }
+                
+                return text.trim();
+            }
+
+            // Copy to clipboard
+            async function copyToClipboard() {
+                if (!currentResults) return;
+                
+                try {
+                    const text = formatResultsForCopy();
+                    await navigator.clipboard.writeText(text);
+                    
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy Results';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                } catch (error) {
+                    console.error('Failed to copy:', error);
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = formatResultsForCopy();
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    copyBtn.textContent = 'Copied!';
+                    copyBtn.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy Results';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                }
+            }
+
+            // Main lookup function
+            async function performLookup() {
+                const domain = parseDomain(domainInput.value);
+                
+                if (!domain) {
+                    showError('Please enter a valid domain name');
+                    return;
+                }
+                
+                showLoading();
+                
+                try {
+                    // Query multiple record types
+                    const types = ['A', 'AAAA', 'MX', 'NS', 'TXT', 'CNAME', 'SOA'];
+                    let combinedResults = {
+                        query: domain,
+                        Answer: [],
+                        Additional: [],
+                        Truncated: false,
+                        CNAME: null
+                    };
+                    
+                    for (const type of types) {
+                        try {
+                            const data = await queryDNS(domain, type);
+                            
+                            if (data.Truncated) {
+                                combinedResults.Truncated = true;
+                            }
+                            
+                            if (data.CNAME) {
+                                combinedResults.CNAME = data.CNAME;
+                            }
+                            
+                            if (data.Answer) {
+                                combinedResults.Answer = combinedResults.Answer.concat(data.Answer);
+                            }
+                            
+                            if (data.Additional) {
+                                combinedResults.Additional = combinedResults.Additional.concat(data.Additional);
+                            }
+                            
+                            if (data.Error) {
+                                combinedResults.Answer = combinedResults.Answer.concat([{
+                                    type: 'error',
+                                    value: data.Error
+                                }]);
+                            }
+                        } catch (typeError) {
+                            console.warn(`Failed to query ${type}:`, typeError);
+                        }
+                    }
+                    
+                    // Remove duplicates
+                    combinedResults.Answer = [...new Map(combinedResults.Answer.map(item => [String(item.type) + item.value, item])).values()];
+                    combinedResults.Additional = [...new Map(combinedResults.Additional.map(item => [String(item.type) + item.value, item])).values()];
+                    
+                    displayResults(combinedResults);
+                    saveCache();
+                } catch (error) {
+                    showError(`Query failed: ${error.message}`);
+                }
+            }
+
+            // Event listeners
+            lookupBtn.addEventListener('click', performLookup);
+            
+            domainInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    performLookup();
+                }
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                domainInput.value = '';
+                currentResults = null;
+                currentQuery = null;
+                clearCache();
+                displayResults({ query: '', Answer: [], Additional: [] });
+            });
+            
+            copyBtn.addEventListener('click', copyToClipboard);
+            
+            // Initialize
+            loadCache();
+        })();
+    </script>
+</body>
+</html>
