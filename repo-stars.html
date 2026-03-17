@@ -11,9 +11,12 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,sans-
 .container{max-width:700px;margin:0 auto;padding:1rem}
 h1{font-size:1.6rem;margin:0 0 1rem}
 label{display:block;margin:1rem 0 .4rem;font-weight:600}
-input[type="text"]{width:100%;padding:.6rem;font-size:1rem;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:4px}
-button{background:var(--accent);color:#fff;border:0;padding:.6rem 1rem;font-size:1rem;border-radius:4px;cursor:pointer;margin-top:.4rem}
-.card{background:var(--card);border:1px solid var(--border);border-radius:8;padding:.8rem;margin-top:1rem}
+input[type="text"]{width:100%;padding:.6rem;font-size:1rem;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:4px;transition:border-color .2s}
+input[type="text"]:focus{outline:none;border-color:var(--accent)}
+button{background:var(--accent);color:#fff;border:0;padding:.6rem 1rem;font-size:1rem;border-radius:4px;cursor:pointer;margin-top:.4rem;transition:opacity .2s}
+button:hover{opacity:.9}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8;padding:.8rem;margin-top:1rem;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .card h3{margin:.2rem 0 .4rem;font-size:1.1rem}
 .card p{color:var(--muted);font-size:.9rem;margin:.2rem 0}
 .meta{display:flex;gap:.8rem;margin:.6rem 0;color:var(--muted);font-size:.85rem;flex-wrap:wrap}
@@ -22,29 +25,92 @@ button{background:var(--accent);color:#fff;border:0;padding:.6rem 1rem;font-size
 .tag{display:inline-block;padding:.1rem .4rem;font-size:.7rem;border-radius:2px;background:#2a2a2a;color:var(--muted);text-transform:uppercase}
 .nav{margin-top:2rem}
 .nav a{display:inline-block;background:var(--card);border:1px solid var(--border);color:var(--text);padding:.5rem 1rem;text-decoration:none;border-radius:4px;font-size:.9rem}
+.loading{display:flex;justify-content:center;align-items:center;padding:2rem}
+.spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error{color:#ff6b6b}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>🔭 Repo Star Tracker</h1>
 <label>Enter GitHub Repository</label>
-<input type="text" id="repo" placeholder="owner/repo or just repo name">
+<input type="text" id="repo" placeholder="owner/repo or just repo name" autocomplete="off">
 <button onclick="fetchRepo()">Track Repo</button>
 <div class="card" id="result"></div>
 <div class="nav"><a href="index.html">Back to Home</a></div>
 </div>
 <script>
+let repoHistory = [];
+const STORAGE_KEY = 'repo_star_tracker_history';
+
+function loadHistory(){
+try{
+const saved = localStorage.getItem(STORAGE_KEY);
+if(saved){
+repoHistory = JSON.parse(saved);
+}
+}catch(e){
+console.error('Failed to load history:', e);
+}
+}
+
+function saveHistory(){
+try{
+localStorage.setItem(STORAGE_KEY, JSON.stringify(repoHistory));
+}catch(e){
+console.error('Failed to save history:', e);
+}
+}
+
+function addToHistory(repoName){
+const entry = {
+name: repoName,
+timestamp: new Date().toISOString(),
+url: location.href.split('#')[0]
+};
+repoHistory.unshift(entry);
+if(repoHistory.length > 50){
+repoHistory = repoHistory.slice(0, 50);
+}
+saveHistory();
+}
+
+function removeFromHistory(index){
+repoHistory.splice(index, 1);
+saveHistory();
+}
+
 async function fetchRepo(){
-const repo = document.getElementById('repo').value.trim();
-if(!repo)return alert('Please enter a repo.');
+const repoInput = document.getElementById('repo');
+const repo = repoInput.value.trim();
+const resultDiv = document.getElementById('result');
+
+if(!repo){
+alert('Please enter a repo.');
+return;
+}
+
+// Validate GitHub URL format
+const parts = repo.split('/');
+if(parts.length < 2){
+alert('Please enter in format: owner/repo (e.g., octocat/Hello-World)');
+return;
+}
+
+// Clear previous result and show loading
+resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
 try{
 // Usage tracking
 fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:[location.pathname.split('/').pop(),'load',new Date().toISOString()]})}).catch(()=>{});
-const parts = repo.split('/');
-const owner = parts[0], name = parts[1] || parts[0];
+
+const owner = parts[0], name = parts[1];
 const url = `https://api.github.com/repos/${owner}/${name}`;
 const res = await fetch(url);
+
 if(!res.ok)throw new Error('Not found. Check the repo name.');
+
 const data = await res.json();
 const container = document.getElementById('result');
 container.innerHTML = `
@@ -59,11 +125,44 @@ ${data.forks_count?`<span>🍴 ${data.forks_count} 🍴</span>`:''}
 ${data.updated_at?`<span>🕒 ${data.updated_at.split('T')[0]}</span>`:''}
 </div>
 ${data.description?`<p>${data.description}</p>`:''}
-</h1>`;
+<div style="margin-top:.8rem;display:flex;gap:.5rem">
+<button onclick="exportResult()" style="background:#2a2a2a;color:var(--text);border:1px solid var(--border);padding:.4rem .6rem;font-size:.85rem;border-radius:4px;cursor:pointer">Export JSON</button>
+<button onclick="addToHistory('${repo}')" style="background:var(--accent);color:#fff;border:0;padding:.4rem .6rem;font-size:.85rem;border-radius:4px;cursor:pointer">Save to History</button>
+</div>
+`;
+repoHistory.push({name: repo, timestamp: new Date().toISOString()});
+saveHistory();
 }catch(e){
-document.getElementById('result').innerHTML = `<p style="color:#ff6b6b">${e.message}</p>`;
+document.getElementById('result').innerHTML = `<p class="error">${e.message}</p>`;
 }
 }
+
+function exportResult(){
+const resultDiv = document.getElementById('result');
+const html = resultDiv.innerHTML;
+const blob = new Blob([html], {type: 'text/html'});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'repo-result.html';
+a.click();
+URL.revokeObjectURL(url);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+if(e.ctrlKey && e.key === 'Enter'){
+e.preventDefault();
+fetchRepo();
+}
+if(e.key === 'Escape'){
+document.getElementById('repo').value = '';
+document.getElementById('repo').focus();
+}
+});
+
+// Load history on startup
+loadHistory();
 </script>
 </body>
 </html>
