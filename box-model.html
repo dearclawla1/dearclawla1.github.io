@@ -18,10 +18,22 @@ input:focus{outline:2px solid #6366f1;}
 .margin{background:#c0c0c0;border:1px solid #333;}
 .legend{background:#222;border:1px solid #333;border-radius:4px;padding:0.5rem;font-size:0.8rem;margin-bottom:1rem;}
 legend{color:#e4e4e4;}
+.dark-theme{background:#1a1a1a;color:#e4e4e4;}
+.dark-theme input{background:#2a2a2a;}
+.dark-theme button{background:#6366f1;color:#0a0a0a;}
+.dark-theme #preview{border-color:#444;}
+.dark-theme .box{background:#2a2a2a;border-color:#444;}
+.dark-theme .content{background:#3a3a3a;border-color:#444;}
+.dark-theme .padding{background:#3a3a3a;border-color:#444;}
+.dark-theme .border{background:#4a4a4a;border-color:#444;}
+.dark-theme .margin{background:#4a4a4a;border-color:#444;}
+.dark-theme .legend{background:#2a2a2a;border-color:#444;}
+.dark-theme legend{color:#e4e4e4;}
 </style>
 </head>
 <body>
 <a href="index.html" style="color:#6366f1">Back to Home</a>
+<button onclick="toggleTheme()" style="background:#333;color:#e4e4e4;border:1px solid #333;margin-bottom:1rem;">Dark Theme</button>
 <details class="legend">
 <summary>Dimensions</summary>
 <dl><dt>Width:</dt><dd><input type="number" id="w" value="200">px</dd>
@@ -48,6 +60,32 @@ mp=document.getElementById('mpos'),pp=document.getElementById('ppos'),bp=documen
 function getVal(id,pos) {let v=document.getElementById(id).value;let s='';
 if(pos==='auto')s='auto';else if(pos==='all')s=`${v}px`;else s=`${pos}:${v}px`;return s;}
 function update() {
+let dims=`width: ${w.value}px; height: ${h.value}px;`;
+let m=`margin: ${getVal('m',mp.value)};`;
+let p=`padding: ${getVal('p',pp.value)};`;
+let b=`border: ${getVal('b',bp.value)};`;
+let box=`<div class="box" style="${dims}${m}${p}${b}" id="demo"></div>`;
+document.getElementById('demo').innerHTML=box;
+let demo=document.getElementById('demo');
+demo.style.marginTop=`${mp.value==='top'||mp.value==='all'?''+m.value+'px':''}`;
+demo.style.marginBottom=`${mp.value==='bottom'||mp.value==='all'?''+m.value+'px':''}`;
+demo.style.marginLeft=`${mp.value==='left'||mp.value==='all'?''+m.value+'px':''}`;
+demo.style.marginRight=`${mp.value==='right'||mp.value==='all'?''+m.value+'px':''}`;
+demo.style.paddingTop=`${pp.value==='top'||pp.value==='all'?''+p.value+'px':''}`;
+demo.style.paddingBottom=`${pp.value==='bottom'||pp.value==='all'?''+p.value+'px':''}`;
+demo.style.paddingLeft=`${pp.value==='left'||pp.value==='all'?''+p.value+'px':''}`;
+demo.style.paddingRight=`${pp.value==='right'||pp.value==='all'?''+p.value+'px':''}`;
+demo.style.borderTop=`${bp.value==='top'||bp.value==='all'?''+b.value+'px solid #333':''}`;
+demo.style.borderBottom=`${bp.value==='bottom'||bp.value==='all'?''+b.value+'px solid #333':''}`;
+demo.style.borderLeft=`${bp.value==='left'||bp.value==='all'?''+b.value+'px solid #333':''}`;
+demo.style.borderRight=`${bp.value==='right'||bp.value==='all'?''+b.value+'px solid #333':''}`;
+demo.style.boxShadow=`inset 0 0 0 1px ${bp.value==='top'||bp.value==='bottom'||bp.value==='left'||bp.value==='right'?'#333':'#333'}`;
+}
+function toggleTheme() {
+document.body.classList.toggle('dark-theme');
+}
+update();
+</script>
 let dims=`width: ${w.value}px; height: ${h.value}px;`;
 let m=`margin: ${getVal('m',mp.value)};`;
 let p=`padding: ${getVal('p',pp.value)};`;
