@@ -1,33 +1,530 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Mouse Key Mapper</title>
-<style>
-body{background:#0a0a0a;color:#e4e4e4;font-family:system-ui;margin:0;padding:20px}
-h1{color:#6366f1;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px}
-.btn{background:#6366f1;color:#fff;border:none;padding:10px 15px;border-radius:6px;cursor:pointer}
-.btn:hover{background:#5558e6}
-input[type="text"]{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:8px;border-radius:4px;width:100%}
-label{display:block;margin:10px 0 5px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouse-Key Mapper - Click-to-Keyboard Automation Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0a0a;
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #6366f1;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .card {
+            background: #111;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #222;
+        }
+        .card h2 {
+            color: #6366f1;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #ccc;
+        }
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #e4e4e4;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        button {
+            padding: 12px 25px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background: #5558e3;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .key-display {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 10px 0;
+            border: 1px solid #333;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .key-display.active {
+            border-color: #6366f1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+        .key-display.mapped {
+            border-color: #10b981;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .mapper-item {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #333;
+        }
+        .mapper-item h3 {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .mapper-item .key {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 8px;
+            background: #2a2a2a;
+            border-radius: 6px;
+            margin: 5px 0;
+            border: 1px solid #444;
+        }
+        .mapper-item .key.mapped {
+            background: #10b981;
+            color: #000;
+            border-color: #10b981;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .actions button {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+        .actions .btn-clear {
+            background: #ef4444;
+        }
+        .actions .btn-clear:hover {
+            background: #dc2626;
+        }
+        .actions .btn-save {
+            background: #10b981;
+        }
+        .actions .btn-save:hover {
+            background: #059669;
+        }
+        .actions .btn-load {
+            background: #f59e0b;
+        }
+        .actions .btn-load:hover {
+            background: #d97706;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        .status.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 1px solid #10b981;
+        }
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+        .status.info {
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+            border: 1px solid #6366f1;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .instructions {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #6366f1;
+        }
+        .instructions h3 {
+            color: #6366f1;
+            margin-bottom: 10px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+        .key-hint {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #333;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #888;
+            margin: 2px;
+        }
+        .key-hint:hover {
+            background: #444;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            .card {
+                padding: 20px;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>Mouse Key Mapper</h1>
-<div class="grid">
-<div><label>Left Button</label><input type="text" id="left" placeholder="Click to map..."><button class="btn" onclick="map('left')">Map</button></div>
-<div><label>Right Button</label><input type="text" id="right" placeholder="Click to map..."><button class="btn" onclick="map('right')">Map</button></div>
-<div><label>Middle Button</label><input type="text" id="middle" placeholder="Click to map..."><button class="btn" onclick="map('middle')">Map</button></div>
-<div><label>Back Button</label><input type="text" id="back" placeholder="Click to map..."><button class="btn" onclick="map('back')">Map</button></div>
-<div><label>Forward Button</label><input type="text" id="forward" placeholder="Click to map..."><button class="btn" onclick="map('forward')">Map</button></div>
-<div><label>Side Button 1</label><input type="text" id="side1" placeholder="Click to map..."><button class="btn" onclick="map('side1')">Map</button></div>
-<div><label>Side Button 2</label><input type="text" id="side2" placeholder="Click to map..."><button class="btn" onclick="map('side2')">Map</button></div>
-<div><label>Thumb Button</label><input type="text" id="thumb" placeholder="Click to map..."><button class="btn" onclick="map('thumb')">Map</button></div>
-</div>
-<a href="index.html" style="color:#6366f1;display:block;margin-top:20px">Back to Home</a>
-<script>
-function map(id){document.getElementById(id).value=window.event.key||window.event.code}
-</script>
+    <div class="container">
+        <h1>Mouse-Key Mapper</h1>
+        <p class="subtitle">Map mouse clicks to keyboard keys for automation and productivity</p>
+
+        <div class="instructions">
+            <h3>How to Use</h3>
+            <ol>
+                <li>Click "Start Listening" to enable click detection</li>
+                <li>Click anywhere on the page to map that location to a key</li>
+                <li>Choose a keyboard key from the dropdown (or press a physical key)</li>
+                <li>Click "Save Mapping" to store the mapping</li>
+                <li>Click "Load Mappings" to restore saved mappings</li>
+            </ol>
+            <div style="margin-top: 10px;">
+                <span class="key-hint">Space</span>
+                <span class="key-hint">Enter</span>
+                <span class="key-hint">Tab</span>
+                <span class="key-hint">Esc</span>
+                <span class="key-hint">F1-F12</span>
+                <span class="key-hint">A-Z</span>
+                <span class="key-hint">0-9</span>
+                <span class="key-hint">Arrows</span>
+                <span class="key-hint">Home/End</span>
+                <span class="key-hint">PgUp/PgDn</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Click Detection</h2>
+            <div class="form-group">
+                <label for="keyInput">Keyboard Key to Map:</label>
+                <select id="keyInput">
+                    <option value="">-- Select a key --</option>
+                    <option value="Space">Space</option>
+                    <option value="Enter">Enter</option>
+                    <option value="Tab">Tab</option>
+                    <option value="Esc">Esc</option>
+                    <option value="F1">F1</option>
+                    <option value="F2">F2</option>
+                    <option value="F3">F3</option>
+                    <option value="F4">F4</option>
+                    <option value="F5">F5</option>
+                    <option value="F6">F6</option>
+                    <option value="F7">F7</option>
+                    <option value="F8">F8</option>
+                    <option value="F9">F9</option>
+                    <option value="F10">F10</option>
+                    <option value="F11">F11</option>
+                    <option value="F12">F12</option>
+                    <option value="ArrowUp">↑ Up</option>
+                    <option value="ArrowDown">↓ Down</option>
+                    <option value="ArrowLeft">← Left</option>
+                    <option value="ArrowRight">→ Right</option>
+                    <option value="Home">Home</option>
+                    <option value="End">End</option>
+                    <option value="PageUp">PgUp</option>
+                    <option value="PageDown">PgDn</option>
+                    <option value="Delete">Del</option>
+                    <option value="Backspace">Backspace</option>
+                    <option value="Insert">Insert</option>
+                </select>
+            </div>
+            <div class="key-display" id="keyDisplay">
+                <span style="color: #666;">Click to map this location</span>
+            </div>
+            <div class="actions">
+                <button id="startBtn">Start Listening</button>
+                <button id="stopBtn" style="background: #ef4444;">Stop Listening</button>
+            </div>
+            <div id="status" class="status info" style="display: none;"></div>
+        </div>
+
+        <div class="card">
+            <h2>Saved Mappings</h2>
+            <div class="grid" id="mappingsGrid">
+                <div class="mapper-item">
+                    <h3>No mappings saved yet</h3>
+                    <div class="key">-</div>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn-save" id="saveBtn">Save Mapping</button>
+                <button class="btn-load" id="loadBtn">Load Mappings</button>
+                <button class="btn-clear" id="clearBtn">Clear All</button>
+            </div>
+        </div>
+
+        <a href="index.html" style="color: #6366f1">Back to Home</a>
+    </div>
+
+    <script>
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+                params: ['mouse-key-mapper.html', 'load', new Date().toISOString()]
+            })
+        }).catch(() => {});
+
+        const keyDisplay = document.getElementById('keyDisplay');
+        const keyInput = document.getElementById('keyInput');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const loadBtn = document.getElementById('loadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const status = document.getElementById('status');
+        const mappingsGrid = document.getElementById('mappingsGrid');
+        const STORAGE_KEY = 'mouseKeyMappings';
+
+        let isListening = false;
+        let clickCount = 0;
+        let currentMapping = null;
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateKeyDisplay(key) {
+            if (!key) {
+                keyDisplay.innerHTML = '<span style="color: #666;">Click to map this location</span>';
+                keyDisplay.classList.remove('active', 'mapped');
+                return;
+            }
+            keyDisplay.innerHTML = key;
+            keyDisplay.classList.add('active');
+            keyDisplay.classList.remove('mapped');
+        }
+
+        function getClickPosition() {
+            const rect = keyDisplay.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            return { x, y };
+        }
+
+        startBtn.addEventListener('click', () => {
+            isListening = true;
+            startBtn.textContent = 'Listening...';
+            startBtn.disabled = true;
+            showStatus('Click anywhere to map this location', 'info');
+        });
+
+        stopBtn.addEventListener('click', () => {
+            isListening = false;
+            startBtn.textContent = 'Start Listening';
+            startBtn.disabled = false;
+            currentMapping = null;
+            updateKeyDisplay('');
+            showStatus('Stopped listening', 'info');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!isListening) return;
+
+            const position = getClickPosition();
+            clickCount++;
+            currentMapping = {
+                x: Math.round(position.x),
+                y: Math.round(position.y),
+                key: keyInput.value
+            };
+
+            updateKeyDisplay(currentMapping.key || `Click ${clickCount}`);
+            showStatus(`Mapped to: ${currentMapping.key || 'pending'}`, 'success');
+        });
+
+        saveBtn.addEventListener('click', () => {
+            if (!currentMapping) {
+                showStatus('No mapping to save. Click a location first.', 'error');
+                return;
+            }
+            if (!currentMapping.key) {
+                showStatus('Please select a keyboard key first.', 'error');
+                return;
+            }
+
+            const mappings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            mappings.push(currentMapping);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(mappings));
+
+            currentMapping = null;
+            updateKeyDisplay('');
+            renderMappings();
+            showStatus('Mapping saved successfully!', 'success');
+        });
+
+        loadBtn.addEventListener('click', () => {
+            const mappings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            renderMappings();
+            showStatus(`Loaded ${mappings.length} mapping(s)`, 'success');
+        });
+
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Clear all saved mappings?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderMappings();
+                showStatus('All mappings cleared', 'info');
+            }
+        });
+
+        function renderMappings() {
+            const mappings = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            mappingsGrid.innerHTML = '';
+
+            if (mappings.length === 0) {
+                mappingsGrid.innerHTML = `
+                    <div class="mapper-item">
+                        <h3>No mappings saved yet</h3>
+                        <div class="key">-</div>
+                    </div>
+                `;
+                return;
+            }
+
+            mappings.forEach((mapping, index) => {
+                const item = document.createElement('div');
+                item.className = 'mapper-item';
+                item.innerHTML = `
+                    <h3>Click ${index + 1}</h3>
+                    <div class="key ${mapping.key ? 'mapped' : ''}">${mapping.key || 'pending'}</div>
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+                        Position: (${mapping.x}, ${mapping.y})
+                    </div>
+                `;
+                mappingsGrid.appendChild(item);
+            });
+        }
+
+        keyInput.addEventListener('change', () => {
+            if (currentMapping) {
+                currentMapping.key = keyInput.value;
+                updateKeyDisplay(currentMapping.key);
+            }
+        });
+
+        // Keyboard shortcut to select key
+        document.addEventListener('keydown', (e) => {
+            if (!isListening) return;
+
+            const keyMap = {
+                ' ': 'Space',
+                'Enter': 'Enter',
+                'Tab': 'Tab',
+                'Escape': 'Esc',
+                'ArrowUp': 'ArrowUp',
+                'ArrowDown': 'ArrowDown',
+                'ArrowLeft': 'ArrowLeft',
+                'ArrowRight': 'ArrowRight',
+                'Home': 'Home',
+                'End': 'End',
+                'PageUp': 'PageUp',
+                'PageDown': 'PageDown',
+                'Delete': 'Delete',
+                'Backspace': 'Backspace',
+                'Insert': 'Insert',
+            };
+
+            if (keyMap[e.key]) {
+                keyInput.value = keyMap[e.key];
+                if (currentMapping) {
+                    currentMapping.key = keyMap[e.key];
+                    updateKeyDisplay(keyMap[e.key]);
+                }
+            }
+        });
+
+        // Initialize
+        renderMappings();
+    </script>
 </body>
 </html>
