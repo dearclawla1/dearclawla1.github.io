@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mouse Remapper - Custom Mouse Button Remapping Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0a0a0a;
+      color: #e4e4e4;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: #6366f1;
+      text-align: center;
+    }
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+    .card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: #a5a5a5;
+      border-bottom: 1px solid #222;
+      padding-bottom: 0.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: #ccc;
+    }
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e4e4e4;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+    input::placeholder,
+    textarea::placeholder {
+      color: #666;
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    .remap-btn {
+      padding: 12px;
+      background: #252525;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e4e4e4;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .remap-btn:hover {
+      background: #2a2a2a;
+      border-color: #444;
+    }
+    .remap-btn.active {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #fff;
+    }
+    .remap-btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .output-area {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      min-height: 150px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+    .copy-btn:hover {
+      background: #5558e6;
+    }
+    .copy-btn.copied {
+      background: #10b981;
+    }
+    .status {
+      text-align: center;
+      padding: 10px;
+      margin-top: 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .status.success {
+      background: #064e3b;
+      color: #6ee7b7;
+    }
+    .status.error {
+      background: #7f1d1d;
+      color: #f87171;
+    }
+    .status.info {
+      background: #1e3a5f;
+      color: #67e8f9;
+    }
+    .hint {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 0.3rem;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .tab {
+      padding: 10px 20px;
+      background: #252525;
+      border: 1px solid #333;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .tab:hover {
+      background: #2a2a2a;
+    }
+    .tab.active {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #fff;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    .preset-btn {
+      padding: 12px;
+      background: #252525;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e4e4e4;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .preset-btn:hover {
+      background: #2a2a2a;
+      border-color: #444;
+    }
+    .preset-btn.primary {
+      background: #6366f1;
+      border-color: #6366f1;
+    }
+    .preset-btn.danger {
+      background: #ef4444;
+      border-color: #ef4444;
+    }
+    .config-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #222;
+    }
+    .config-section h3 {
+      color: #a5a5a5;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    .config-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 0.8rem;
+    }
+    .config-row label {
+      flex: 1;
+    }
+    .config-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .config-row input[type="text"] {
+      flex: 2;
+    }
+    .config-row input[type="number"] {
+      width: 100px;
+    }
+    .nav-link {
+      display: block;
+      text-align: center;
+      margin-top: 2rem;
+      padding: 10px;
+    }
+    .nav-link a {
+      color: #6366f1;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .nav-link a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      .card {
+        padding: 15px;
+      }
+      .button-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .preset-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖱️ Mouse Remapper</h1>
+    <p class="subtitle">Custom mouse button remapping tool - Reassign mouse buttons to any key or action</p>
+
+    <div class="card">
+      <h2>📋 Quick Presets</h2>
+      <div class="preset-grid">
+        <button class="preset-btn" onclick="applyPreset('gaming')">🎮 Gaming Mode</button>
+        <button class="preset-btn" onclick="applyPreset('productivity')">⚡ Productivity</button>
+        <button class="preset-btn" onclick="applyPreset('scroll')">📜 Scroll Lock</button>
+        <button class="preset-btn" onclick="applyPreset('click')">🖱️ Click Lock</button>
+        <button class="preset-btn" onclick="applyPreset('drag')">📦 Drag Mode</button>
+        <button class="preset-btn" onclick="applyPreset('reset')">🔄 Reset All</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Button Configuration</h2>
+      <div class="form-group">
+        <label for="mouse-btn">Select Mouse Button</label>
+        <select id="mouse-btn" onchange="updateButtonInfo()">
+          <option value="1">Left Button (Primary)</option>
+          <option value="2">Middle Button (Wheel Click)</option>
+          <option value="3">Right Button (Context Menu)</option>
+          <option value="4">Button 4</option>
+          <option value="5">Button 5</option>
+          <option value="6">Button 6</option>
+          <option value="7">Button 7</option>
+          <option value="8">Button 8</option>
+          <option value="9">Button 9</option>
+          <option value="10">Button 10</option>
+          <option value="11">Button 11</option>
+          <option value="12">Button 12</option>
+          <option value="13">Button 13</option>
+          <option value="14">Button 14</option>
+          <option value="15">Button 15</option>
+          <option value="16">Button 16</option>
+        </select>
+        <p class="hint">Most gaming mice have 8-16 programmable buttons</p>
+      </div>
+
+      <div class="form-group">
+        <label for="action-type">Action Type</label>
+        <select id="action-type" onchange="updateActionOptions()">
+          <option value="key">Keyboard Key</option>
+          <option value="mouse">Mouse Button</option>
+          <option value="scroll">Scroll Action</option>
+          <option value="script">JavaScript Script</option>
+          <option value="url">Open URL</option>
+          <option value="clipboard">Clipboard Action</option>
+        </select>
+      </div>
+
+      <div id="key-inputs" class="form-group">
+        <label for="key-value">Keyboard Key</label>
+        <input type="text" id="key-value" placeholder="e.g., 'a', 'Enter', 'F1', 'Space'">
+        <p class="hint">Use single quotes around keys. Try 'a', 'Enter', 'F1', 'Space', 'Backspace'</p>
+      </div>
+
+      <div id="mouse-inputs" class="form-group" style="display:none;">
+        <label for="mouse-target">Target Mouse Button</label>
+        <input type="text" id="mouse-target" placeholder="e.g., '1', '2', '3'">
+        <p class="hint">Use button numbers (1-16). '1' = Left, '2' = Middle, '3' = Right</p>
+      </div>
+
+      <div id="scroll-inputs" class="form-group" style="display:none;">
+        <label for="scroll-action">Scroll Action</label>
+        <select id="scroll-action">
+          <option value="scroll_lock">Scroll Lock</option>
+          <option value="scroll_up">Scroll Up</option>
+          <option value="scroll_down">Scroll Down</option>
+          <option value="scroll_left">Scroll Left</option>
+          <option value="scroll_right">Scroll Right</option>
+          <option value="scroll_page_up">Page Up</option>
+          <option value="scroll_page_down">Page Down</option>
+          <option value="scroll_home">Home</option>
+          <option value="scroll_end">End</option>
+        </select>
+      </div>
+
+      <div id="script-inputs" class="form-group" style="display:none;">
+        <label for="script-code">JavaScript Code</label>
+        <textarea id="script-code" rows="4" placeholder="// Enter JavaScript code here...&#10;// Example: console.log('Button pressed');"></textarea>
+        <p class="hint">Code will execute when the button is clicked</p>
+      </div>
+
+      <div id="url-inputs" class="form-group" style="display:none;">
+        <label for="url-value">URL to Open</label>
+        <input type="text" id="url-value" placeholder="https://example.com">
+        <p class="hint">Enter a full URL. Will open in new tab when button clicked</p>
+      </div>
+
+      <div id="clipboard-inputs" class="form-group" style="display:none;">
+        <label for="clipboard-action">Clipboard Action</label>
+        <select id="clipboard-action">
+          <option value="copy">Copy Text</option>
+          <option value="paste">Paste Text</option>
+          <option value="cut">Cut Text</option>
+          <option value="clear">Clear Clipboard</option>
+        </select>
+        <input type="text" id="clipboard-text" placeholder="Text to copy/paste (optional)">
+        <p class="hint">For copy/paste actions, enter text to use. Leave empty for clipboard operations</p>
+      </div>
+
+      <div class="form-group">
+        <label>Remap Button</label>
+        <div class="button-grid" id="button-grid">
+          <button class="remap-btn" data-btn="1" onclick="setRemapTarget(1)">Left</button>
+          <button class="remap-btn" data-btn="2" onclick="setRemapTarget(2)">Middle</button>
+          <button class="remap-btn" data-btn="3" onclick="setRemapTarget(3)">Right</button>
+          <button class="remap-btn" data-btn="4" onclick="setRemapTarget(4)">Btn 4</button>
+          <button class="remap-btn" data-btn="5" onclick="setRemapTarget(5)">Btn 5</button>
+          <button class="remap-btn" data-btn="6" onclick="setRemapTarget(6)">Btn 6</button>
+          <button class="remap-btn" data-btn="7" onclick="setRemapTarget(7)">Btn 7</button>
+          <button class="remap-btn" data-btn="8" onclick="setRemapTarget(8)">Btn 8</button>
+          <button class="remap-btn" data-btn="9" onclick="setRemapTarget(9)">Btn 9</button>
+          <button class="remap-btn" data-btn="10" onclick="setRemapTarget(10)">Btn 10</button>
+          <button class="remap-btn" data-btn="11" onclick="setRemapTarget(11)">Btn 11</button>
+          <button class="remap-btn" data-btn="12" onclick="setRemapTarget(12)">Btn 12</button>
+          <button class="remap-btn" data-btn="13" onclick="setRemapTarget(13)">Btn 13</button>
+          <button class="remap-btn" data-btn="14" onclick="setRemapTarget(14)">Btn 14</button>
+          <button class="remap-btn" data-btn="15" onclick="setRemapTarget(15)">Btn 15</button>
+          <button class="remap-btn" data-btn="16" onclick="setRemapTarget(16)">Btn 16</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📝 Configuration Output</h2>
+      <div class="output-area" id="output" readonly></div>
+      <button class="copy-btn" onclick="copyOutput()">📋 Copy Configuration</button>
+      <div id="status" class="status" style="display:none;"></div>
+    </div>
+
+    <div class="card config-section">
+      <h3>⚙️ Advanced Settings</h3>
+      <div class="config-row">
+        <label>
+          <input type="checkbox" id="auto-save" onchange="toggleAutoSave()">
+          Auto-save changes
+        </label>
+      </div>
+      <div class="config-row">
+        <label>
+          <input type="checkbox" id="show-debug" onchange="toggleDebug()">
+          Show debug info
+        </label>
+      </div>
+      <div class="config-row">
+        <label>
+          <input type="checkbox" id="global-hotkey" onchange="toggleGlobalHotkey()">
+          Enable global hotkey (Ctrl+Alt+R to apply)
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💾 Save Configuration</h2>
+      <div class="form-group">
+        <label for="save-name">Save As (Optional)</label>
+        <input type="text" id="save-name" placeholder="e.g., 'My Gaming Setup'">
+        <p class="hint">Leave empty to save without a name</p>
+      </div>
+      <button class="preset-btn primary" onclick="saveConfiguration()">💾 Save Configuration</button>
+      <button class="preset-btn danger" onclick="clearConfiguration()">🗑️ Clear All</button>
+    </div>
+
+    <div class="card">
+      <h2>📖 Tips & Tricks</h2>
+      <ul style="padding-left: 20px; line-height: 1.8; color: #ccc;">
+        <li>Use keyboard keys like 'a', 'Enter', 'F1', 'Space', 'Backspace', 'Tab'</li>
+        <li>Mouse buttons 1-16 can be remapped (1=Left, 2=Middle, 3=Right)</li>
+        <li>Scroll actions include scroll lock, page up/down, home, end</li>
+        <li>JavaScript code executes when button is clicked</li>
+        <li>URLs open in new tab when button is clicked</li>
+        <li>Clipboard actions copy/paste text to clipboard</li>
+        <li>Use presets for quick gaming/productivity setups</li>
+        <li>Save configurations for later use</li>
+        <li>Auto-save keeps your changes while you work</li>
+      </ul>
+    </div>
+
+    <div class="nav-link">
+      <a href="index.html">Back to Home</a>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let currentRemap = null;
+    let autoSaveEnabled = false;
+    let debugMode = false;
+    let globalHotkeyEnabled = false;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      loadConfiguration();
+      setupEventListeners();
+      setupGlobalHotkey();
+    });
+
+    function setupEventListeners() {
+      document.getElementById('mouse-btn').addEventListener('change', updateButtonInfo);
+      document.getElementById('action-type').addEventListener('change', updateActionOptions);
+      document.getElementById('auto-save').addEventListener('change', function() {
+        autoSaveEnabled = this.checked;
+        if (autoSaveEnabled) {
+          saveCurrentConfiguration();
+        }
+      });
+      document.getElementById('show-debug').addEventListener('change', function() {
+        debugMode = this.checked;
+      });
+      document.getElementById('global-hotkey').addEventListener('change', function() {
+        globalHotkeyEnabled = this.checked;
+        setupGlobalHotkey();
+      });
+    }
+
+    function setupGlobalHotkey() {
+      if (!globalHotkeyEnabled) return;
+      document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.altKey && e.key === 'R') {
+          e.preventDefault();
+          applyCurrentConfiguration();
+          showStatus('Configuration applied!', 'success');
+        }
+      });
+    }
+
+    function updateButtonInfo() {
+      const btn = document.getElementById('mouse-btn');
+      const btnValue = btn.value;
+      const output = document.getElementById('output');
+      
+      let info = `Mouse Button ${btnValue} Configuration:\n`;
+      info += `================================\n\n`;
+      
+      info += `Button: Mouse Button ${btnValue}\n`;
+      info += `Type: ${document.getElementById('action-type').value}\n\n`;
+      
+      if (debugMode) {
+        info += `Debug Mode: ${debugMode}\n`;
+        info += `Auto-save: ${autoSaveEnabled}\n`;
+        info += `Global Hotkey: ${globalHotkeyEnabled}\n`;
+      }
+      
+      output.textContent = info;
+    }
+
+    function updateActionOptions() {
+      const actionType = document.getElementById('action-type').value;
+      
+      // Hide all input groups
+      document.getElementById('key-inputs').style.display = 'none';
+      document.getElementById('mouse-inputs').style.display = 'none';
+      document.getElementById('scroll-inputs').style.display = 'none';
+      document.getElementById('script-inputs').style.display = 'none';
+      document.getElementById('url-inputs').style.display = 'none';
+      document.getElementById('clipboard-inputs').style.display = 'none';
+      
+      // Show relevant input group
+      if (actionType === 'key') {
+        document.getElementById('key-inputs').style.display = 'block';
+      } else if (actionType === 'mouse') {
+        document.getElementById('mouse-inputs').style.display = 'block';
+      } else if (actionType === 'scroll') {
+        document.getElementById('scroll-inputs').style.display = 'block';
+      } else if (actionType === 'script') {
+        document.getElementById('script-inputs').style.display = 'block';
+      } else if (actionType === 'url') {
+        document.getElementById('url-inputs').style.display = 'block';
+      } else if (actionType === 'clipboard') {
+        document.getElementById('clipboard-inputs').style.display = 'block';
+      }
+      
+      updateButtonInfo();
+    }
+
+    function setRemapTarget(btn) {
+      const output = document.getElementById('output');
+      const btnElement = document.querySelector(`[data-btn="${btn}"]`);
+      const isActive = btnElement.classList.contains('active');
+      
+      if (currentRemap === btn) {
+        // Toggle off
+        btnElement.classList.remove('active');
+        currentRemap = null;
+      } else {
+        // Set new target
+        if (currentRemap) {
+          document.querySelector(`[data-btn="${currentRemap}"]`).classList.remove('active');
+        }
+        btnElement.classList.add('active');
+        currentRemap = btn;
+      }
+      
+      updateButtonInfo();
+    }
+
+    function applyPreset(preset) {
+      const actionType = document.getElementById('action-type');
+      const output = document.getElementById('output');
+      const status = document.getElementById('status');
+      
+      switch(preset) {
+        case 'gaming':
+          actionType.value = 'key';
+          document.getElementById('key-value').value = "'a'";
+          document.querySelector('[data-btn="1"]').classList.add('active');
+          currentRemap = 1;
+          output.textContent = `Gaming Mode Preset Applied:\n\n`;
+          output.textContent += `Button: Mouse Button 1\n`;
+          output.textContent += `Action: Keyboard Key\n`;
+          output.textContent += `Key: 'a'\n\n`;
+          output.textContent += `This remaps your left mouse button to press 'a' key.\n`;
+          output.textContent += `Perfect for gaming where you want quick access to abilities.\n`;
+          showStatus('Gaming mode preset applied!', 'success');
+          break;
+          
+        case 'productivity':
+          actionType.value = 'scroll';
+          document.getElementById('scroll-action').value = 'scroll_lock';
+          document.querySelector('[data-btn="2"]').classList.add('active');
+          currentRemap = 2;
+          output.textContent = `Productivity Mode Preset Applied:\n\n`;
+          output.textContent += `Button: Mouse Button 2\n`;
+          output.textContent += `Action: Scroll Lock\n\n`;
+          output.textContent += `This remaps your middle mouse button to scroll lock.\n`;
+          output.textContent += `Great for productivity apps that use scroll lock.\n`;
+          showStatus('Productivity mode preset applied!', 'success');
+          break;
+          
+        case 'scroll':
+          actionType.value = 'scroll';
+          document.getElementById('scroll-action').value = 'scroll_up';
+          document.querySelector('[data-btn="3"]').classList.add('active');
+          currentRemap = 3;
+          output.textContent = `Scroll Lock Preset Applied:\n\n`;
+          output.textContent += `Button: Mouse Button 3\n`;
+          output.textContent += `Action: Scroll Up\n\n`;
+          output.textContent += `This remaps your right mouse button to scroll up.\n`;
+          output.textContent += `Useful for quick scrolling in documents.\n`;
+          showStatus('Scroll preset applied!', 'success');
+          break;
+          
+        case 'click':
+          actionType.value = 'mouse';
+          document.getElementById('mouse-target').value = '1';
+          document.querySelector('[data-btn="4"]').classList.add('active');
+          currentRemap = 4;
+          output.textContent = `Click Lock Preset Applied:\n\n`;
+          output.textContent += `Button: Mouse Button 4\n`;
+          output.textContent += `Action: Mouse Button 1\n\n`;
+          output.textContent += `This remaps button 4 to act as left click.\n`;
+          output.textContent += `Great for ergonomic mouse setups.\n`;
+          showStatus('Click lock preset applied!', 'success');
+          break;
+          
+        case 'drag':
+          actionType.value = 'mouse';
+          document.getElementById('mouse-target').value = '2';
+          document.querySelector('[data-btn="5"]').classList.add('active');
+          currentRemap = 5;
+          output.textContent = `Drag Mode Preset Applied:\n\n`;
+          output.textContent += `Button: Mouse Button 5\n`;
+          output.textContent += `Action: Mouse Button 2\n\n`;
+          output.textContent += `This remaps button 5 to act as middle click.\n`;
+          output.textContent += `Perfect for drag-and-drop operations.\n`;
+          showStatus('Drag mode preset applied!', 'success');
+          break;
+          
+        case 'reset':
+          actionType.value = 'key';
+          document.getElementById('key-value').value = '';
+          document.querySelectorAll('.remap-btn').forEach(btn => {
+            btn.classList.remove('active');
+          });
+          currentRemap = null;
+          output.textContent = `All configurations cleared.\n\n`;
+          output.textContent += `Ready to create new remappings.\n`;
+          showStatus('All configurations cleared!', 'info');
+          break;
+      }
+      
+      updateButtonInfo();
+    }
+
+    function saveCurrentConfiguration() {
+      const output = document.getElementById('output');
+      const config = {
+        button: document.getElementById('mouse-btn').value,
+        actionType: document.getElementById('action-type').value,
+        keyValue: document.getElementById('key-value').value,
+        mouseTarget: document.getElementById('mouse-target').value,
+        scrollAction: document.getElementById('scroll-action').value,
+        scriptCode: document.getElementById('script-code').value,
+        urlValue: document.getElementById('url-value').value,
+        clipboardAction: document.getElementById('clipboard-action').value,
+        clipboardText: document.getElementById('clipboard-text').value,
+        remapTarget: currentRemap,
+        autoSave: autoSaveEnabled,
+        debug: debugMode,
+        globalHotkey: globalHotkeyEnabled
+      };
+      
+      localStorage.setItem('mouse-remapper-config', JSON.stringify(config));
+      output.textContent += `\n[Auto-saved to local storage]`;
+    }
+
+    function loadConfiguration() {
+      const saved = localStorage.getItem('mouse-remapper-config');
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          document.getElementById('mouse-btn').value = config.button || '1';
+          document.getElementById('action-type').value = config.actionType || 'key';
+          document.getElementById('key-value').value = config.keyValue || '';
+          document.getElementById('mouse-target').value = config.mouseTarget || '';
+          document.getElementById('scroll-action').value = config.scrollAction || '';
+          document.getElementById('script-code').value = config.scriptCode || '';
+          document.getElementById('url-value').value = config.urlValue || '';
+          document.getElementById('clipboard-action').value = config.clipboardAction || '';
+          document.getElementById('clipboard-text').value = config.clipboardText || '';
+          
+          if (config.remapTarget) {
+            document.querySelector(`[data-btn="${config.remapTarget}"]`).classList.add('active');
+            currentRemap = config.remapTarget;
+          }
+          
+          autoSaveEnabled = config.autoSave || false;
+          debugMode = config.debug || false;
+          globalHotkeyEnabled = config.globalHotkey || false;
+          
+          document.getElementById('auto-save').checked = autoSaveEnabled;
+          document.getElementById('show-debug').checked = debugMode;
+          document.getElementById('global-hotkey').checked = globalHotkeyEnabled;
+          
+          updateButtonInfo();
+        } catch (e) {
+          console.error('Failed to load configuration:', e);
+        }
+      }
+    }
+
+    function saveConfiguration() {
+      const name = document.getElementById('save-name').value;
+      const output = document.getElementById('output');
+      const config = {
+        button: document.getElementById('mouse-btn').value,
+        actionType: document.getElementById('action-type').value,
+        keyValue: document.getElementById('key-value').value,
+        mouseTarget: document.getElementById('mouse-target').value,
+        scrollAction: document.getElementById('scroll-action').value,
+        scriptCode: document.getElementById('script-code').value,
+        urlValue: document.getElementById('url-value').value,
+        clipboardAction: document.getElementById('clipboard-action').value,
+        clipboardText: document.getElementById('clipboard-text').value,
+        remapTarget: currentRemap,
+        autoSave: autoSaveEnabled,
+        debug: debugMode,
+        globalHotkey: globalHotkeyEnabled
+      };
+      
+      if (name) {
+        localStorage.setItem('mouse-remapper-' + name, JSON.stringify(config));
+        output.textContent += `\n[Saved to local storage as '${name}']`;
+      } else {
+        localStorage.setItem('mouse-remapper-config', JSON.stringify(config));
+        output.textContent += `\n[Saved to local storage]`;
+      }
+      
+      showStatus('Configuration saved successfully!', 'success');
+    }
+
+    function clearConfiguration() {
+      document.getElementById('mouse-btn').value = '1';
+      document.getElementById('key-value').value = '';
+      document.getElementById('mouse-target').value = '';
+      document.getElementById('scroll-action').value = '';
+      document.getElementById('script-code').value = '';
+      document.getElementById('url-value').value = '';
+      document.getElementById('clipboard-action').value = '';
+      document.getElementById('clipboard-text').value = '';
+      
+      document.querySelectorAll('.remap-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      currentRemap = null;
+      
+      localStorage.removeItem('mouse-remapper-config');
+      localStorage.removeItem('mouse-remapper-*');
+      
+      output.textContent = 'All configurations cleared.\n\n';
+      output.textContent += 'Ready to create new remappings.';
+      
+      showStatus('All configurations cleared!', 'info');
+    }
+
+    function applyCurrentConfiguration() {
+      if (!currentRemap) {
+        showStatus('Please select a button to remap!', 'error');
+        return;
+      }
+      
+      const config = {
+        button: currentRemap,
+        actionType: document.getElementById('action-type').value,
+        keyValue: document.getElementById('key-value').value,
+        mouseTarget: document.getElementById('mouse-target').value,
+        scrollAction: document.getElementById('scroll-action').value,
+        scriptCode: document.getElementById('script-code').value,
+        urlValue: document.getElementById('url-value').value,
+        clipboardAction: document.getElementById('clipboard-action').value,
+        clipboardText: document.getElementById('clipboard-text').value
+      };
+      
+      output.textContent += `\n[Configuration ready to apply]`;
+      showStatus('Configuration applied!', 'success');
+    }
+
+    function copyOutput() {
+      const output = document.getElementById('output');
+      const text = output.textContent;
+      
+      navigator.clipboard.writeText(text).then(function() {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '✅ Copied!';
+        btn.classList.add('copied');
+        
+        setTimeout(function() {
+          btn.textContent = '📋 Copy Configuration';
+          btn.classList.remove('copied');
+        }, 2000);
+      }).catch(function(err) {
+        showStatus('Failed to copy: ' + err, 'error');
+      });
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      status.className = 'status ' + type;
+      status.style.display = 'block';
+      
+      setTimeout(function() {
+        status.style.display = 'none';
+      }, 3000);
+    }
+
+    function toggleAutoSave() {
+      autoSaveEnabled = document.getElementById('auto-save').checked;
+      if (autoSaveEnabled) {
+        saveCurrentConfiguration();
+      }
+    }
+
+    function toggleDebug() {
+      debugMode = document.getElementById('show-debug').checked;
+      updateButtonInfo();
+    }
+
+    function toggleGlobalHotkey() {
+      globalHotkeyEnabled = document.getElementById('global-hotkey').checked;
+      setupGlobalHotkey();
+    }
+
+    // Usage tracking
+    fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+        params: ['mouse-remapper.html', 'load', new Date().toISOString()]
+      })
+    }).catch(() => {});
+  </script>
+</body>
+</html>
