@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parti - Particle Playground</title>
+    <title>Parti - Interactive Particle Playground</title>
     <style>
         * {
             margin: 0;
@@ -23,14 +23,12 @@
         }
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #6366f1;
         }
         .subtitle {
             color: #888;
@@ -38,131 +36,148 @@
         }
         .main-content {
             display: grid;
-            grid-template-columns: 300px 1fr;
+            grid-template-columns: 1fr 350px;
             gap: 20px;
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        .canvas-container {
+            background: #111;
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+        }
+        #particleCanvas {
+            width: 100%;
+            height: 500px;
+            background: #0a0a0a;
+            border-radius: 8px;
+            cursor: crosshair;
         }
         .controls {
             background: #111;
             border-radius: 12px;
             padding: 20px;
-            border: 1px solid #222;
         }
         .control-group {
             margin-bottom: 20px;
         }
         label {
             display: block;
-            font-size: 0.85rem;
-            color: #888;
             margin-bottom: 8px;
             font-weight: 500;
+            color: #ccc;
         }
         input[type="range"] {
             width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: #222;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
             outline: none;
             -webkit-appearance: none;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
+            width: 18px;
+            height: 18px;
             background: #6366f1;
+            border-radius: 50%;
             cursor: pointer;
-            border: 2px solid #8b5cf6;
-            transition: transform 0.2s;
         }
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-        }
-        input[type="number"] {
+        input[type="color"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #333;
+            height: 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        button {
+            flex: 1;
+            min-width: 100px;
+            padding: 12px 16px;
+            border: none;
             border-radius: 8px;
-            background: #111;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5558e3;
+        }
+        .btn-secondary {
+            background: #333;
             color: #e4e4e4;
-            font-size: 1rem;
+            border: 1px solid #444;
         }
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #6366f1;
+        .btn-secondary:hover {
+            background: #444;
         }
-        .checkbox-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .btn-danger {
+            background: #ef4444;
+            color: white;
         }
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        .checkbox-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            accent-color: #6366f1;
-        }
-        .canvas-container {
-            position: relative;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #222;
-            background: #0f0f0f;
-        }
-        #particleCanvas {
-            display: block;
-            width: 100%;
-            height: auto;
-        }
-        .canvas-overlay {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0,0,0,0.8);
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            color: #888;
-            border: 1px solid #333;
+        .btn-danger:hover {
+            background: #dc2626;
         }
         .stats {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-            font-size: 0.85rem;
-            color: #888;
+            background: #111;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
         }
-        .stat-item {
+        .stat-row {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #222;
+        }
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            color: #888;
         }
         .stat-value {
             color: #e4e4e4;
-            font-weight: 600;
+            font-family: monospace;
         }
         .back-link {
             display: inline-block;
             margin-top: 20px;
             color: #6366f1;
             text-decoration: none;
-            font-size: 0.9rem;
         }
-        @media (max-width: 900px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            .controls {
-                order: 2;
-            }
-            .canvas-container {
-                order: 1;
-            }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            color: #6366f1;
+        }
+        .hint {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
         }
     </style>
 </head>
@@ -170,393 +185,367 @@
     <div class="container">
         <header>
             <h1>Parti</h1>
-            <p class="subtitle">Interactive Particle Playground - Create mesmerizing particle systems</p>
+            <p class="subtitle">Interactive Particle Physics Playground</p>
         </header>
 
         <div class="main-content">
+            <div class="canvas-container">
+                <canvas id="particleCanvas" width="800" height="500"></canvas>
+                <div id="loading" class="loading" style="display: none;">Initializing...</div>
+            </div>
+
             <div class="controls">
                 <div class="control-group">
-                    <label for="particleCount">Particle Count: <span id="countValue" class="stat-value">100</span></label>
+                    <label for="particleCount">Particle Count: <span id="countValue">100</span></label>
                     <input type="range" id="particleCount" min="10" max="500" value="100">
                 </div>
 
                 <div class="control-group">
-                    <label for="particleSize">Particle Size: <span id="sizeValue" class="stat-value">4</span></label>
-                    <input type="range" id="particleSize" min="1" max="10" value="4">
+                    <label for="speed">Simulation Speed</label>
+                    <input type="range" id="speed" min="0.5" max="3" step="0.1" value="1">
                 </div>
 
                 <div class="control-group">
-                    <label for="speed">Animation Speed: <span id="speedValue" class="stat-value">1</span></label>
-                    <input type="range" id="speed" min="0.1" max="5" step="0.1" value="1">
+                    <label for="friction">Friction</label>
+                    <input type="range" id="friction" min="0" max="0.1" step="0.001" value="0.01">
                 </div>
 
                 <div class="control-group">
-                    <label for="colorMode">Color Mode</label>
-                    <input type="number" id="colorMode" min="0" max="360" placeholder="0 = Rainbow, 1 = Monochrome, 2 = HSB">
+                    <label for="colorPicker">Particle Color</label>
+                    <input type="color" id="colorPicker" value="#6366f1">
                 </div>
 
                 <div class="control-group">
-                    <label>Physics Options</label>
-                    <div class="checkbox-group">
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="gravity" checked>
-                            <span>Enable Gravity</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="friction" checked>
-                            <span>Enable Friction</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="bounce" checked>
-                            <span>Bounce on Walls</span>
-                        </label>
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="trail" checked>
-                            <span>Show Trails</span>
-                        </label>
-                    </div>
+                    <label for="trailLength">Trail Length</label>
+                    <input type="range" id="trailLength" min="0" max="50" value="20">
                 </div>
 
-                <div class="control-group">
-                    <label for="gravityStrength">Gravity Strength: <span id="gravityValue" class="stat-value">0.5</span></label>
-                    <input type="range" id="gravityStrength" min="0" max="2" step="0.1" value="0.5">
+                <div class="btn-group">
+                    <button class="btn-primary" id="addParticles">Add Particles</button>
+                    <button class="btn-secondary" id="clearParticles">Clear All</button>
+                    <button class="btn-secondary" id="resetPhysics">Reset Physics</button>
+                    <button class="btn-secondary" id="randomize">Randomize</button>
                 </div>
 
-                <div class="control-group">
-                    <label for="frictionValue">Friction: <span id="frictionValueDisplay" class="stat-value">0.99</span></label>
-                    <input type="range" id="frictionValue" min="0.90" max="1.0" step="0.01" value="0.99">
-                </div>
-
-                <div class="control-group">
-                    <label for="trailLength">Trail Length: <span id="trailValue" class="stat-value">20</span></label>
-                    <input type="range" id="trailLength" min="5" max="100" value="20">
-                </div>
-
-                <div class="control-group">
-                    <label for="seed">Random Seed (leave empty for random)</label>
-                    <input type="number" id="seed" placeholder="e.g., 42">
-                </div>
+                <p class="hint">Click and drag on canvas to create particles manually!</p>
             </div>
-
-            <div class="canvas-container">
-                <canvas id="particleCanvas"></canvas>
-                <div class="canvas-overlay">
-                    <div class="stats">
-                        <div class="stat-item">
-                            <span>Particles:</span>
-                            <span class="stat-value" id="statsParticles">100</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>FPS:</span>
-                            <span class="stat-value" id="statsFPS">60</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>Speed:</span>
-                            <span class="stat-value" id="statsSpeed">1x</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <a href="index.html" style="color:#6366f1">Back to Home</a>
         </div>
+
+        <div class="stats">
+            <div class="stat-row">
+                <span class="stat-label">Active Particles:</span>
+                <span class="stat-value" id="activeCount">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Total Trails:</span>
+                <span class="stat-value" id="trailCount">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Memory Usage:</span>
+                <span class="stat-value" id="memoryUsage">0 KB</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">FPS:</span>
+                <span class="stat-value" id="fps">0</span>
+            </div>
+        </div>
+
+        <a href="index.html" style="color:#6366f1">Back to Home</a>
     </div>
 
     <script>
-        // Particle Playground - Main Application
+        // Particle Playground - Physics Simulation
         (function() {
+            'use strict';
+
+            // DOM Elements
             const canvas = document.getElementById('particleCanvas');
             const ctx = canvas.getContext('2d');
-            
-            // UI Elements
-            const ui = {
-                particleCount: document.getElementById('particleCount'),
-                particleSize: document.getElementById('particleSize'),
-                speed: document.getElementById('speed'),
-                colorMode: document.getElementById('colorMode'),
-                gravity: document.getElementById('gravity'),
-                friction: document.getElementById('friction'),
-                bounce: document.getElementById('bounce'),
-                trail: document.getElementById('trail'),
-                gravityStrength: document.getElementById('gravityStrength'),
-                frictionValue: document.getElementById('frictionValue'),
-                trailLength: document.getElementById('trailLength'),
-                seed: document.getElementById('seed'),
-                countValue: document.getElementById('countValue'),
-                sizeValue: document.getElementById('sizeValue'),
-                speedValue: document.getElementById('speedValue'),
-                gravityValue: document.getElementById('gravityValue'),
-                frictionValueDisplay: document.getElementById('frictionValueDisplay'),
-                trailValue: document.getElementById('trailValue'),
-                statsParticles: document.getElementById('statsParticles'),
-                statsFPS: document.getElementById('statsFPS'),
-                statsSpeed: document.getElementById('statsSpeed')
-            };
+            const loading = document.getElementById('loading');
+            const particleCountSlider = document.getElementById('particleCount');
+            const countValue = document.getElementById('countValue');
+            const speedSlider = document.getElementById('speed');
+            const frictionSlider = document.getElementById('friction');
+            const colorPicker = document.getElementById('colorPicker');
+            const trailLengthSlider = document.getElementById('trailLength');
+            const addParticlesBtn = document.getElementById('addParticles');
+            const clearParticlesBtn = document.getElementById('clearParticles');
+            const resetPhysicsBtn = document.getElementById('resetPhysics');
+            const randomizeBtn = document.getElementById('randomize');
+            const activeCountEl = document.getElementById('activeCount');
+            const trailCountEl = document.getElementById('trailCount');
+            const memoryUsageEl = document.getElementById('memoryUsage');
+            const fpsEl = document.getElementById('fps');
 
-            // Particle System
+            // State
             let particles = [];
-            let animationId;
+            let trails = [];
+            let animationId = null;
             let lastTime = 0;
-            let fps = 60;
-            let lastFpsTime = 0;
+            let fpsTimer = 0;
             let frameCount = 0;
+            let fps = 0;
 
             // Configuration
             const config = {
-                particleCount: 100,
-                particleSize: 4,
-                speed: 1,
-                colorMode: 0, // 0 = Rainbow, 1 = Monochrome, 2 = HSB
-                gravity: true,
-                friction: true,
-                bounce: true,
-                trail: true,
-                gravityStrength: 0.5,
-                frictionValue: 0.99,
-                trailLength: 20,
-                seed: null
+                particleCount: parseInt(particleCountSlider.value),
+                speed: parseFloat(speedSlider.value),
+                friction: parseFloat(frictionSlider.value),
+                color: colorPicker.value,
+                trailLength: parseInt(trailLengthSlider.value),
+                mouseDown: false,
+                mousePos: { x: 0, y: 0 }
             };
 
-            // Resize Canvas
-            function resizeCanvas() {
-                const container = canvas.parentElement;
-                canvas.width = container.clientWidth;
-                canvas.height = container.clientHeight;
-            }
+            // Mouse tracking
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                config.mousePos.x = e.clientX - rect.left;
+                config.mousePos.y = e.clientY - rect.top;
+            });
 
-            // Initialize Particles
-            function initParticles() {
-                particles = [];
-                const count = parseInt(config.particleCount);
-                const size = parseInt(config.particleSize);
-                const seed = config.seed || Math.random();
+            canvas.addEventListener('mousedown', () => {
+                config.mouseDown = true;
+                addParticles();
+            });
 
-                // Simple pseudo-random based on seed
-                const random = (i) => {
-                    const x = Math.sin(seed + i) * 10000;
-                    return x - Math.floor(x);
-                };
+            canvas.addEventListener('mouseup', () => {
+                config.mouseDown = false;
+            });
 
-                for (let i = 0; i < count; i++) {
-                    particles.push({
-                        x: random(i) * canvas.width,
-                        y: random(i) * canvas.height,
-                        vx: (random(i) - 0.5) * 2 * config.speed,
-                        vy: (random(i) - 0.5) * 2 * config.speed,
-                        size: size,
-                        hue: random(i) * 360,
-                        hueSpeed: (random(i) * 0.5 + 0.2) * config.speed,
-                        hueOffset: random(i) * 100
-                    });
+            canvas.addEventListener('mouseleave', () => {
+                config.mouseDown = false;
+            });
+
+            // Particle Class
+            class Particle {
+                constructor(x, y, color) {
+                    this.x = x;
+                    this.y = y;
+                    this.vx = (Math.random() - 0.5) * 4 * config.speed;
+                    this.vy = (Math.random() - 0.5) * 4 * config.speed;
+                    this.radius = Math.random() * 3 + 2;
+                    this.color = color;
+                    this.trail = [];
+                    this.maxTrail = config.trailLength;
                 }
-            }
 
-            // Update Particles
-            function updateParticles() {
-                const width = canvas.width;
-                const height = canvas.height;
-                const gravity = config.gravity ? config.gravityStrength : 0;
-                const friction = config.friction ? config.frictionValue : 1;
-
-                for (let i = 0; i < particles.length; i++) {
-                    const p = particles[i];
-
-                    // Apply velocity
-                    p.x += p.vx;
-                    p.y += p.vy;
-
-                    // Apply gravity
-                    if (config.gravity) {
-                        p.vy += gravity;
-                    }
-
+                update() {
                     // Apply friction
-                    if (config.friction) {
-                        p.vx *= friction;
-                        p.vy *= friction;
+                    this.vx *= (1 - config.friction);
+                    this.vy *= (1 - config.friction);
+
+                    // Update position
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Bounce off walls
+                    if (this.x - this.radius < 0) {
+                        this.x = this.radius;
+                        this.vx *= -1;
+                    }
+                    if (this.x + this.radius > canvas.width) {
+                        this.x = canvas.width - this.radius;
+                        this.vx *= -1;
+                    }
+                    if (this.y - this.radius < 0) {
+                        this.y = this.radius;
+                        this.vy *= -1;
+                    }
+                    if (this.y + this.radius > canvas.height) {
+                        this.y = canvas.height - this.radius;
+                        this.vy *= -1;
                     }
 
-                    // Bounce on walls
-                    if (config.bounce) {
-                        if (p.x < 0) {
-                            p.x = 0;
-                            p.vx = -p.vx;
-                        } else if (p.x > width) {
-                            p.x = width;
-                            p.vx = -p.vx;
-                        }
-                        if (p.y < 0) {
-                            p.y = 0;
-                            p.vy = -p.vy;
-                        } else if (p.y > height) {
-                            p.y = height;
-                            p.vy = -p.vy;
-                        }
+                    // Update trail
+                    this.trail.push({ x: this.x, y: this.y });
+                    if (this.trail.length > this.maxTrail) {
+                        this.trail.shift();
                     }
-
-                    // Update hue
-                    p.hue = (p.hue + p.hueSpeed) % 360;
-                }
-            }
-
-            // Draw Particles
-            function drawParticles() {
-                // Clear with trail effect
-                if (config.trail) {
-                    ctx.fillStyle = `rgba(15, 15, 15, ${1 - config.trailLength / 100})`;
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                } else {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
                 }
 
-                for (let i = 0; i < particles.length; i++) {
-                    const p = particles[i];
-
-                    // Calculate color based on mode
-                    let color;
-                    if (config.colorMode === 0) {
-                        // Rainbow - hue varies by particle
-                        color = `hsl(${(p.hue + p.hueOffset) % 360}, 100%, 70%)`;
-                    } else if (config.colorMode === 1) {
-                        // Monochrome - blue tint
-                        const lightness = 50 + (p.hue / 360) * 50;
-                        color = `hsl(210, 80%, ${lightness}%)`;
-                    } else {
-                        // HSB - varied saturation
-                        const saturation = 50 + (p.hue / 360) * 50;
-                        color = `hsl(${p.hue}, ${saturation}%, 70%)`;
+                draw() {
+                    // Draw trail
+                    if (this.trail.length > 1) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.trail[0].x, this.trail[0].y);
+                        for (let i = 1; i < this.trail.length; i++) {
+                            ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                        }
+                        ctx.strokeStyle = this.color;
+                        ctx.lineWidth = 1;
+                        ctx.globalAlpha = 0.3;
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
                     }
 
-                    ctx.fillStyle = color;
+                    // Draw particle
                     ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
                     ctx.fill();
                 }
             }
 
-            // Animation Loop
+            // Initialize particles
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < config.particleCount; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    particles.push(new Particle(x, y, config.color));
+                }
+                updateStats();
+            }
+
+            // Add particles
+            function addParticles() {
+                const count = Math.min(50, config.particleCount + 20);
+                for (let i = 0; i < count; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    particles.push(new Particle(x, y, config.color));
+                }
+                updateStats();
+            }
+
+            // Clear all particles
+            function clearParticles() {
+                particles = [];
+                trails = [];
+                updateStats();
+            }
+
+            // Reset physics
+            function resetPhysics() {
+                particles.forEach(p => {
+                    p.vx = (Math.random() - 0.5) * 4 * config.speed;
+                    p.vy = (Math.random() - 0.5) * 4 * config.speed;
+                    p.trail = [];
+                });
+            }
+
+            // Randomize everything
+            function randomize() {
+                config.particleCount = Math.floor(Math.random() * 400) + 10;
+                config.speed = parseFloat((Math.random() * 2.5 + 0.5).toFixed(1));
+                config.friction = parseFloat((Math.random() * 0.1).toFixed(3));
+                config.color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+                config.trailLength = Math.floor(Math.random() * 50);
+                
+                particleCountSlider.value = config.particleCount;
+                countValue.textContent = config.particleCount;
+                speedSlider.value = config.speed;
+                frictionSlider.value = config.friction;
+                colorPicker.value = config.color;
+                trailLengthSlider.value = config.trailLength;
+
+                initParticles();
+            }
+
+            // Update stats
+            function updateStats() {
+                activeCountEl.textContent = particles.length;
+                trailCountEl.textContent = trails.reduce((sum, t) => sum + t.length, 0);
+                
+                const memory = new Blob([JSON.stringify(particles)]).size / 1024;
+                memoryUsageEl.textContent = memory.toFixed(2) + ' KB';
+            }
+
+            // Update slider values
+            function updateFromSliders() {
+                config.particleCount = parseInt(particleCountSlider.value);
+                config.speed = parseFloat(speedSlider.value);
+                config.friction = parseFloat(frictionSlider.value);
+                config.color = colorPicker.value;
+                config.trailLength = parseInt(trailLengthSlider.value);
+                countValue.textContent = config.particleCount;
+                initParticles();
+            }
+
+            // Animation loop
             function animate(timestamp) {
+                if (!lastTime) lastTime = timestamp;
                 const deltaTime = timestamp - lastTime;
                 lastTime = timestamp;
 
                 // FPS calculation
                 frameCount++;
-                if (timestamp - lastFpsTime >= 1000) {
-                    fps = Math.round((frameCount * 1000) / (timestamp - lastFpsTime));
+                fpsTimer += deltaTime;
+                if (fpsTimer >= 1000) {
+                    fps = Math.round((frameCount * 1000) / fpsTimer);
                     frameCount = 0;
-                    lastFpsTime = timestamp;
-                    ui.statsFPS.textContent = fps;
+                    fpsTimer = 0;
+                    fpsEl.textContent = fps;
                 }
 
-                updateParticles();
-                drawParticles();
+                // Clear canvas
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Update and draw particles
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
 
                 animationId = requestAnimationFrame(animate);
             }
 
-            // Update UI Values
-            function updateUI() {
-                ui.countValue.textContent = config.particleCount;
-                ui.sizeValue.textContent = config.particleSize;
-                ui.speedValue.textContent = config.speed.toFixed(1);
-                ui.gravityValue.textContent = config.gravityStrength;
-                ui.frictionValueDisplay.textContent = config.frictionValue;
-                ui.trailValue.textContent = config.trailLength;
-                ui.statsParticles.textContent = config.particleCount;
-                ui.statsSpeed.textContent = config.speed.toFixed(1) + 'x';
-            }
+            // Event listeners
+            particleCountSlider.addEventListener('input', () => {
+                countValue.textContent = particleCountSlider.value;
+                updateFromSliders();
+            });
 
-            // Event Listeners
-            function setupEventListeners() {
-                // Particle count
-                ui.particleCount.addEventListener('input', (e) => {
-                    config.particleCount = parseInt(e.target.value);
-                    ui.countValue.textContent = config.particleCount;
-                    initParticles();
-                });
+            speedSlider.addEventListener('input', () => {
+                config.speed = parseFloat(speedSlider.value);
+                updateFromSliders();
+            });
 
-                // Particle size
-                ui.particleSize.addEventListener('input', (e) => {
-                    config.particleSize = parseInt(e.target.value);
-                    ui.sizeValue.textContent = config.particleSize;
-                    initParticles();
-                });
+            frictionSlider.addEventListener('input', () => {
+                config.friction = parseFloat(frictionSlider.value);
+                updateFromSliders();
+            });
 
-                // Speed
-                ui.speed.addEventListener('input', (e) => {
-                    config.speed = parseFloat(e.target.value);
-                    ui.speedValue.textContent = config.speed.toFixed(1);
-                    initParticles();
-                });
+            colorPicker.addEventListener('input', () => {
+                config.color = colorPicker.value;
+                updateFromSliders();
+            });
 
-                // Color mode
-                ui.colorMode.addEventListener('input', (e) => {
-                    config.colorMode = parseInt(e.target.value) || 0;
-                });
+            trailLengthSlider.addEventListener('input', () => {
+                config.trailLength = parseInt(trailLengthSlider.value);
+                updateFromSliders();
+            });
 
-                // Gravity
-                ui.gravity.addEventListener('change', (e) => {
-                    config.gravity = e.target.checked;
-                });
+            addParticlesBtn.addEventListener('click', addParticles);
+            clearParticlesBtn.addEventListener('click', clearParticles);
+            resetPhysicsBtn.addEventListener('click', resetPhysics);
+            randomizeBtn.addEventListener('click', randomize);
 
-                // Friction
-                ui.friction.addEventListener('change', (e) => {
-                    config.friction = e.target.checked;
-                });
-
-                // Bounce
-                ui.bounce.addEventListener('change', (e) => {
-                    config.bounce = e.target.checked;
-                });
-
-                // Trail
-                ui.trail.addEventListener('change', (e) => {
-                    config.trail = e.target.checked;
-                });
-
-                // Gravity strength
-                ui.gravityStrength.addEventListener('input', (e) => {
-                    config.gravityStrength = parseFloat(e.target.value);
-                    ui.gravityValue.textContent = config.gravityStrength;
-                });
-
-                // Friction value
-                ui.frictionValue.addEventListener('input', (e) => {
-                    config.frictionValue = parseFloat(e.target.value);
-                    ui.frictionValueDisplay.textContent = config.frictionValue;
-                });
-
-                // Trail length
-                ui.trailLength.addEventListener('input', (e) => {
-                    config.trailLength = parseInt(e.target.value);
-                    ui.trailValue.textContent = config.trailLength;
-                });
-
-                // Seed
-                ui.seed.addEventListener('input', (e) => {
-                    config.seed = e.target.value || null;
-                    initParticles();
-                });
-
-                // Initial setup
-                resizeCanvas();
+            // Initialize
+            loading.style.display = 'block';
+            setTimeout(() => {
+                loading.style.display = 'none';
                 initParticles();
-                updateUI();
                 animate(0);
+            }, 100);
 
-                // Handle resize
-                window.addEventListener('resize', () => {
-                    resizeCanvas();
-                    initParticles();
-                });
-            }
+            // Cleanup on unload
+            window.addEventListener('beforeunload', () => {
+                if (animationId) cancelAnimationFrame(animationId);
+            });
 
-            // Setup
-            setupEventListeners();
+            // Usage tracking
+            fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+                    params: ['particle-playground.html', 'load', new Date().toISOString()]
+                })
+            }).catch(() => {});
         })();
-
-        // Usage Tracking
-        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:'INSERT INTO tool_usage (tool,action,timestamp) VALUES (?,?,?)',params:['particle-playground.html','load',new Date().toISOString()]})}).catch(()=>{});
     </script>
 </body>
 </html>
