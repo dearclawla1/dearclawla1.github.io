@@ -13,15 +13,20 @@ h1{color:#4ec9b0;margin-bottom:20px}
 .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:15px;margin-bottom:20px}
 .field{display:flex:flex-direction:column}
 label{font-size:12px;color:#888;margin-bottom:5px}
-input,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;border-radius:4px;font-size:12px}
+input,select{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;border-radius:4px;font-size:12px;transition:border-color 0.2s}
 input:focus,select:focus{outline:none;border-color:#4ec9b0}
-#expression{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;border-radius:4px;font-size:13px;width:100%;margin-bottom:15px;display:block}
-button{background:#4ec9b0;border:none;color:#0a0a0a;padding:10px 20px;border-radius:4px;font-size:12px;cursor:pointer;margin-right:10px}
+#expression{background:#1a1a1a;border:1px solid #333;color:#e4e4e4;padding:10px;border-radius:4px;font-size:13px;width:100%;margin-bottom:15px;display:block;transition:border-color 0.2s}
+button{background:#4ec9b0;border:none;color:#0a0a0a;padding:10px 20px;border-radius:4px;font-size:12px;cursor:pointer;margin-right:10px;transition:background 0.2s}
 button:hover{background:#46b09e}
 #validate{background:#ff6b6b}
 #validate:hover{background:#e55a5a}
-#output{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;font-size:12px;white-space:pre-wrap;min-height:40px}
+#output{background:#1a1a1a;padding:15px;border-radius:4px;margin-top:15px;font-size:12px;white-space:pre-wrap;min-height:40px;transition:border-color 0.2s}
 #output.error{border:1px solid #ff6b6b}
+#output.success{border:1px solid #4ec9b0}
+.export-btn{background:#4ec9b0;margin-left:10px}
+.export-btn:hover{background:#46b09e}
+.clear-btn{background:#ff6b6b;margin-left:10px}
+.clear-btn:hover{background:#e55a5a}
 </style>
 </head>
 <body>
@@ -38,6 +43,8 @@ button:hover{background:#46b09e}
 <input type="text" id="expression" placeholder="CRON Expression" readonly>
 <button onclick="validate()">Validate</button>
 <button id="validate" onclick="validate()">Validate</button>
+<button class="export-btn" onclick="exportResult()">Export JSON</button>
+<button class="clear-btn" onclick="clearForm()">Clear</button>
 <div id="output"></div>
 </div>
 <script>
@@ -62,6 +69,7 @@ const p=parse(expr);
 const output=document.getElementById('output');
 let valid=true;
 let msg='Valid CRON Expression';
+try{
 if(!p){output.classList.add('error');msg='Invalid format';valid=false;document.getElementById('expression').value=generate();}
 else{
 const check=(v,min,max)=>Number.isInteger(Number(v))&&Number(v)>=min&&Number(v)<=max||v==='*';
@@ -70,7 +78,12 @@ if(!check(p.hour,0,23)){msg='Hour must be 0-23 or *';valid=false;}
 if(!check(p.day,1,31)){msg='Day must be 1-31 or *';valid=false;}
 if(!check(p.month,1,12)){msg='Month must be 1-12 or *';valid=false;}
 if(!check(p.dow,0,7)){msg='Day of week must be 0-7 or *';valid=false;}
-if(valid){output.classList.remove('error');output.textContent=`✓ ${msg}\n\nExpression: ${expr}\n\nSchedule: Runs at ${getSchedule(expr)}`;}
+if(valid){output.classList.remove('error');output.classList.add('success');output.textContent=`✓ ${msg}\n\nExpression: ${expr}\n\nSchedule: Runs at ${getSchedule(expr)}`;}
+}
+}
+catch(e){
+output.classList.add('error');
+output.textContent=`Error: ${e.message}`;
 }
 }
 function getSchedule(expr){
@@ -82,12 +95,90 @@ if(p.month==='*')return 'At '+(parseInt(p.hour)+1)+':'+(parseInt(p.min)+'0')+` o
 if(p.dow==='*')return 'At '+(parseInt(p.hour)+1)+':'+(parseInt(p.min)+'0')+` in month ${p.month}`;
 return 'Custom schedule';
 }
+function exportResult(){
+const expr=document.getElementById('expression').value;
+const p=parse(expr);
+const result={
+expression: expr,
+schedule: getSchedule(expr),
+details: {
+minute: p.min,
+hour: p.hour,
+day: p.day,
+month: p.month,
+dayOfWeek: p.dow
+}
+};
+const jsonStr=JSON.stringify(result,null,2);
+const blob=new Blob([jsonStr],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download='cron-expression.json';
+a.click();
+URL.revokeObjectURL(url);
+}
+function clearForm(){
+document.getElementById('minute').value='*';
+document.getElementById('hour').value='*';
+document.getElementById('day').value='*';
+document.getElementById('month').value='*';
+document.getElementById('dow').value='*';
+document.getElementById('expression').value='* * * * *';
+document.getElementById('output').textContent='';
+document.getElementById('output').classList.remove('error','success');
+}
+function saveToLocalStorage(){
+try{
+const data={
+minute: document.getElementById('minute').value,
+hour: document.getElementById('hour').value,
+day: document.getElementById('day').value,
+month: document.getElementById('month').value,
+dow: document.getElementById('dow').value,
+expression: document.getElementById('expression').value
+};
+localStorage.setItem('cronBuilder',JSON.stringify(data));
+}
+catch(e){
+console.log('localStorage not available');
+}
+}
+function loadFromLocalStorage(){
+try{
+const saved=localStorage.getItem('cronBuilder');
+if(saved){
+const data=JSON.parse(saved);
+document.getElementById('minute').value=data.minute||'*';
+document.getElementById('hour').value=data.hour||'*';
+document.getElementById('day').value=data.day||'*';
+document.getElementById('month').value=data.month||'*';
+document.getElementById('dow').value=data.dow||'*';
+document.getElementById('expression').value=data.expression||'* * * * *';
+}
+}
+catch(e){
+console.log('localStorage not available');
+}
+}
 document.getElementById('minute').onchange=generate;
 document.getElementById('hour').onchange=generate;
 document.getElementById('day').onchange=generate;
 document.getElementById('month').onchange=generate;
 document.getElementById('dow').onchange=generate;
 generate();
+loadFromLocalStorage();
+saveToLocalStorage();
+document.addEventListener('keydown',function(e){
+if(e.ctrlKey&&e.key==='Enter'){
+e.preventDefault();
+validate();
+}
+if(e.key==='Escape'){
+e.preventDefault();
+clearForm();
+}
+});
 </script>
 </body>
 </html>
