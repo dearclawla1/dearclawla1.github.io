@@ -5,18 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GitHub Trending Explorer</title>
 <style>
-:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1;--card:#111111;--border:#333333}
+:root{--bg:#0a0a0a;--text:#e4e4e4;--primary:#6366f1;--card:#111111;--border:#333333;--success:#10b981;--warning:#f59e0b;--error:#ef4444}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);padding:20px}
 .container{max-width:900px;margin:0 auto}
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 a{color:var(--primary);text-decoration:none}
-.grid{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:15px}
+.grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-bottom:15px}
 select,input{padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)}
 button{padding:10px 20px;border:none;border-radius:6px;background:var(--primary);color:white;cursor:pointer;font-weight:600}
 button:hover{opacity:0.9}
 button.download-btn{background:#333333;color:#e4e4e4;font-size:12px;padding:6px 12px}
 button.download-btn:hover{background:#444444}
+button.clear-btn{background:var(--error);color:white;font-size:12px;padding:6px 12px}
+button.clear-btn:hover{opacity:0.9}
 #results{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:15px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:8;padding:15px;transition:transform 0.2s,box-shadow 0.2s}
 .card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(99,102,241,0.2)}
@@ -26,6 +28,7 @@ button.download-btn:hover{background:#444444}
 .error{background:#333333;border:1px solid #666;border-radius:8;padding:15px;margin-bottom:15px}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .card{animation:fadeIn 0.3s ease-out}
+.sort-select{padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);cursor:pointer}
 </style>
 </head>
 <body>
@@ -46,6 +49,11 @@ button.download-btn:hover{background:#444444}
 <option value="C++">C++</option>
 <option value="Rust">Rust</option>
 </select>
+<select id="sort" class="sort-select">
+<option value="stars">Sort by Stars</option>
+<option value="updated">Sort by Updated</option>
+<option value="name">Sort by Name</option>
+</select>
 <button id="fetchBtn">Fetch Trending</button>
 </div>
 <div id="status"></div>
@@ -54,6 +62,7 @@ button.download-btn:hover{background:#444444}
 <script>
 document.getElementById('fetchBtn').addEventListener('click', async () => {
   const lang = document.getElementById('lang').value;
+  const sort = document.getElementById('sort').value;
   const status = document.getElementById('status');
   const results = document.getElementById('results');
   
@@ -61,12 +70,12 @@ document.getElementById('fetchBtn').addEventListener('click', async () => {
   status.innerHTML = '<div class="loading">Loading...</div>';
   
   try {
-    const url = lang ? `https://api.github.com/search/repositories?q=trending:yes&sort=stars&order=desc&per_page=50&language=${lang}` : 'https://api.github.com/search/repositories?q=trending:yes&sort=stars&order=desc&per_page=50';
+    const url = lang ? `https://api.github.com/search/repositories?q=trending:yes&sort=${sort}&order=desc&per_page=50&language=${lang}` : `https://api.github.com/search/repositories?q=trending:yes&sort=${sort}&order=desc&per_page=50`;
     
     const response = await fetch(url);
     
     if (!response.ok) {
-      throw new Error('Failed to fetch data');
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
@@ -81,6 +90,7 @@ document.getElementById('fetchBtn').addEventListener('click', async () => {
         const stars = repo.stargazers_count || 0;
         const htmlUrl = repo.html_url || '#';
         const name = repo.name || '';
+        const updated = repo.updated_at || '';
         
         card.innerHTML = `
           <h3>
@@ -92,6 +102,9 @@ document.getElementById('fetchBtn').addEventListener('click', async () => {
           <p style="margin-top:8px;font-size:12px;color:#888;">
             Language: ${language} | Stars: ${stars.toLocaleString()}
           </p>
+          <p style="margin-top:4px;font-size:11px;color:#666;">
+            Updated: ${updated ? new Date(updated).toLocaleDateString() : 'N/A'}
+          </p>
           <button class="download-btn" onclick="downloadRepo('${name}', '${description}', '${language}', ${stars}, '${htmlUrl}')">
             Download Info
           </button>
@@ -99,6 +112,8 @@ document.getElementById('fetchBtn').addEventListener('click', async () => {
         
         results.appendChild(card);
       });
+      
+      status.innerHTML = `<div style="color:var(--success);font-size:13px;">Successfully loaded ${data.items.length} repositories!</div>`;
     } else {
       status.innerHTML = '<div class="error">No trending repositories found.</div>';
     }
@@ -119,6 +134,10 @@ window.addEventListener('DOMContentLoaded', () => {
   if (savedLang) {
     document.getElementById('lang').value = savedLang;
   }
+  
+  // Clear results on page load
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('status').innerHTML = '';
 });
 
 // Keyboard shortcut: Ctrl+Enter to fetch
@@ -127,6 +146,12 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     document.getElementById('fetchBtn').click();
   }
+});
+
+// Clear results button
+document.getElementById('fetchBtn').addEventListener('click', () => {
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('status').innerHTML = '';
 });
 
 // Download repository info
@@ -142,6 +167,13 @@ window.downloadRepo = function(name, description, language, stars, htmlUrl) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
+
+// Clear results on fetch button click
+const fetchBtn = document.getElementById('fetchBtn');
+fetchBtn.addEventListener('click', () => {
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('status').innerHTML = '';
+});
 </script>
 </body>
 </html>
