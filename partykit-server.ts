@@ -99,13 +99,6 @@ export default class GameRoom implements Server {
   private zoneEvents = new Map<string, ZoneEvent[]>();
   private eventCooldowns = new Map<string, number>();
 
-  // Zone-wide statistics tracking
-  private zoneStats = new Map<string, ZoneStatistics>();
-
-  // Anti-cheat tracking
-  private movementHistory = new Map<string, Array<{ x: number; y: number; timestamp: number }>>();
-  private attackHistory = new Map<string, Array<{ timestamp: number; damage: number }>>();
-
   constructor(roomId: string) {
     // Initialize weapon damage caps and multipliers
     this.weaponDamageMultipliers.set("sword", 1.0);
@@ -121,16 +114,6 @@ export default class GameRoom implements Server {
 
     // Initialize zone events map
     this.zoneEvents.set(roomId, []);
-
-    // Initialize zone statistics
-    this.zoneStats.set(roomId, {
-      totalKills: 0,
-      totalDeaths: 0,
-      totalDamageDealt: 0,
-      totalDamageTaken: 0,
-      activePlayers: 0,
-      maxActivePlayers: 0,
-    });
   }
 
   onConnect(conn: Connection, ctx: ConnectionContext): void {
@@ -151,16 +134,6 @@ export default class GameRoom implements Server {
       };
     }
 
-    // Initialize movement history
-    if (!this.movementHistory.has(conn.id)) {
-      this.movementHistory.set(conn.id, []);
-    }
-
-    // Initialize attack history
-    if (!this.attackHistory.has(conn.id)) {
-      this.attackHistory.set(conn.id, []);
-    }
-
     // Send full state to new player
     this.broadcast({
       type: "state",
@@ -174,17 +147,6 @@ export default class GameRoom implements Server {
     const roomId = Object.keys(this.playerConnMap).find(id => this.playerConnMap.get(id) === conn.id);
     if (roomId) {
       this.playerConnMap.delete(roomId);
-    }
-
-    // Clean up tracking data
-    this.movementHistory.delete(conn.id);
-    this.attackHistory.delete(conn.id);
-
-    // Update zone statistics
-    const zoneStat = this.zoneStats.get(roomId);
-    if (zoneStat) {
-      zoneStat.activePlayers = Math.max(0, zoneStat.activePlayers - 1);
-      zoneStat.maxActivePlayers = Math.max(zoneStat.activePlayers, zoneStat.maxActivePlayers);
     }
 
     // Broadcast player leave
@@ -206,22 +168,22 @@ export default class GameRoom implements Server {
 
     const handlers = {
       join: (conn, playerData) => {
-        const existingPlayer = this.players.get(conn.id);
-        if (existingPlayer) {
+        const player = this.players.get(conn.id);
+        if (player) {
           // Update existing player
-          existingPlayer.name = playerData.name;
-          existingPlayer.className = playerData.className;
-          existingPlayer.level = playerData.level;
-          existingPlayer.hp = playerData.hp;
-          existingPlayer.maxHp = playerData.maxHp;
-          existingPlayer.x = playerData.x;
-          existingPlayer.y = playerData.y;
-          existingPlayer.facing = playerData.facing;
-          existingPlayer.color = playerData.color;
-          existingPlayer.weapon = playerData.weapon;
-          existingPlayer.zone = playerData.zone;
-          existingPlayer.lastUpdate = Date.now();
-          existingPlayer.stats = existingPlayer.stats || {
+          player.name = playerData.name;
+          player.className = playerData.className;
+          player.level = playerData.level;
+          player.hp = playerData.hp;
+          player.maxHp = playerData.maxHp;
+          player.x = playerData.x;
+          player.y = playerData.y;
+          player.facing = playerData.facing;
+          player.color = playerData.color;
+          player.weapon = playerData.weapon;
+          player.zone = playerData.zone;
+          player.lastUpdate = Date.now();
+          player.stats = player.stats || {
             kills: 0,
             deaths: 0,
             damageDealt: 0,
@@ -229,64 +191,17 @@ export default class GameRoom implements Server {
             lastKillTime: 0,
             lastDeathTime: 0,
           };
-        } else {
-          // Add new player
-          this.players.set(conn.id, {
-            ...playerData,
-            zone: roomId,
-            lastUpdate: Date.now(),
-            stats: playerData.stats || {
-              kills: 0,
-              deaths: 0,
-              damageDealt: 0,
-              damageTaken: 0,
-              lastKillTime: 0,
-              lastDeathTime: 0,
-            },
+          this.broadcast({
+            type: "state",
+            players: Array.from(this.players.values()),
+            you: player,
           });
         }
-
-        // Update zone statistics
-        const zoneStat = this.zoneStats.get(roomId);
-        if (zoneStat) {
-          zoneStat.activePlayers = Math.max(0, zoneStat.activePlayers + 1);
-          zoneStat.maxActivePlayers = Math.max(zoneStat.activePlayers, zoneStat.maxActivePlayers);
-        }
-
-        this.broadcast({
-          type: "state",
-          players: Array.from(this.players.values()),
-          you: existingPlayer || null,
-        });
       },
 
       move: (conn, { x, y, facing }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Position validation - check for teleportation
-          const movementHistory = this.movementHistory.get(conn.id) || [];
-          const lastMovement = movementHistory[movementHistory.length - 1];
-          const maxTeleportDistance = 100; // Maximum allowed teleport distance
-
-          if (lastMovement) {
-            const dx = x - lastMovement.x;
-            const dy = y - lastMovement.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > maxTeleportDistance) {
-              console.log(`[Server] ${roomId}: ${player.name} attempted teleportation (distance: ${distance.toFixed(2)})`);
-              // Reject invalid movement
-              return;
-            }
-          }
-
-          // Add movement to history
-          const movementHistory = this.movementHistory.get(conn.id) || [];
-          movementHistory.push({ x, y, timestamp: Date.now() });
-          if (movementHistory.length > 100) {
-            movementHistory.shift();
-          }
-
           // Position valid
           player.x = x;
           player.y = y;
@@ -303,29 +218,12 @@ export default class GameRoom implements Server {
       attack: (conn, { facing, weapon, damage }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Attack validation
-          const weaponMultiplier = this.weaponDamageMultipliers.get(weapon) || 1.0;
-          const maxDamage = this.damageCaps.get(weapon) || 100;
-          const adjustedDamage = damage * weaponMultiplier;
-
-          if (adjustedDamage > maxDamage) {
-            console.log(`[Server] ${roomId}: ${player.name} attempted damage overflow (weapon: ${weapon}, damage: ${damage.toFixed(2)})`);
-            // Cap damage
-            damage = maxDamage / weaponMultiplier;
-          }
-
-          // Add attack to history
-          const attackHistory = this.attackHistory.get(conn.id) || [];
-          attackHistory.push({ timestamp: Date.now(), damage });
-          if (attackHistory.length > 100) {
-            attackHistory.shift();
-          }
-
+          // Record attack
+          player.lastUpdate = Date.now();
           this.broadcast({
-            type: "player-attack",
-            id: player.id,
-            facing: facing,
-            weapon: weapon,
+            type: "state",
+            players: Array.from(this.players.values()),
+            you: player,
           });
         }
       },
@@ -333,68 +231,50 @@ export default class GameRoom implements Server {
       projectile: (conn, { proj }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Validate projectile ownership
-          if (proj.ownerId !== player.id) {
-            console.log(`[Server] ${roomId}: Projectile ownership mismatch (owner: ${proj.ownerId}, player: ${player.id})`);
-            return;
-          }
-
-          // Validate projectile damage
-          const weaponMultiplier = this.weaponDamageMultipliers.get(player.weapon) || 1.0;
-          const maxDamage = this.damageCaps.get(player.weapon) || 100;
-          const adjustedDamage = proj.damage * weaponMultiplier;
-
-          if (adjustedDamage > maxDamage) {
-            console.log(`[Server] ${roomId}: Projectile damage overflow (damage: ${proj.damage.toFixed(2)})`);
-            proj.damage = maxDamage / weaponMultiplier;
-          }
-
+          // Add projectile
           this.broadcast({
             type: "projectile",
-            proj: proj,
+            proj,
           });
         }
       },
 
       "hit-player": (conn, { targetId, damage }) => {
-        const player = this.players.get(conn.id);
-        if (player) {
-          // Validate damage
-          const weaponMultiplier = this.weaponDamageMultipliers.get(player.weapon) || 1.0;
-          const maxDamage = this.damageCaps.get(player.weapon) || 100;
-          const adjustedDamage = damage * weaponMultiplier;
+        const target = this.players.get(targetId);
+        if (target) {
+          // Apply damage to target
+          const weapon = player.weapon;
+          const multiplier = this.weaponDamageMultipliers.get(weapon) || 1.0;
+          const cappedDamage = Math.min(damage * multiplier, this.damageCaps.get(weapon) || 100);
+          target.hp = Math.max(0, target.hp - cappedDamage);
+          target.lastUpdate = Date.now();
+          target.stats.damageTaken += cappedDamage;
+          target.stats.lastDeathTime = Date.now();
+          
+          // Broadcast damage
+          this.broadcast({
+            type: "player-damage",
+            id: targetId,
+            damage: cappedDamage,
+            hp: target.hp,
+          });
 
-          if (adjustedDamage > maxDamage) {
-            console.log(`[Server] ${roomId}: Damage overflow (damage: ${damage.toFixed(2)})`);
-            damage = maxDamage / weaponMultiplier;
-          }
-
-          // Find target player
-          const target = this.players.get(targetId);
-          if (target) {
-            // Apply damage
-            target.hp = Math.max(0, target.hp - damage);
-            target.stats.damageTaken += damage;
-            target.stats.damageDealt += damage; // Attacker deals damage
-
-            // Update attacker stats
-            const attacker = this.players.get(conn.id);
-            if (attacker) {
-              attacker.stats.damageDealt += damage;
-            }
-
-            // Check for death
-            if (target.hp <= 0) {
-              this.handleDeath(target, conn.id);
-            }
-
-            // Broadcast damage
+          // Check for death
+          if (target.hp <= 0) {
             this.broadcast({
-              type: "player-damage",
-              id: target.id,
-              damage: damage,
-              hp: target.hp,
+              type: "player-death",
+              id: targetId,
+              killerId: player.id,
             });
+            this.broadcast({
+              type: "player-kill",
+              id: player.id,
+              killerId: player.id,
+              damage: cappedDamage,
+            });
+            player.stats.kills += 1;
+            player.stats.lastKillTime = Date.now();
+            player.stats.damageDealt += cappedDamage;
           }
         }
       },
@@ -402,17 +282,11 @@ export default class GameRoom implements Server {
       chat: (conn, { text }) => {
         const player = this.players.get(conn.id);
         if (player) {
-          // Simple chat validation
-          if (text.length > 200) {
-            console.log(`[Server] ${roomId}: Chat message too long`);
-            return;
-          }
-
           this.broadcast({
             type: "chat",
             id: player.id,
             name: player.name,
-            text: text,
+            text,
           });
         }
       },
@@ -429,138 +303,118 @@ export default class GameRoom implements Server {
       },
 
       gamecheck: (conn, {}) => {
-        const player = this.players.get(conn.id);
-        if (player) {
-          // Game check handler - can be used for server-side validation
-          console.log(`[Server] ${roomId}: Game check from ${player.name}`);
-        }
+        // Server health check - no-op
       },
     };
 
-    // Execute appropriate handler
-    if (message.type && handlers[message.type]) {
-      handlers[message.type](conn, message);
-    } else if (message) {
-      // Handle unknown message types safely
-      console.log(`[Server] ${roomId}: Unknown message type: ${JSON.stringify(message)}`);
+    // Handle message
+    if (message && typeof message === "object" && "type" in message) {
+      const handler = handlers[message.type as keyof typeof handlers];
+      if (handler) {
+        try {
+          handler(conn, message);
+        } catch (error) {
+          console.error(`[Server] ${roomId}: Error handling ${message.type}`, error);
+        }
+      }
+    } else {
+      // Handle unknown message types (client ignores unknown)
+      console.log(`[Server] ${roomId}: Unknown message type`, message);
     }
-  },
+  }
 
-  handleDeath(deceased: PlayerState, killerId: string): void {
-    // Update deceased player stats
-    deceased.stats.deaths += 1;
-    deceased.stats.damageTaken += 100; // Assume 100 damage caused death
-    deceased.lastDeathTime = Date.now();
+  // ============================================================
+  // ZONE EVENT SYSTEM
+  // ============================================================
 
-    // Update killer stats if valid
-    const killer = this.players.get(killerId);
-    if (killer) {
-      killer.stats.kills += 1;
-      killer.stats.damageDealt += 100;
-      killer.lastKillTime = Date.now();
+  /**
+   * Broadcast a zone-wide event to all players in the room
+   * @param eventType - Type of event (e.g., "weather", "boss", "message")
+   * @param data - Event data
+   * @param duration - How long the event lasts (ms)
+   */
+  broadcastZoneEvent(eventType: string, data?: any, duration: number = 30000): void {
+    const roomId = this.getRoomId(this.getCtx(this.connectionMap.values().next().value || {}));
+    const now = Date.now();
+
+    // Check cooldown to prevent spam
+    const cooldown = this.eventCooldowns.get(roomId) || 0;
+    if (now - cooldown < 10000) { // 10 second cooldown between events
+      console.log(`[Server] ${roomId}: Zone event on cooldown`);
+      return;
     }
 
-    // Update zone statistics
-    const zoneStat = this.zoneStats.get(this.getRoomId(this.getCtx(this.connectionMap.get(killerId || deceased.id))));
-    if (zoneStat) {
-      zoneStat.totalKills += 1;
-      zoneStat.totalDeaths += 1;
-      zoneStat.totalDamageDealt += 100;
-      zoneStat.totalDamageTaken += 100;
-    }
+    // Set cooldown
+    this.eventCooldowns.set(roomId, now);
 
-    // Broadcast death
-    this.broadcast({
-      type: "player-death",
-      id: deceased.id,
-      killerId: killerId,
-    });
-
-    // Remove player from map
-    this.players.delete(deceased.id);
-  },
-
-  broadcast(message: ServerMessage): void {
-    const roomId = this.getRoomId(this.getCtx(this.connectionMap.values().next().value));
-    const connId = this.playerConnMap.get(roomId);
-    if (connId) {
-      this.connectionMap.get(connId)?.send(JSON.stringify(message));
-    }
-  },
-
-  broadcastExcept(message: ServerMessage, exceptConn: Connection): void {
-    const roomId = this.getRoomId(this.getCtx(this.connectionMap.values().next().value));
-    const connId = this.playerConnMap.get(roomId);
-    if (connId) {
-      this.connectionMap.get(connId)?.send(JSON.stringify(message));
-    }
-  },
-
-  getRoomId(ctx: ConnectionContext): string {
-    return ctx.roomId;
-  },
-
-  getCtx(conn: Connection): ConnectionContext {
-    // This is a simplified version - in practice, you'd need to store context
-    return {} as ConnectionContext;
-  },
-};
-
-// ============================================================
-// ZONE EVENT METHODS
-// ============================================================
-
-export interface ZoneEventSystem {
-  broadcastZoneEvent: (roomId: string, event: string, data?: any) => void;
-  getActiveEvents: (roomId: string) => ZoneEvent[];
-  addZoneEvent: (roomId: string, event: string, data?: any, duration?: number) => void;
-}
-
-export const zoneEventSystem: ZoneEventSystem = {
-  broadcastZoneEvent: (roomId: string, event: string, data?: any) => {
-    const zoneEvents = zoneEvents.get(roomId) || [];
-    zoneEvents.push({
-      id: `${roomId}-${Date.now()}`,
-      type: event,
+    // Create event
+    const event: ZoneEvent = {
+      id: `event-${now}-${Math.random().toString(36).substr(2, 9)}`,
+      type: eventType,
       data,
-      timestamp: Date.now(),
-      duration: 0,
-    });
+      timestamp: now,
+      duration,
+    };
+
+    // Track event
+    if (!this.zoneEvents.has(roomId)) {
+      this.zoneEvents.set(roomId, []);
+    }
+    this.zoneEvents.get(roomId)!.push(event);
+
+    // Broadcast event
     this.broadcast({
       type: "zone-event",
-      event: event,
-      data: data,
-    });
-  },
-  getActiveEvents: (roomId: string) => {
-    return zoneEvents.get(roomId) || [];
-  },
-  addZoneEvent: (roomId: string, event: string, data?: any, duration?: number) => {
-    const zoneEvents = zoneEvents.get(roomId) || [];
-    zoneEvents.push({
-      id: `${roomId}-${Date.now()}`,
-      type: event,
+      event: eventType,
       data,
-      timestamp: Date.now(),
-      duration: duration || 0,
     });
-    this.broadcast({
-      type: "zone-event",
-      event: event,
-      data: data,
-    });
-  },
-};
+  }
 
-// ============================================================
-// ZONE STATISTICS
-// ============================================================
+  /**
+   * Get current zone events for a room
+   * @param roomId - Room ID
+   * @returns Array of active events
+   */
+  getActiveEvents(roomId: string): ZoneEvent[] {
+    if (!this.zoneEvents.has(roomId)) {
+      return [];
+    }
 
-interface ZoneStatistics {
-  totalKills: number;
-  totalDeaths: number;
-  totalDamageDealt: number;
-  totalDamageTaken: number;
-  activePlayers: number;
-  maxActivePlayers: number;
+    const now = Date.now();
+    const events = this.zoneEvents.get(roomId) || [];
+    
+    // Filter to only active events (not expired)
+    return events.filter(event => now - event.timestamp < event.duration);
+  }
+
+  /**
+   * Add a new zone event
+   * @param eventType - Type of event
+   * @param data - Event data
+   * @param duration - How long the event lasts (ms)
+   */
+  addZoneEvent(eventType: string, data?: any, duration: number = 30000): void {
+    this.broadcastZoneEvent(eventType, data, duration);
+  }
+
+  // ============================================================
+  // HELPER METHODS
+  // ============================================================
+
+  private getRoomId(ctx: ConnectionContext): string {
+    // Extract room ID from context
+    return ctx.roomId || "default";
+  }
+
+  private getCtx(conn: Connection): ConnectionContext {
+    // Get context for connection
+    return { roomId: "default" } as ConnectionContext;
+  }
+
+  private broadcast(msg: any): void {
+    // Broadcast message to all connections
+    for (const [connId, conn] of this.connectionMap) {
+      conn.send(msg);
+    }
+  }
 }
