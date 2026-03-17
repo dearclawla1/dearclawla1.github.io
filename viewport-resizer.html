@@ -24,6 +24,10 @@ input{background:#1a1a1a;color:#e4e4e4;width:100%}
 select{background:#1a1a1a;color:#e4e4e4;width:100%}
 .output-box{background:#1a1a1a;padding:16px;border-radius:8px;font-family:monospace;font-size:0.9rem;border:1px solid #333}
 .output-box code{color:#a3a3a3}
+.error-message{background:#3d1a1a;color:#ff6b6b;padding:12px;border-radius:8px;font-size:0.9rem;border:1px solid #ff6b6b;margin-bottom:15px;animation:shake 0.3s ease-in-out}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.export-btn{background:#10b981;color:#fff}
+.export-btn:hover{background:#059669}
 </style>
 </head>
 <body>
@@ -32,9 +36,10 @@ select{background:#1a1a1a;color:#e4e4e4;width:100%}
 <h1>Viewport Resizer</h1>
 <a href="#" class="back-link">← Back</a>
 </header>
+<div id="error-container"></div>
 <div class="grid">
-<input type="number" id="width" placeholder="Width (px)">
-<input type="number" id="height" placeholder="Height (px)">
+<input type="number" id="width" placeholder="Width (px)" min="0">
+<input type="number" id="height" placeholder="Height (px)" min="0">
 <select id="ratio">
 <option value="16/9">16:9</option>
 <option value="4/3">4:3</option>
@@ -45,12 +50,17 @@ select{background:#1a1a1a;color:#e4e4e4;width:100%}
 <div class="output-box">
 <code id="info">Enter dimensions and select ratio</code>
 </div>
+<div style="display:flex;gap:10px;margin-top:15px">
+<button id="export-btn" class="export-btn">💾 Export Result</button>
+</div>
 </div>
 <script>
 const widthInput = document.getElementById('width');
 const heightInput = document.getElementById('height');
 const ratioSelect = document.getElementById('ratio');
 const infoText = document.getElementById('info');
+const errorContainer = document.getElementById('error-container');
+const exportBtn = document.getElementById('export-btn');
 
 function parseRatio(ratio) {
   const [num, den] = ratio.split('/').map(Number);
@@ -67,6 +77,28 @@ function adjustWidth(height, ratio) {
   const { num, den } = parseRatio(ratio);
   const newW = Math.round(height * num / den);
   return newW;
+}
+
+function showError(message) {
+  errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+  setTimeout(() => {
+    errorContainer.innerHTML = '';
+  }, 3000);
+}
+
+function validateInputs() {
+  const width = parseInt(widthInput.value);
+  const height = parseInt(heightInput.value);
+  
+  if (isNaN(width) || width < 0) {
+    showError('Width must be a valid number (0 or greater)');
+    return false;
+  }
+  if (isNaN(height) || height < 0) {
+    showError('Height must be a valid number (0 or greater)');
+    return false;
+  }
+  return true;
 }
 
 function updateInfo() {
@@ -88,11 +120,56 @@ function updateInfo() {
   }
 }
 
-widthInput.addEventListener('input', updateInfo);
-heightInput.addEventListener('input', updateInfo);
+function exportResult() {
+  const width = parseInt(widthInput.value) || 0;
+  const height = parseInt(heightInput.value) || 0;
+  const ratio = ratioSelect.value;
+  const newH = adjustHeight(width, ratio);
+  
+  const result = {
+    width: width,
+    height: newH,
+    ratio: ratio,
+    timestamp: new Date().toISOString()
+  };
+  
+  const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `viewport-${width}x${newH}-${ratio}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+widthInput.addEventListener('input', () => {
+  validateInputs();
+  updateInfo();
+});
+
+heightInput.addEventListener('input', () => {
+  validateInputs();
+  updateInfo();
+});
+
 ratioSelect.addEventListener('change', updateInfo);
 
+exportBtn.addEventListener('click', exportResult);
+
 updateInfo();
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'Enter') {
+    exportResult();
+  }
+  if (e.key === 'Escape') {
+    widthInput.value = '';
+    heightInput.value = '';
+    updateInfo();
+  }
+});
+
 </script>
 </body>
 </html>
