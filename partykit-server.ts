@@ -240,8 +240,9 @@ export default class GameRoom implements Server {
       },
 
       "hit-player": (conn, { targetId, damage }) => {
+        const player = this.players.get(conn.id);
         const target = this.players.get(targetId);
-        if (target) {
+        if (target && player) {
           // Apply damage to target
           const weapon = player.weapon;
           const multiplier = this.weaponDamageMultipliers.get(weapon) || 1.0;
@@ -382,39 +383,46 @@ export default class GameRoom implements Server {
 
     const now = Date.now();
     const events = this.zoneEvents.get(roomId) || [];
-    
-    // Filter to only active events (not expired)
     return events.filter(event => now - event.timestamp < event.duration);
   }
 
-  /**
-   * Add a new zone event
-   * @param eventType - Type of event
-   * @param data - Event data
-   * @param duration - How long the event lasts (ms)
-   */
-  addZoneEvent(eventType: string, data?: any, duration: number = 30000): void {
-    this.broadcastZoneEvent(eventType, data, duration);
+  // ============================================================
+  // BROADCAST SYSTEM
+  // ============================================================
+
+  broadcast(msg: any): void {
+    const roomId = Object.keys(this.playerConnMap).find(id => this.playerConnMap.get(id) !== undefined);
+    if (!roomId) {
+      console.log(`[Server]: No room ID found for broadcast`);
+      return;
+    }
+
+    const connId = this.playerConnMap.get(roomId);
+    if (!connId) {
+      console.log(`[Server]: No connection found for room ${roomId}`);
+      return;
+    }
+
+    const conn = this.connectionMap.get(connId);
+    if (!conn) {
+      console.log(`[Server]: Connection not found for room ${roomId}`);
+      return;
+    }
+
+    conn.send(msg);
   }
 
   // ============================================================
-  // HELPER METHODS
+  // UTILITY FUNCTIONS
   // ============================================================
 
   private getRoomId(ctx: ConnectionContext): string {
-    // Extract room ID from context
     return ctx.roomId || "default";
   }
 
   private getCtx(conn: Connection): ConnectionContext {
-    // Get context for connection
-    return { roomId: "default" } as ConnectionContext;
-  }
-
-  private broadcast(msg: any): void {
-    // Broadcast message to all connections
-    for (const [connId, conn] of this.connectionMap) {
-      conn.send(msg);
-    }
+    return {
+      roomId: "default",
+    };
   }
 }
