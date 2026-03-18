@@ -42,6 +42,10 @@
             border-radius: 5px;
             background-color: #1e1e1e;
         }
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -59,6 +63,7 @@
         <div id="currency" class="section" style="display: none;">
             <h2>Currency Converter</h2>
             <input type="text" id="amount" placeholder="Enter amount in USD">
+            <span class="error" id="currencyError"></span>
             <input type="text" id="toCurrency" placeholder="Enter currency code (e.g., EUR)">
             <button onclick="convertCurrency()">Convert</button>
             <div class="result" id="currencyResult"></div>
@@ -67,6 +72,7 @@
         <div id="crypto" class="section" style="display: none;">
             <h2>Crypto Prices</h2>
             <input type="text" id="cryptoId" placeholder="Enter crypto ID (e.g., bitcoin)">
+            <span class="error" id="cryptoError"></span>
             <button onclick="getCryptoPrice()">Get Price</button>
             <div class="result" id="cryptoResult"></div>
         </div>
@@ -74,6 +80,7 @@
         <div id="weather" class="section" style="display: none;">
             <h2>Weather Forecast</h2>
             <input type="text" id="location" placeholder="Enter location (e.g., New York)">
+            <span class="error" id="weatherError"></span>
             <button onclick="getWeather()">Get Weather</button>
             <div class="result" id="weatherResult"></div>
         </div>
@@ -81,6 +88,7 @@
         <div id="dictionary" class="section" style="display: none;">
             <h2>Dictionary Lookup</h2>
             <input type="text" id="word" placeholder="Enter word to look up">
+            <span class="error" id="dictionaryError"></span>
             <button onclick="lookupWord()">Lookup</button>
             <div class="result" id="dictionaryResult"></div>
         </div>
@@ -98,83 +106,110 @@
         async function convertCurrency() {
             const amount = document.getElementById('amount').value;
             const toCurrency = document.getElementById('toCurrency').value;
+            const errorElement = document.getElementById('currencyError');
+            errorElement.innerText = '';
+
             if (!amount || !toCurrency) {
-                alert('Please enter both amount and currency code.');
+                errorElement.innerText = 'Please enter both amount and currency code.';
                 return;
             }
 
             try {
                 const response = await fetch(`https://api.frankfurter.app/latest?from=USD&to=${toCurrency}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 const data = await response.json();
                 const rate = data.rates[toCurrency];
                 const convertedAmount = (amount * rate).toFixed(2);
                 document.getElementById('currencyResult').innerText = `${amount} USD is ${convertedAmount} ${toCurrency}`;
             } catch (error) {
-                document.getElementById('currencyResult').innerText = 'Error fetching currency data.';
+                errorElement.innerText = 'Error fetching currency data.';
             }
         }
 
         async function getCryptoPrice() {
             const cryptoId = document.getElementById('cryptoId').value;
+            const errorElement = document.getElementById('cryptoError');
+            errorElement.innerText = '';
+
             if (!cryptoId) {
-                alert('Please enter a crypto ID.');
+                errorElement.innerText = 'Please enter a crypto ID.';
                 return;
             }
 
             try {
                 const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoId}&vs_currencies=usd`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 const data = await response.json();
                 const price = data[cryptoId].usd;
                 document.getElementById('cryptoResult').innerText = `${cryptoId} is $${price}`;
             } catch (error) {
-                document.getElementById('cryptoResult').innerText = 'Error fetching crypto data.';
+                errorElement.innerText = 'Error fetching crypto data.';
             }
         }
 
         async function getWeather() {
             const location = document.getElementById('location').value;
+            const errorElement = document.getElementById('weatherError');
+            errorElement.innerText = '';
+
             if (!location) {
-                alert('Please enter a location.');
+                errorElement.innerText = 'Please enter a location.';
                 return;
             }
 
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 const data = await response.json();
                 if (data.length === 0) {
-                    document.getElementById('weatherResult').innerText = 'Location not found.';
+                    errorElement.innerText = 'Location not found.';
                     return;
                 }
 
                 const { lat, lon } = data[0];
                 const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                if (!weatherResponse.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 const weatherData = await weatherResponse.json();
                 const temperature = weatherData.current_weather.temperature;
                 document.getElementById('weatherResult').innerText = `Current temperature in ${location} is ${temperature}°C.`;
             } catch (error) {
-                document.getElementById('weatherResult').innerText = 'Error fetching weather data.';
+                errorElement.innerText = 'Error fetching weather data.';
             }
         }
 
         async function lookupWord() {
             const word = document.getElementById('word').value;
+            const errorElement = document.getElementById('dictionaryError');
+            errorElement.innerText = '';
+
             if (!word) {
-                alert('Please enter a word to look up.');
+                errorElement.innerText = 'Please enter a word to look up.';
                 return;
             }
 
             try {
                 const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 const data = await response.json();
                 if (data.length === 0) {
-                    document.getElementById('dictionaryResult').innerText = 'Word not found.';
+                    errorElement.innerText = 'Word not found.';
                     return;
                 }
 
                 const definition = data[0].meanings[0].definitions[0].definition;
                 document.getElementById('dictionaryResult').innerText = `Definition of ${word}: ${definition}`;
             } catch (error) {
-                document.getElementById('dictionaryResult').innerText = 'Error fetching dictionary data.';
+                errorElement.innerText = 'Error fetching dictionary data.';
             }
         }
 
