@@ -1,3 +1,4 @@
+// Import necessary modules
 import type { Party, Connection, Server, ConnectionContext } from "partykit/server";
 
 // ============================================================
