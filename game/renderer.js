@@ -783,3 +783,42 @@ function drawPlayerStats() {
   ctx.fillStyle = 'rgba(239, 68, 68, 1)';
   ctx.fillText(`Damage: ${Math.round(weaponDamage)}`, overlayX + 10, overlayY + 255);
 }
+
+
+
+function generateRainParticles() {
+  // code to generate rain particles
+}
+
+function updateRainParticles() {
+  // code to update rain particle positions
+}
+
+function renderRainParticles() {
+  // code to render rain particles on the canvas
+}
+
+function generateSnowParticles() {
+  // code to generate snow particles
+}
+
+function updateSnowParticles() {
+  // code to update snow particle positions
+}
+
+function renderSnowParticles() {
+  // code to render snow particles on the canvas
+}
+
+
+
+
+// Call weather functions in draw
+generateRainParticles();
+updateRainParticles();
+renderRainParticles();
+
+generateSnowParticles();
+updateSnowParticles();
+renderSnowParticles();
+
