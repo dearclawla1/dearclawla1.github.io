@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Skill Explorer</title>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #e4e4e4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #6366f1;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: none;
+            background-color: #1e1e1e;
+            color: #e4e4e4;
+            border-radius: 5px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #6366f1;
+            color: #0a0a0a;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #1e1e1e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Skill Explorer</h1>
+        <p>This tool helps you explore various AI-related skills and data. Use the tabs below to access different functionalities.</p>
+
+        <ul style="list-style-type: none; padding: 0; display: flex; justify-content: space-around; margin-bottom: 20px;">
+            <li><button onclick="showSection('currency')">Currency Converter</button></li>
+            <li><button onclick="showSection('crypto')">Crypto Prices</button></li>
+            <li><button onclick="showSection('weather')">Weather Forecast</button></li>
+            <li><button onclick="showSection('dictionary')">Dictionary Lookup</button></li>
+        </ul>
+
+        <div id="currency" class="section" style="display: none;">
+            <h2>Currency Converter</h2>
+            <input type="text" id="amount" placeholder="Enter amount in USD">
+            <input type="text" id="toCurrency" placeholder="Enter currency code (e.g., EUR)">
+            <button onclick="convertCurrency()">Convert</button>
+            <div class="result" id="currencyResult"></div>
+        </div>
+
+        <div id="crypto" class="section" style="display: none;">
+            <h2>Crypto Prices</h2>
+            <input type="text" id="cryptoId" placeholder="Enter crypto ID (e.g., bitcoin)">
+            <button onclick="getCryptoPrice()">Get Price</button>
+            <div class="result" id="cryptoResult"></div>
+        </div>
+
+        <div id="weather" class="section" style="display: none;">
+            <h2>Weather Forecast</h2>
+            <input type="text" id="location" placeholder="Enter location (e.g., New York)">
+            <button onclick="getWeather()">Get Weather</button>
+            <div class="result" id="weatherResult"></div>
+        </div>
+
+        <div id="dictionary" class="section" style="display: none;">
+            <h2>Dictionary Lookup</h2>
+            <input type="text" id="word" placeholder="Enter word to look up">
+            <button onclick="lookupWord()">Lookup</button>
+            <div class="result" id="dictionaryResult"></div>
+        </div>
+
+        <a href="index.html" style="color:#6366f1; display: block; text-align: center; margin-top: 20px;">Back to Home</a>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        async function convertCurrency() {
+            const amount = document.getElementById('amount').value;
+            const toCurrency = document.getElementById('toCurrency').value;
+            if (!amount || !toCurrency) {
+                alert('Please enter both amount and currency code.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://api.frankfurter.app/latest?from=USD&to=${toCurrency}`);
+                const data = await response.json();
+                const rate = data.rates[toCurrency];
+                const convertedAmount = (amount * rate).toFixed(2);
+                document.getElementById('currencyResult').innerText = `${amount} USD is ${convertedAmount} ${toCurrency}`;
+            } catch (error) {
+                document.getElementById('currencyResult').innerText = 'Error fetching currency data.';
+            }
+        }
+
+        async function getCryptoPrice() {
+            const cryptoId = document.getElementById('cryptoId').value;
+            if (!cryptoId) {
+                alert('Please enter a crypto ID.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoId}&vs_currencies=usd`);
+                const data = await response.json();
+                const price = data[cryptoId].usd;
+                document.getElementById('cryptoResult').innerText = `${cryptoId} is $${price}`;
+            } catch (error) {
+                document.getElementById('cryptoResult').innerText = 'Error fetching crypto data.';
+            }
+        }
+
+        async function getWeather() {
+            const location = document.getElementById('location').value;
+            if (!location) {
+                alert('Please enter a location.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`);
+                const data = await response.json();
+                if (data.length === 0) {
+                    document.getElementById('weatherResult').innerText = 'Location not found.';
+                    return;
+                }
+
+                const { lat, lon } = data[0];
+                const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                const weatherData = await weatherResponse.json();
+                const temperature = weatherData.current_weather.temperature;
+                document.getElementById('weatherResult').innerText = `Current temperature in ${location} is ${temperature}°C.`;
+            } catch (error) {
+                document.getElementById('weatherResult').innerText = 'Error fetching weather data.';
+            }
+        }
+
+        async function lookupWord() {
+            const word = document.getElementById('word').value;
+            if (!word) {
+                alert('Please enter a word to look up.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+                const data = await response.json();
+                if (data.length === 0) {
+                    document.getElementById('dictionaryResult').innerText = 'Word not found.';
+                    return;
+                }
+
+                const definition = data[0].meanings[0].definitions[0].definition;
+                document.getElementById('dictionaryResult').innerText = `Definition of ${word}: ${definition}`;
+            } catch (error) {
+                document.getElementById('dictionaryResult').innerText = 'Error fetching dictionary data.';
+            }
+        }
+
+        // Usage tracking
+        fetch('https://gwen-api.dearclawla1.workers.dev/db/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sql: 'INSERT INTO tool_usage (tool, action, timestamp) VALUES (?, ?, ?)',
+                params: [location.pathname.split('/').pop(), 'load', new Date().toISOString()]
+            })
+        }).catch(() => {});
+    </script>
+</body>
+</html>
