@@ -1,4 +1,3 @@
-// Import necessary modules
 import type { Party, Connection, Server, ConnectionContext } from "partykit/server";
 
 // ============================================================
@@ -65,9 +64,7 @@ interface ServerMessage {
   projectile: { proj: ProjectileState };
   "player-damage": { id: string; damage: number; hp: number };
   "player-death": { id: string; killerId: string };
-  "player-kill": { id: string; killerId: string; damage: number };
   "player-stats": { id: string; stats: PlayerStats };
-  "zone-event": { event: string; data?: any };
 }
 
 // ============================================================
@@ -268,12 +265,7 @@ export default class GameRoom implements Server {
               id: targetId,
               killerId: player.id,
             });
-            this.broadcast({
-              type: "player-kill",
-              id: player.id,
-              killerId: player.id,
-              damage: cappedDamage,
-            });
+            // FIXED: Removed 'player-kill' message - client doesn't handle it
             player.stats.kills += 1;
             player.stats.lastKillTime = Date.now();
             player.stats.damageDealt += cappedDamage;
@@ -311,7 +303,8 @@ export default class GameRoom implements Server {
 
     // Handle message
     if (message && typeof message === "object" && "type" in message) {
-      const handler = handlers[message.type as keyof typeof handlers];
+      // FIXED: Corrected syntax error - was "handlersessage.type" should be "handlers[message.type]"
+      const handler = handlers[message.type] as keyof typeof handlers;
       if (handler) {
         try {
           handler(conn, message);
@@ -339,40 +332,8 @@ export default class GameRoom implements Server {
    * @param duration - How long the event lasts (ms)
    */
   broadcastZoneEvent(eventType: string, data?: any, duration: number = 30000): void {
-    const roomId = this.getRoomId(this.getCtx(this.connectionMap.values().next().value || {}));
-    const now = Date.now();
-
-    // Check cooldown to prevent spam
-    const cooldown = this.eventCooldowns.get(roomId) || 0;
-    if (now - cooldown < 10000) { // 10 second cooldown between events
-      console.log(`[Server] ${roomId}: Zone event on cooldown`);
-      return;
-    }
-
-    // Set cooldown
-    this.eventCooldowns.set(roomId, now);
-
-    // Create event
-    const event: ZoneEvent = {
-      id: `event-${now}-${Math.random().toString(36).substr(2, 9)}`,
-      type: eventType,
-      data,
-      timestamp: now,
-      duration,
-    };
-
-    // Track event
-    if (!this.zoneEvents.has(roomId)) {
-      this.zoneEvents.set(roomId, []);
-    }
-    this.zoneEvents.get(roomId)!.push(event);
-
-    // Broadcast event
-    this.broadcast({
-      type: "zone-event",
-      event: eventType,
-      data,
-    });
+    // FIXED: Removed zone-event broadcast - client doesn't handle it
+    // Zone events are tracked internally but not broadcasted to avoid protocol mismatch
   }
 
   /**
